@@ -1,0 +1,19 @@
+{
+  "name": "core",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.92.1",
+    "@effect/platform-bun": "^0.81.1",
+    "@types/js-yaml": "^4.0.9",
+    "effect": "^3.18.4",
+    "js-yaml": "^4.1.0",
+    "typebox": "^1.0.35"
+  }
+}
