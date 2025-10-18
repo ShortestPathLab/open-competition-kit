@@ -1,31 +1,35 @@
-import { Schema } from "effect";
+import { Schema as S } from "effect";
 
-export const Item = Schema.Struct({
-  id: Schema.String,
-  name: Schema.String,
+export const Item = S.Struct({
+  id: S.String,
+  name: S.String,
 });
 
-export const Extendable = Schema.Struct({
-  with: Schema.Array(Schema.String),
+export const Extendable = S.Struct({
+  with: S.Array(S.String),
 });
 
-export const TrackConfig = Schema.Struct({
+export const TrackConfig = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
   form: Extendable,
 });
 
-export const CompetitionConfig = Schema.Struct({
+export const CompetitionConfig = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
-  tracks: Schema.Array(TrackConfig),
+  tracks: S.Array(TrackConfig),
   runner: Extendable,
-  leaderboards: Schema.Array(Extendable),
+  leaderboards: S.Array(Extendable),
 });
 
-export const Config = Schema.Struct({
-  competitions: Schema.Array(CompetitionConfig),
+export const Config = S.Struct({
+  competitions: S.Array(CompetitionConfig),
   ...Extendable.fields,
 });
 
-export const decode = Schema.decodeUnknown(Config);
+export type Config = S.Schema.Type<typeof Config>;
+
+export type Extendable = S.Schema.Type<typeof Extendable>;
+
+export const decode = S.decodeUnknown(Config);

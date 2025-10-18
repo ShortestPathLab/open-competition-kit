@@ -1,22 +1,57 @@
 import { FileSystem } from "@effect/platform";
-import { Config, Effect } from "effect";
+import {
+  Config as C,
+  Effect as E,
+  Match as M,
+  Option as O,
+  pipe,
+  Schema as S,
+} from "effect";
 import { load as _load, YAMLException } from "js-yaml";
-import { decode } from "./schema";
+import { mapValues, uniq } from "lodash-es";
+import { decode, Extendable } from "./schema";
 
 const load = (s: string) =>
-  Effect.try({
+  E.try({
     try: () => _load(s),
     catch: (e) => e as YAMLException,
   });
 
-export const getConfig = Config.string("CONFIG")
-  .pipe(Config.withDefault("./competition.config.yaml"))
-  .pipe(
-    Effect.andThen((path) =>
-      Effect.gen(function* () {
-        return yield* (yield* FileSystem.FileSystem).readFileString(path);
-      })
+export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
+  const ctx = O.match(S.decodeUnknownOption(Extendable)(t), {
+    onNone: () => w,
+    onSome: (t) => uniq([...w, ...t.with]),
+  });
+  return M.value(t).pipe(
+    // Array case
+    M.when(M.instanceOf(Array), (t) =>
+      t.map((v) => propagateExtendable(v, ctx))
     ),
-    Effect.andThen(load),
-    Effect.andThen(decode)
-  );
+    // Object case
+    M.when(M.instanceOf(Object), (t) => ({
+      ...mapValues(t, (v: string) => propagateExtendable(v, ctx)),
+      with: ctx,
+    })),
+    // Primitive case
+    M.orElse(() => t)
+  ) as T;
+};
+
+export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig>()(
+  "open-competition-kit/Config",
+  {
+    effect: E.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const raw = pipe(
+        C.string("CONFIG"),
+        C.withDefault("./competition.config.yaml"),
+        E.andThen(fs.readFileString),
+        E.andThen(load),
+        E.andThen(decode)
+      );
+      return {
+        config: raw.pipe(E.map(propagateExtendable)),
+      };
+    }),
+  }
+) {}

@@ -12,7 +12,9 @@
     "@effect/platform": "^0.92.1",
     "@effect/platform-bun": "^0.81.1",
     "@types/js-yaml": "^4.0.9",
+    "@types/lodash-es": "^4.17.12",
     "effect": "^3.18.4",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "lodash-es": "^4.17.21"
   }
 }
