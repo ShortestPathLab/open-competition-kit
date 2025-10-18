@@ -1,5 +1,10 @@
 export default {
-  db: { connect: async () => "Not implemented", disconnect: async () => {} },
+  db: {
+    connect: async () => "Not implemented",
+    disconnect: async () => {},
+    query: async () => [],
+    mutate: async () => {},
+  },
   auth: {},
   user: {},
   form: { ui: {}, submit: {} },

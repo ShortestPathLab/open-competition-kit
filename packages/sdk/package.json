@@ -1,0 +1,21 @@
+{
+  "name": "sdk",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@effect/platform": "^0.92.1",
+    "@effect/platform-bun": "^0.81.1",
+    "@types/lodash-es": "^4.17.12",
+    "core": "workspace:*",
+    "effect": "^3.18.4",
+    "lodash-es": "^4.17.21",
+    "proxy-deep": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

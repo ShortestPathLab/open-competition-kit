@@ -1,14 +1,22 @@
+import { OpenCompetitionKitDatabase } from "./db";
 import { Effect as E } from "effect";
-import { OpenCompetitionKitHooks } from "hook";
+import type { OpenCompetitionKitApi } from "./api";
 
 export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
   "open-competition-kit/OpenCompetitionKit",
   {
     effect: E.gen(function* () {
-      const hooks = yield* OpenCompetitionKitHooks;
-      return {
-        hooks,
+      const db = yield* OpenCompetitionKitDatabase;
+      const instance = yield* db();
+      const connect = yield* E.once(instance.connect());
+      const competitions = {
+        get: (id: string) =>
+          connect.pipe(E.andThen(instance.one("competitions", id))),
+        list: () => connect.pipe(E.andThen(E.succeed(1))),
       };
+      return {
+        competitions,
+      } satisfies OpenCompetitionKitApi;
     }),
   }
 ) {}

@@ -1,6 +1,6 @@
 import { Path } from "@effect/platform";
-import { OpenCompetitionKitConfig } from "config";
-import type { Extendable } from "config/schema";
+import { OpenCompetitionKitConfig } from "core/config";
+import type { Extendable } from "core/config/schema";
 import { Effect as E, Match as M, pipe, Schema as S } from "effect";
 import { merge } from "lodash-es";
 
@@ -15,7 +15,22 @@ const hook = <T extends S.Struct.Field, U extends S.Struct.Field>(
 
 export const Hooks = S.Struct({
   db: S.Struct({
-    connect: hook(S.Void, S.Number),
+    connect: hook(S.Void, S.Void),
+    query: hook(
+      S.Struct({
+        from: S.String,
+        where: S.String,
+        select: S.Array(S.String),
+      }),
+      S.Array(S.Any)
+    ),
+    mutate: hook(
+      S.Struct({
+        id: S.String,
+        data: S.Any,
+      }),
+      S.Void
+    ),
     disconnect: hook(S.Void, S.Void),
   }),
   auth: S.Struct({}),
@@ -69,6 +84,8 @@ export const resolve = (p: string) =>
     );
   });
 
+export class HookError extends Error {}
+
 export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>()(
   "open-competition-kit/Hooks",
   {
@@ -76,7 +93,14 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
       const c = yield* OpenCompetitionKitConfig;
       const config = yield* c.config;
       return {
-        get: (accessor: (c: typeof config) => Extendable) => {
+        try:
+          <T extends unknown[], U>(f: (...args: T) => Promise<U>) =>
+          (...t: T) =>
+            E.tryPromise({
+              try: () => f(...t),
+              catch: (e) => e as HookError,
+            }),
+        get: (accessor: (c: typeof config) => Extendable = (c) => c) => {
           const { with: w } = accessor(config);
           return E.mergeAll(w.map(resolve), {}, merge).pipe(E.andThen(decode));
         },
