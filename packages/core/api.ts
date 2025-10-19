@@ -16,5 +16,6 @@ export type OpenCompetitionKitApi = {
      * Lists all competitions.
      */
     list: unknown;
+    create: unknown;
   };
 };

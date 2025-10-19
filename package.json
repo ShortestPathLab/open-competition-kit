@@ -2,7 +2,8 @@
   "name": "open-competition-kit",
   "private": true,
   "scripts": {
-    "db:prisma:generate": "bun packages/packages/db/prisma/generate.ts"
+    "db:prisma:generate": "bun packages/packages/db/prisma/generate.ts",
+    "db:prisma:studio": "bunx prisma studio --schema packages/packages/db/prisma/schemas/schema.prisma"
   },
   "workspaces": [
     "packages/**"

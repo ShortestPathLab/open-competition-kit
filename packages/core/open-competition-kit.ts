@@ -10,11 +10,15 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
       const { config } = yield* OpenCompetitionKitConfig;
       const db = yield* OpenCompetitionKitDatabase;
       const instance = yield* db();
-      const connect = yield* E.once(instance.connect());
       const competitions = {
-        get: (id: string) =>
-          connect.pipe(E.andThen(instance.one("competitions", id))),
-        list: () => connect.pipe(E.andThen(E.succeed(1))),
+        list: () => instance.competitions.list({}),
+        create: () =>
+          instance.competitions.create({
+            name: "Random",
+          }),
+        get: () => {
+          throw new Error();
+        },
       };
       return {
         config: { get: () => config },

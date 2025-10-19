@@ -10,8 +10,8 @@ const u = async () => (await db()).user;
 export default {
   db: {
     competitions: {
-      get: async (id) => (await c()).findFirstOrThrow({ where: { id } }),
-      list: async () => (await c()).findMany(),
+      get: async (id) => await (await c()).findFirstOrThrow({ where: { id } }),
+      list: async () => await (await db()).competition.findMany(),
       create: async (partial) => {
         const store = await c();
         return await store.create({
@@ -31,8 +31,8 @@ export default {
       },
     },
     tracks: {
-      get: async (id) => (await t()).findFirstOrThrow({ where: { id } }),
-      list: async () => (await t()).findMany(),
+      get: async (id) => await (await t()).findFirstOrThrow({ where: { id } }),
+      list: async () => await (await t()).findMany(),
       create: async ({ competition, ...partial }) => {
         const store = await t();
         if (!competition) throw new Error("No competition");
@@ -53,8 +53,8 @@ export default {
       },
     },
     users: {
-      get: async (id) => (await u()).findFirstOrThrow({ where: { id } }),
-      list: async () => (await u()).findMany(),
+      get: async (id) => await (await u()).findFirstOrThrow({ where: { id } }),
+      list: async () => await (await u()).findMany(),
       create: async (partial) => {
         const store = await u();
         return await store.create({
