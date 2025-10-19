@@ -20,9 +20,9 @@ const OpenCompetitionKitDatabaseLive = L.provide(
   OpenCompetitionKitHooksLive
 );
 
-const OpenCompetitionKitLive = L.provide(
-  OpenCompetitionKit.Default,
-  OpenCompetitionKitDatabaseLive
+const OpenCompetitionKitLive = OpenCompetitionKit.Default.pipe(
+  L.provide(OpenCompetitionKitDatabaseLive),
+  L.provide(OpenCompetitionKitConfig.Default)
 );
 
 export const init = once(
@@ -53,14 +53,14 @@ type MapEffectToPromise<T> = T extends (...args: infer In) => // Effect case
 E.Effect<infer Out, infer Error, never>
   ? Fn<In, Out, Error>
   : // Promise case
-  T extends (...args: infer In) => Promise<infer Out>
-  ? Fn<In, Out>
-  : // Object case
-  T extends { [K in infer U]: unknown }
-  ? {
-      [K in U]: MapEffectToPromise<T[K]>;
-    }
-  : never;
+    T extends (...args: infer In) => Promise<infer Out>
+    ? Fn<In, Out>
+    : // Object case
+      T extends { [K in infer U]: unknown }
+      ? {
+          [K in U]: MapEffectToPromise<T[K]>;
+        }
+      : never;
 
 type Kit = MapEffectToPromise<Awaited<ReturnType<typeof init>>>;
 
@@ -87,6 +87,8 @@ const kit = new DeepProxy({} as OpenCompetitionKitApi & Kit, {
   },
 });
 
-export const { competitions } = kit;
+export const { competitions, config } = kit;
+
+export * from "core";
 
 export default kit;

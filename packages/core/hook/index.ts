@@ -3,36 +3,10 @@ import { OpenCompetitionKitConfig } from "core/config";
 import type { Extendable } from "core/config/schema";
 import { Effect as E, Match as M, pipe, Schema as S } from "effect";
 import { merge } from "lodash-es";
-
-const hook = <T extends S.Struct.Field, U extends S.Struct.Field>(
-  _a: T,
-  _b: U
-) =>
-  S.declare(
-    (input): input is (a: S.Schema.Type<T>) => Promise<S.Schema.Type<U>> =>
-      typeof input === "function"
-  );
+import db from "./db";
 
 export const Hooks = S.Struct({
-  db: S.Struct({
-    connect: hook(S.Void, S.Void),
-    query: hook(
-      S.Struct({
-        from: S.String,
-        where: S.String,
-        select: S.Array(S.String),
-      }),
-      S.Array(S.Any)
-    ),
-    mutate: hook(
-      S.Struct({
-        id: S.String,
-        data: S.Any,
-      }),
-      S.Void
-    ),
-    disconnect: hook(S.Void, S.Void),
-  }),
+  db,
   auth: S.Struct({}),
   user: S.Struct({}),
   form: S.Struct({
@@ -47,6 +21,14 @@ export const Hooks = S.Struct({
 
 export type Hooks = S.Schema.Type<typeof Hooks>;
 
+type DeepPartial<T> = T extends { [key: string]: unknown }
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>;
+    }
+  : T;
+
+export type Package = DeepPartial<Hooks>;
+
 // Produces dot-notation keys for a nested object T (arrays and functions are treated as leaves)
 type DotNotationKeys<T, Prev extends string = ""> = {
   [K in keyof T & string]: T[K] extends object
@@ -59,6 +41,7 @@ type DotNotationKeys<T, Prev extends string = ""> = {
 export type HookKey = DotNotationKeys<Hooks>;
 
 const decode = S.decodeUnknown(Hooks);
+const decodePartial = S.decodeUnknown(S.partial(Hooks));
 
 class NotImplementedError extends Error {}
 
@@ -78,7 +61,7 @@ export const resolve = (p: string) =>
             try: async () => (await import(path.resolve(p)))?.default,
             catch: (e) => e as Error,
           }),
-          E.andThen(decode)
+          E.andThen(decodePartial)
         )
       )
     );
@@ -108,3 +91,5 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
     }),
   }
 ) {}
+
+export * as db from "./db";

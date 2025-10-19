@@ -1,3 +1,7 @@
 with:
-  - ./packages/db/prisma
+  - ./packages/packages/noop
+  - ./packages/packages/db/prisma
+db:
+  provider: postgresql
+  url: postgres://postgres:postgres@localhost:5432/postgres
 competitions: []

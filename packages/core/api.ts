@@ -1,4 +1,7 @@
 export type OpenCompetitionKitApi = {
+  config: {
+    get: unknown;
+  };
   /**
    * The competitions in this system
    */

@@ -2,7 +2,9 @@
   "name": "open-competition-kit",
   "private": true,
   "workspaces": [
-    "packages/**",
-    "services/**"
-  ]
+    "packages/**"
+  ],
+  "dependencies": {
+    "@prisma/client": "^6.17.1"
+  }
 }
