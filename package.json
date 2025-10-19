@@ -2,7 +2,7 @@
   "name": "open-competition-kit",
   "private": true,
   "workspaces": [
-    "packages/*",
-    "services/*"
+    "packages/**",
+    "services/**"
   ]
 }
