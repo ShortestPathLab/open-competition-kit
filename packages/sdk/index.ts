@@ -35,15 +35,33 @@ export const init = once(
     )
 );
 
-type MapEffectToPromise<T> = T extends (
-  ...args: infer In
-) => E.Effect<infer Out, any, never>
-  ? (...args: In) => Promise<Out>
-  : T extends { [K in infer U]: unknown }
+type Result<Out, Error> =
+  | {
+      error: undefined;
+      value: Out;
+    }
+  | {
+      value: undefined;
+      error: Error;
+    };
+
+type Fn<In extends unknown[], Out, Error = unknown> = (
+  ...args: In
+) => Promise<Result<Out, Error>>;
+
+type MapEffectToPromise<T> = T extends (...args: infer In) => // Effect case
+E.Effect<infer Out, infer Error, never>
+  ? Fn<In, Out, Error>
+  : // Promise case
+  T extends (...args: infer In) => Promise<infer Out>
+  ? Fn<In, Out>
+  : // Object case
+  T extends { [K in infer U]: unknown }
   ? {
       [K in U]: MapEffectToPromise<T[K]>;
     }
   : never;
+
 type Kit = MapEffectToPromise<Awaited<ReturnType<typeof init>>>;
 
 const kit = new DeepProxy({} as OpenCompetitionKitApi & Kit, {
@@ -52,10 +70,20 @@ const kit = new DeepProxy({} as OpenCompetitionKitApi & Kit, {
   },
   async apply(_target, _this, args) {
     const kit = await init();
-    const result = await get(kit, this.path)(...args);
-    return E.isEffect(result)
-      ? await E.runPromise(result as E.Effect<unknown, unknown, never>)
-      : result;
+    try {
+      const result = await get(kit, this.path)(...args);
+      return {
+        value: E.isEffect(result)
+          ? await E.runPromise(result as E.Effect<unknown, unknown, never>)
+          : result,
+        error: undefined,
+      } satisfies Result<unknown, unknown>;
+    } catch (e) {
+      return {
+        error: e,
+        value: undefined,
+      } satisfies Result<unknown, unknown>;
+    }
   },
 });
 

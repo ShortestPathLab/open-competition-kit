@@ -8,5 +8,10 @@ export type OpenCompetitionKitApi = {
      * @param id The ID of the competition
      */
     get: unknown;
+
+    /**
+     * Lists all competitions.
+     */
+    list: unknown;
   };
 };
