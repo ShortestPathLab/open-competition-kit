@@ -1,5 +1,15 @@
 import { OpenCompetitionKitHooks } from "core/hook";
 import { Effect as E } from "effect";
+import { withHooks } from "./hook/db";
+
+export type Table<T> = {
+  list: () => Promise<T[]>;
+  where: (partial: Partial<T>) => Promise<T[]>;
+  create: (data: T) => Promise<void>;
+  get: (id: string) => Promise<T>;
+  update: (id: string, data: Partial<T>) => Promise<void>;
+  delete: (id: string) => Promise<void>;
+};
 
 export class OpenCompetitionKitDatabase extends E.Service<OpenCompetitionKitDatabase>()(
   "open-competition-kit/OpenCompetitionKitDatabase",
@@ -10,10 +20,8 @@ export class OpenCompetitionKitDatabase extends E.Service<OpenCompetitionKitData
         E.gen(function* () {
           const api = yield* hooks.get(...a);
           return {
-            competitions: {
-              list: hooks.try(api.db.competitions.list),
-              create: hooks.try(api.db.competitions.create),
-            },
+            competitions: yield* withHooks(api.db.competitions),
+            tracks: yield* withHooks(api.db.tracks),
           };
         });
     }),

@@ -1,7 +1,7 @@
 import { Path } from "@effect/platform";
 import { OpenCompetitionKitConfig } from "core/config";
 import type { Extendable } from "core/config/schema";
-import { Effect as E, Match as M, pipe, Schema as S } from "effect";
+import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
 import { merge } from "lodash-es";
 import db from "./db";
 
@@ -43,7 +43,13 @@ export type HookKey = DotNotationKeys<Hooks>;
 const decode = S.decodeUnknown(Hooks);
 const decodePartial = S.decodeUnknown(S.partial(Hooks));
 
-class NotImplementedError extends Error {}
+class NotImplementedError extends Data.TaggedError("NotImplementedError") {}
+
+class ImportError extends Data.TaggedError("ImportError") {
+  constructor(readonly params: { cause: unknown }) {
+    super();
+  }
+}
 
 export const resolve = (p: string) =>
   E.gen(function* () {
@@ -59,7 +65,7 @@ export const resolve = (p: string) =>
         pipe(
           E.tryPromise({
             try: async () => (await import(path.resolve(p)))?.default,
-            catch: (e) => e as Error,
+            catch: (e) => new ImportError({ cause: e }),
           }),
           E.andThen(decodePartial)
         )
@@ -67,7 +73,7 @@ export const resolve = (p: string) =>
     );
   });
 
-export class HookError extends Error {}
+export class HookError extends Data.TaggedError("HookError") {}
 
 export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>()(
   "open-competition-kit/Hooks",

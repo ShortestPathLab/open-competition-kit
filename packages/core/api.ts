@@ -2,6 +2,7 @@ export type OpenCompetitionKitApi = {
   config: {
     get: unknown;
   };
+  tracks: {};
   /**
    * The competitions in this system
    */

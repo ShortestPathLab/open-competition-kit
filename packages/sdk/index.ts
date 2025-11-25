@@ -21,6 +21,7 @@ const OpenCompetitionKitDatabaseLive = L.provide(
 );
 
 const OpenCompetitionKitLive = OpenCompetitionKit.Default.pipe(
+  L.provide(OpenCompetitionKitHooksLive),
   L.provide(OpenCompetitionKitDatabaseLive),
   L.provide(OpenCompetitionKitConfig.Default)
 );
