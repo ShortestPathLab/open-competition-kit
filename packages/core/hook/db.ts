@@ -9,8 +9,6 @@ export const Id = S.String.annotations({
   identifier: "open-competition-kit/db/Id",
 });
 
-// export const isLiteral = (s) =>
-
 const createSchemas = <
   K extends string,
   T extends {

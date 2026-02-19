@@ -1,7 +1,9 @@
-import type { Hooks } from "./hook";
-
 export type OpenCompetitionKitApi = {
-  hooks: Hooks;
+  hooks: unknown;
+  auth: {
+    logIn: unknown;
+    logOut: unknown;
+  };
   config: {
     get: unknown;
   };

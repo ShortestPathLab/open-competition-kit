@@ -1,4 +1,4 @@
-import { type Package } from "sdk";
+import { type Package, hooks } from "sdk";
 import { db } from "./db";
 
 const getCollection = async (collection: string) => {
@@ -22,7 +22,7 @@ export default {
     create: async ({ collection, payload }) => {
       const a = await getCollection(collection);
       return await a.create({
-        data: { ...payload },
+        data: payload,
       });
     },
     update: async ({ collection, payload }) => {

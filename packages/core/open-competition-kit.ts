@@ -1,10 +1,11 @@
+import { Path } from "@effect/platform";
 import { Data as D, Effect as E, Match as M } from "effect";
-import type { OpenCompetitionKitApi } from "./api";
-import { OpenCompetitionKitConfig } from "./config";
-import { OpenCompetitionKitCollections } from "./collections";
-import type { schemas, WithHooks } from "./hook/db";
 import { noop } from "lodash-es";
+import type { OpenCompetitionKitApi } from "./api";
+import { OpenCompetitionKitCollections } from "./collections";
+import { OpenCompetitionKitConfig } from "./config";
 import { OpenCompetitionKitHooks } from "./hook";
+import type { schemas, WithHooks } from "./hook/db";
 
 export class CollectionOwnerError extends D.TaggedError(
   "CollectionOwnerError",
@@ -29,7 +30,9 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
   "open-competition-kit/OpenCompetitionKit",
   {
     effect: E.gen(function* () {
+      const path = yield* Path.Path;
       const { config } = yield* OpenCompetitionKitConfig;
+      const hooks = yield* OpenCompetitionKitHooks;
       const db = yield* OpenCompetitionKitCollections;
       const instance = yield* db();
       const competitions = yield* collectionFrom(
@@ -64,10 +67,36 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
       return {
         config: { get: () => config },
         competitions,
+        hooks: {
+          do: <U>(
+            call: (
+              api: ReturnType<typeof hooks.get> extends E.Effect<
+                infer O,
+                infer _E,
+                infer _C
+              >
+                ? O
+                : never,
+            ) => U,
+            ...w: Parameters<typeof hooks.get>
+          ) => {
+            return E.provideService(
+              E.gen(function* () {
+                const api = yield* hooks.get(...w);
+                return call(api);
+              }),
+              Path.Path,
+              path,
+            );
+          },
+        },
         tracks,
         users,
         enrolments,
-        hooks: undefined,
+        auth: {
+          logIn: undefined,
+          logOut: undefined,
+        },
       } satisfies OpenCompetitionKitApi;
     }),
   },

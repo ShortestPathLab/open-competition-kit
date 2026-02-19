@@ -1,9 +1,9 @@
 import { write } from "bun";
-import { Match as M, Schema as S, SchemaAST } from "effect";
+import { Match as M, Schema as S } from "effect";
 import { capitalize, entries } from "lodash-es";
 import { hook } from "sdk";
 
-const { schemas, Id, Number, Boolean, Date, String, Int, Literal } = hook.db;
+const { schemas, Id, Number, Boolean, Date, String, Int } = hook.db;
 
 const is =
   <T>(a: T) =>
@@ -13,7 +13,6 @@ const is =
 function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
   const lines = entries(s.fields)
     .map(([k, v]) => {
-      console.log(k, v);
       const type = M.value(v as S.SchemaClass<string, string, never>).pipe(
         M.when(is(Id), () => "String @id @default(cuid())"),
         M.when(is(String), () => "String"),
@@ -21,8 +20,7 @@ function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
         M.when(is(Int), () => "Int"),
         M.when(is(Boolean), () => "Boolean"),
         M.when(is(Date), () => "DateTime"),
-        M.when(isLiteral, (l) => console.log("test", l.literal)),
-        M.orElse(() => "")
+        M.orElse(() => ""),
       );
       return type ? `${k} ${type}` : "";
     })
@@ -44,7 +42,7 @@ export async function toPrisma(db: Config) {
   const a1 = [
     clause(
       "datasource db",
-      entries(db.datasource).map(([k, v]) => `${k} = "${v}"`)
+      entries(db.datasource).map(([k, v]) => `${k} = "${v}"`),
     ),
     clause("generator client", [
       'provider = "prisma-client"',

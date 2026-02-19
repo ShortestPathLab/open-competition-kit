@@ -1,16 +1,5 @@
-import { competitions, } from "sdk";
+import { competitions } from "sdk";
 
-const myCompetition = await competitions.
+const myCompetition = await competitions.list({});
 
-competitions.on(
-    'change',
-    ()=>{
-        
-    }
-)
-
-const result = await competitions.list();
-
-if (result.error) throw result.error;
-
-console.log(result.value);
+console.log(myCompetition);
