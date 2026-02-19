@@ -47,6 +47,8 @@ const createAccessor = <T extends DbKey>(
           payload: id,
         }),
     } satisfies WithHooks<
+      (typeof tables)[typeof collection]["create"]["Type"],
+      (typeof tables)[typeof collection]["update"]["Type"],
       (typeof tables)[typeof collection]["full"]["Type"],
       unknown,
       unknown

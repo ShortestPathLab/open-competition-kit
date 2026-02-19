@@ -11,10 +11,22 @@ export class CollectionOwnerError extends D.TaggedError(
   "CollectionOwnerError",
 ) {}
 
-export function collectionFrom<T, U1, E1, E2, E3, C1, C2, C3, U2 = U1>(
-  table: WithHooks<T, E1, C1>,
-  owner: (item: T) => E.Effect<U1, E2, C3>,
-  of: (owner: U2) => E.Effect<Readonly<T[]>, E3, C2>,
+export function collectionFrom<
+  TCreate,
+  TUpdate,
+  TFull,
+  U1,
+  E1,
+  E2,
+  E3,
+  C1,
+  C2,
+  C3,
+  U2 = U1,
+>(
+  table: WithHooks<TCreate, TUpdate, TFull, E1, C1>,
+  owner: (item: TFull) => E.Effect<U1, E2, C3>,
+  of: (owner: U2) => E.Effect<Readonly<TFull[]>, E3, C2>,
 ) {
   return E.gen(function* () {
     return {

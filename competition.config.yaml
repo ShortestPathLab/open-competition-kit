@@ -4,4 +4,11 @@ with:
 db:
   provider: postgresql
   url: postgres://postgres:postgres@localhost:5433/postgres
-competitions: []
+competitions:
+  - id: "1"
+    with: []
+    name: "1"
+    tracks: []
+    runner:
+      with: []
+    leaderboards: []

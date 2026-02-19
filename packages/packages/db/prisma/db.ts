@@ -11,9 +11,11 @@ export const db = once(async () => {
   const { provider, url } = value.db as { provider: string; url: string };
   await toPrisma({ datasource: { provider } });
   // Set up db
-  await $`bunx --package prisma@7.4.0 prisma generate --schema ${import.meta.dir}/schemas/schema.prisma`;
-  await $`bunx --package prisma@7.4.0 prisma format --schema ${import.meta.dir}/schemas/schema.prisma`;
-  await $`DATABASE_URL=${url} bunx --package prisma@7.4.0 prisma migrate dev --name ${randomUUIDv7()} --schema ${import.meta.dir}/schemas/schema.prisma --config ${import.meta.dir}/prisma.config.ts`;
+  await $`
+    bunx --package prisma@7.4.0 prisma generate --schema ${import.meta.dir}/schemas/schema.prisma
+    bunx --package prisma@7.4.0 prisma format --schema ${import.meta.dir}/schemas/schema.prisma
+    DATABASE_URL=${url} bunx --package prisma@7.4.0 prisma migrate dev --name ${randomUUIDv7()} --schema ${import.meta.dir}/schemas/schema.prisma --config ${import.meta.dir}/prisma.config.ts
+  `.quiet();
   //
   return await client(new PrismaPg({ connectionString: url }));
 });

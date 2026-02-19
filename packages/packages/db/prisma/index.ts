@@ -18,7 +18,10 @@ export default {
       const a = await getCollection(collection);
       return a.findFirstOrThrow({ where: { id: payload } });
     },
-    list: async () => await (await db()).enrolment.findMany(),
+    list: async ({ collection, payload }) => {
+      const a = await getCollection(collection);
+      return a.findMany({ where: payload });
+    },
     create: async ({ collection, payload }) => {
       const a = await getCollection(collection);
       return await a.create({

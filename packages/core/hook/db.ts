@@ -52,18 +52,20 @@ export const schemas = mapValues(tables, (v) => v.full) as {
 
 export type DbKey = keyof typeof schemas;
 
-export type TableHooks<T> = {
-  list: (partial: Partial<T>) => Promise<Readonly<T[]>>;
-  get: (id: string) => Promise<T>;
-  create: (data: Omit<T, "id">) => Promise<T>;
-  update: (data: Partial<T> & { id: string }) => Promise<void>;
+export type TableHooks<TCreate, TUpdate, TFull> = {
+  list: (partial: Partial<TFull>) => Promise<Readonly<TFull[]>>;
+  get: (id: string) => Promise<TFull>;
+  create: (data: TCreate) => Promise<TFull>;
+  update: (data: TUpdate) => Promise<void>;
   delete: (id: string) => Promise<void>;
 };
 
-export type WithHooks<T, E, C> = {
-  [K in keyof TableHooks<T>]: TableHooks<T>[K] extends (
-    ...args: infer In
-  ) => Promise<infer Out>
+export type WithHooks<TCreate, TUpdate, TFull, E, C> = {
+  [K in keyof TableHooks<TCreate, TUpdate, TFull>]: TableHooks<
+    TCreate,
+    TUpdate,
+    TFull
+  >[K] extends (...args: infer In) => Promise<infer Out>
     ? (...args: In) => E.Effect<Out, E, C>
     : never;
 };
@@ -101,7 +103,9 @@ export const db = S.Struct({
   delete: hook(accessor(S.String), S.Void),
 });
 
-export const withHooks = <T>(h: TableHooks<T>) =>
+export const withHooks = <TCreate, TUpdate, TFull>(
+  h: TableHooks<TCreate, TUpdate, TFull>,
+) =>
   E.gen(function* () {
     const hooks = yield* OpenCompetitionKitHooks;
     return {
