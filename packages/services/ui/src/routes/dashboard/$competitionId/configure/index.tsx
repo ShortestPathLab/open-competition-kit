@@ -1,4 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn, useServerFn } from "@tanstack/react-start";
+import sdk from "sdk";
 import { SectionHeader } from "*/components/section-header";
 import { FormField } from "*/components/form-field";
 import { IconUpload } from "*/components/icon-upload";
@@ -13,11 +16,41 @@ import {
   ListOrdered,
 } from "lucide-react";
 
+const getCompetitionConfig = createServerFn({ method: "GET" }).handler(
+  async (ctx: any) => {
+    const id = ctx.data as string;
+
+    // TODO: Implement SDK function
+    // @ts-ignore
+    const _config = await sdk.competitions.getConfig(id);
+
+    return {
+      name: "GPPC 2025",
+      contactEmail: "olivia@untitledui.com",
+      description: "Lorem ipsum sit amet.",
+      database: {
+        type: "MongoDB",
+        url: "mongodb://smsthsmth",
+      },
+    };
+  },
+);
+
 export const Route = createFileRoute("/dashboard/$competitionId/configure/")({
   component: ConfigurePage,
 });
 
 function ConfigurePage() {
+  const { competitionId } = Route.useParams();
+  const fetchConfig = useServerFn(getCompetitionConfig);
+
+  const { data: config } = useQuery({
+    queryKey: ["competitionConfig", competitionId],
+    queryFn: () => (fetchConfig as any)({ data: competitionId }),
+  });
+
+  if (!config) return <div className="p-6">Loading...</div>;
+
   return (
     <div className="flex flex-col gap-8">
       {/* Competition Settings */}
@@ -44,7 +77,7 @@ function ConfigurePage() {
           <FormField label="Name">
             <input
               type="text"
-              defaultValue="GPPC 2025"
+              defaultValue={config.name}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </FormField>
@@ -53,7 +86,7 @@ function ConfigurePage() {
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="email"
-                defaultValue="olivia@untitledui.com"
+                defaultValue={config.contactEmail}
                 className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm"
               />
             </div>
@@ -93,7 +126,7 @@ function ConfigurePage() {
                 </button>
               </div>
               <textarea
-                defaultValue="Lorem ipsum sit amet."
+                defaultValue={config.description}
                 rows={4}
                 className="w-full rounded-b-md border border-t-0 border-input bg-background px-3 py-2 text-sm resize-none"
               />
@@ -115,7 +148,9 @@ function ConfigurePage() {
           <FormField label="Database type">
             <button className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm">
               <span className="flex items-center gap-2">
-                <span className="text-muted-foreground">MongoDB</span>
+                <span className="text-muted-foreground">
+                  {config.database.type}
+                </span>
                 <span className="text-xs text-muted-foreground">
                   Best for high-performance smth smth
                 </span>
@@ -126,7 +161,7 @@ function ConfigurePage() {
           <FormField label="Database URL">
             <input
               type="text"
-              defaultValue="mongodb://smsthsmth"
+              defaultValue={config.database.url}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </FormField>

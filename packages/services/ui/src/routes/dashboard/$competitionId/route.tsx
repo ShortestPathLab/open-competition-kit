@@ -13,7 +13,7 @@ function AdminCompetitionLayout() {
   return (
     <div>
       <div className="flex items-center justify-between border-b border-border px-6 py-2">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 [view-transition-name:admin-header]">
           <CompetitionSelector name="GPPC 2025" />
           <AdminCompetitionTabs competitionId={competitionId} />
         </div>

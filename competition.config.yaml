@@ -1,6 +1,8 @@
 with:
   - ./packages/packages/noop
   - ./packages/packages/db/prisma
+appName: GPPC
+appDescription: GPPC is etc.etc.
 db:
   provider: postgresql
   url: postgres://postgres:postgres@localhost:5433/postgres

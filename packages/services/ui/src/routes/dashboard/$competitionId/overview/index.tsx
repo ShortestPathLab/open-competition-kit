@@ -1,4 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn, useServerFn } from "@tanstack/react-start";
+import sdk from "sdk";
 import { PageHeader } from "*/components/page-header";
 import { StatCard } from "*/components/stat-card";
 import { ToggleTabs } from "*/components/toggle-tabs";
@@ -13,17 +16,30 @@ interface Submission {
   result: number;
 }
 
-const stats = [
-  { title: "Participants", value: 2420, change: 40 },
-  { title: "Best sum-of-costs", value: 1210, change: -10 },
-  { title: "Something else", value: 316, change: 20 },
-];
+const getDashboardData = createServerFn({ method: "GET" }).handler(
+  async (ctx: any) => {
+    const id = ctx.data as string;
 
-const submissions: Submission[] = Array.from({ length: 7 }, (_, i) => ({
-  id: `sub-${i}`,
-  checked: i < 3 || i > 4,
-  result: Math.random() * 100,
-}));
+    // TODO: Implement SDK functions
+    // @ts-ignore
+    const _stats = await sdk.competitions.getStats(id);
+    // @ts-ignore
+    const _submissions = await sdk.competitions.getSubmissions(id);
+
+    return {
+      stats: [
+        { title: "Participants", value: 2420, change: 40 },
+        { title: "Best sum-of-costs", value: 1210, change: -10 },
+        { title: "Something else", value: 316, change: 20 },
+      ],
+      submissions: Array.from({ length: 7 }, (_, i) => ({
+        id: `sub-${i}`,
+        checked: i < 3 || i > 4,
+        result: Math.random() * 100,
+      })),
+    };
+  },
+);
 
 const columns: Column<Submission>[] = [
   {
@@ -78,6 +94,17 @@ export const Route = createFileRoute("/dashboard/$competitionId/overview/")({
 });
 
 function AdminOverviewPage() {
+  const { competitionId } = Route.useParams();
+  const fetchDashboardData = useServerFn(getDashboardData);
+
+  const { data } = useQuery({
+    queryKey: ["dashboard", competitionId],
+    queryFn: () => (fetchDashboardData as any)({ data: competitionId }),
+  });
+
+  const stats = data?.stats ?? [];
+  const submissions = data?.submissions ?? [];
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -100,7 +127,7 @@ function AdminOverviewPage() {
       <ToggleTabs tabs={["All tracks", "Single-agent", "Multi-agent"]} />
 
       <div className="grid grid-cols-3 gap-4">
-        {stats.map((stat) => (
+        {stats.map((stat: any) => (
           <StatCard key={stat.title} {...stat} />
         ))}
       </div>

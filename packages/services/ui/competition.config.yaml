@@ -1,8 +1,16 @@
 with:
   - ../../packages/noop
   - ../../packages/db/prisma
-  -
+appName: GPPC
+appDescription: GPPC is etc.etc.
 db:
   provider: postgresql
-  url: postgres://postgres:admin@localhost:5432/postgres
-competitions: []
+  url: postgres://postgres:postgres@localhost:5433/postgres
+competitions:
+  - id: "1"
+    with: []
+    name: "1"
+    tracks: []
+    runner:
+      with: []
+    leaderboards: []

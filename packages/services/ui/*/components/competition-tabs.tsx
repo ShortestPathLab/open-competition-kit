@@ -8,6 +8,7 @@ export function CompetitionTabs({ competitionId }: CompetitionTabsProps) {
   const base = `/competitions/${competitionId}`;
   return (
     <TabNav
+      variant="underline"
       tabs={[
         { label: "Overview", href: base },
         { label: "Tracks", href: `${base}/tracks` },
