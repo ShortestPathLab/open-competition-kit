@@ -64,15 +64,15 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
             >
               Sudo
             </Link>
-            {/* @ts-expect-error placeholder routes */}
             <Link
+              /// @ts-expect-error
               to="/register"
               className="rounded-md border border-border px-4 py-1.5 text-sm"
             >
               Register
             </Link>
-            {/* @ts-expect-error placeholder routes */}
             <Link
+              /// @ts-expect-error
               to="/sign-in"
               className="rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground"
             >
