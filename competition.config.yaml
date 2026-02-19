@@ -3,5 +3,5 @@ with:
   - ./packages/packages/db/prisma
 db:
   provider: postgresql
-  url: postgres://postgres:postgres@localhost:5432/postgres
+  url: postgres://postgres:postgres@localhost:5433/postgres
 competitions: []

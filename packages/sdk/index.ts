@@ -6,24 +6,29 @@ import {
   OpenCompetitionKitHooks,
   type OpenCompetitionKitApi,
 } from "core";
+import { OpenCompetitionKitCollections } from "core/collections";
 import { Effect as E, Layer as L } from "effect";
 import { get, once } from "lodash-es";
 import DeepProxy from "proxy-deep";
 
 const OpenCompetitionKitHooksLive = L.provide(
   OpenCompetitionKitHooks.Default,
-  OpenCompetitionKitConfig.Default
+  OpenCompetitionKitConfig.Default,
 );
 
 const OpenCompetitionKitDatabaseLive = L.provide(
   OpenCompetitionKitDatabase.Default,
-  OpenCompetitionKitHooksLive
+  OpenCompetitionKitHooksLive,
+);
+const OpenCompetitionKitCollectionsLive = L.provide(
+  OpenCompetitionKitCollections.Default,
+  OpenCompetitionKitDatabaseLive,
 );
 
 const OpenCompetitionKitLive = OpenCompetitionKit.Default.pipe(
   L.provide(OpenCompetitionKitHooksLive),
-  L.provide(OpenCompetitionKitDatabaseLive),
-  L.provide(OpenCompetitionKitConfig.Default)
+  L.provide(OpenCompetitionKitCollectionsLive),
+  L.provide(OpenCompetitionKitConfig.Default),
 );
 
 export const init = once(
@@ -31,9 +36,9 @@ export const init = once(
     await E.runPromise(
       OpenCompetitionKit.pipe(
         E.provide(OpenCompetitionKitLive),
-        E.provide(BunContext.layer)
-      )
-    )
+        E.provide(BunContext.layer),
+      ),
+    ),
 );
 
 type Result<Out, Error> =
@@ -88,7 +93,7 @@ const kit = new DeepProxy({} as OpenCompetitionKitApi & Kit, {
   },
 });
 
-export const { competitions, config } = kit;
+export const { competitions, config, hooks } = kit;
 
 export * from "core";
 

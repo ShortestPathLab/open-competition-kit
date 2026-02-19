@@ -9,133 +9,160 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
-import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
-import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
-import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
-import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
-import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
-import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as CompetitionsIndexRouteImport } from './routes/competitions/index'
+import { Route as DashboardCompetitionIdRouteRouteImport } from './routes/dashboard/$competitionId/route'
+import { Route as CompetitionsIdRouteRouteImport } from './routes/competitions/$id/route'
+import { Route as CompetitionsIdIndexRouteImport } from './routes/competitions/$id/index'
+import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from './routes/dashboard/$competitionId/overview/index'
+import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from './routes/dashboard/$competitionId/configure/index'
+import { Route as CompetitionsIdTracksIndexRouteImport } from './routes/competitions/$id/tracks/index'
 
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
-  id: '/demo/start/server-funcs',
-  path: '/demo/start/server-funcs',
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
+  id: '/competitions/',
+  path: '/competitions/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DemoStartApiRequestRoute = DemoStartApiRequestRouteImport.update({
-  id: '/demo/start/api-request',
-  path: '/demo/start/api-request',
+const DashboardCompetitionIdRouteRoute =
+  DashboardCompetitionIdRouteRouteImport.update({
+    id: '/$competitionId',
+    path: '/$competitionId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const CompetitionsIdRouteRoute = CompetitionsIdRouteRouteImport.update({
+  id: '/competitions/$id',
+  path: '/competitions/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DemoApiNamesRoute = DemoApiNamesRouteImport.update({
-  id: '/demo/api/names',
-  path: '/demo/api/names',
-  getParentRoute: () => rootRouteImport,
+const CompetitionsIdIndexRoute = CompetitionsIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompetitionsIdRouteRoute,
 } as any)
-const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
-  id: '/demo/start/ssr/',
-  path: '/demo/start/ssr/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoStartSsrSpaModeRoute = DemoStartSsrSpaModeRouteImport.update({
-  id: '/demo/start/ssr/spa-mode',
-  path: '/demo/start/ssr/spa-mode',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoStartSsrFullSsrRoute = DemoStartSsrFullSsrRouteImport.update({
-  id: '/demo/start/ssr/full-ssr',
-  path: '/demo/start/ssr/full-ssr',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
-  id: '/demo/start/ssr/data-only',
-  path: '/demo/start/ssr/data-only',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const DashboardCompetitionIdOverviewIndexRoute =
+  DashboardCompetitionIdOverviewIndexRouteImport.update({
+    id: '/overview/',
+    path: '/overview/',
+    getParentRoute: () => DashboardCompetitionIdRouteRoute,
+  } as any)
+const DashboardCompetitionIdConfigureIndexRoute =
+  DashboardCompetitionIdConfigureIndexRouteImport.update({
+    id: '/configure/',
+    path: '/configure/',
+    getParentRoute: () => DashboardCompetitionIdRouteRoute,
+  } as any)
+const CompetitionsIdTracksIndexRoute =
+  CompetitionsIdTracksIndexRouteImport.update({
+    id: '/tracks/',
+    path: '/tracks/',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/demo/api/names': typeof DemoApiNamesRoute
-  '/demo/start/api-request': typeof DemoStartApiRequestRoute
-  '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
-  '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
-  '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
-  '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
-  '/demo/start/ssr': typeof DemoStartSsrIndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
+  '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/competitions': typeof CompetitionsIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/competitions/$id/': typeof CompetitionsIdIndexRoute
+  '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
+  '/dashboard/$competitionId/configure': typeof DashboardCompetitionIdConfigureIndexRoute
+  '/dashboard/$competitionId/overview': typeof DashboardCompetitionIdOverviewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/demo/api/names': typeof DemoApiNamesRoute
-  '/demo/start/api-request': typeof DemoStartApiRequestRoute
-  '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
-  '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
-  '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
-  '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
-  '/demo/start/ssr': typeof DemoStartSsrIndexRoute
+  '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/competitions': typeof CompetitionsIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/competitions/$id': typeof CompetitionsIdIndexRoute
+  '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
+  '/dashboard/$competitionId/configure': typeof DashboardCompetitionIdConfigureIndexRoute
+  '/dashboard/$competitionId/overview': typeof DashboardCompetitionIdOverviewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/demo/api/names': typeof DemoApiNamesRoute
-  '/demo/start/api-request': typeof DemoStartApiRequestRoute
-  '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
-  '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
-  '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
-  '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
-  '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
+  '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/competitions/': typeof CompetitionsIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/competitions/$id/': typeof CompetitionsIdIndexRoute
+  '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
+  '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
+  '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/demo/api/names'
-    | '/demo/start/api-request'
-    | '/demo/start/server-funcs'
-    | '/demo/start/ssr/data-only'
-    | '/demo/start/ssr/full-ssr'
-    | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr'
+    | '/dashboard'
+    | '/competitions/$id'
+    | '/dashboard/$competitionId'
+    | '/competitions'
+    | '/dashboard/'
+    | '/competitions/$id/'
+    | '/competitions/$id/tracks'
+    | '/dashboard/$competitionId/configure'
+    | '/dashboard/$competitionId/overview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/demo/api/names'
-    | '/demo/start/api-request'
-    | '/demo/start/server-funcs'
-    | '/demo/start/ssr/data-only'
-    | '/demo/start/ssr/full-ssr'
-    | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr'
+    | '/dashboard/$competitionId'
+    | '/competitions'
+    | '/dashboard'
+    | '/competitions/$id'
+    | '/competitions/$id/tracks'
+    | '/dashboard/$competitionId/configure'
+    | '/dashboard/$competitionId/overview'
   id:
     | '__root__'
     | '/'
-    | '/demo/api/names'
-    | '/demo/start/api-request'
-    | '/demo/start/server-funcs'
-    | '/demo/start/ssr/data-only'
-    | '/demo/start/ssr/full-ssr'
-    | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr/'
+    | '/dashboard'
+    | '/competitions/$id'
+    | '/dashboard/$competitionId'
+    | '/competitions/'
+    | '/dashboard/'
+    | '/competitions/$id/'
+    | '/competitions/$id/tracks/'
+    | '/dashboard/$competitionId/configure/'
+    | '/dashboard/$competitionId/overview/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DemoApiNamesRoute: typeof DemoApiNamesRoute
-  DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
-  DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
-  DemoStartSsrDataOnlyRoute: typeof DemoStartSsrDataOnlyRoute
-  DemoStartSsrFullSsrRoute: typeof DemoStartSsrFullSsrRoute
-  DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute
-  DemoStartSsrIndexRoute: typeof DemoStartSsrIndexRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  CompetitionsIdRouteRoute: typeof CompetitionsIdRouteRouteWithChildren
+  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -143,67 +170,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo/start/server-funcs': {
-      id: '/demo/start/server-funcs'
-      path: '/demo/start/server-funcs'
-      fullPath: '/demo/start/server-funcs'
-      preLoaderRoute: typeof DemoStartServerFuncsRouteImport
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/competitions/': {
+      id: '/competitions/'
+      path: '/competitions'
+      fullPath: '/competitions'
+      preLoaderRoute: typeof CompetitionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo/start/api-request': {
-      id: '/demo/start/api-request'
-      path: '/demo/start/api-request'
-      fullPath: '/demo/start/api-request'
-      preLoaderRoute: typeof DemoStartApiRequestRouteImport
+    '/dashboard/$competitionId': {
+      id: '/dashboard/$competitionId'
+      path: '/$competitionId'
+      fullPath: '/dashboard/$competitionId'
+      preLoaderRoute: typeof DashboardCompetitionIdRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/competitions/$id': {
+      id: '/competitions/$id'
+      path: '/competitions/$id'
+      fullPath: '/competitions/$id'
+      preLoaderRoute: typeof CompetitionsIdRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo/api/names': {
-      id: '/demo/api/names'
-      path: '/demo/api/names'
-      fullPath: '/demo/api/names'
-      preLoaderRoute: typeof DemoApiNamesRouteImport
-      parentRoute: typeof rootRouteImport
+    '/competitions/$id/': {
+      id: '/competitions/$id/'
+      path: '/'
+      fullPath: '/competitions/$id/'
+      preLoaderRoute: typeof CompetitionsIdIndexRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
     }
-    '/demo/start/ssr/': {
-      id: '/demo/start/ssr/'
-      path: '/demo/start/ssr'
-      fullPath: '/demo/start/ssr'
-      preLoaderRoute: typeof DemoStartSsrIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/dashboard/$competitionId/overview/': {
+      id: '/dashboard/$competitionId/overview/'
+      path: '/overview'
+      fullPath: '/dashboard/$competitionId/overview'
+      preLoaderRoute: typeof DashboardCompetitionIdOverviewIndexRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
     }
-    '/demo/start/ssr/spa-mode': {
-      id: '/demo/start/ssr/spa-mode'
-      path: '/demo/start/ssr/spa-mode'
-      fullPath: '/demo/start/ssr/spa-mode'
-      preLoaderRoute: typeof DemoStartSsrSpaModeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/dashboard/$competitionId/configure/': {
+      id: '/dashboard/$competitionId/configure/'
+      path: '/configure'
+      fullPath: '/dashboard/$competitionId/configure'
+      preLoaderRoute: typeof DashboardCompetitionIdConfigureIndexRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
     }
-    '/demo/start/ssr/full-ssr': {
-      id: '/demo/start/ssr/full-ssr'
-      path: '/demo/start/ssr/full-ssr'
-      fullPath: '/demo/start/ssr/full-ssr'
-      preLoaderRoute: typeof DemoStartSsrFullSsrRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo/start/ssr/data-only': {
-      id: '/demo/start/ssr/data-only'
-      path: '/demo/start/ssr/data-only'
-      fullPath: '/demo/start/ssr/data-only'
-      preLoaderRoute: typeof DemoStartSsrDataOnlyRouteImport
-      parentRoute: typeof rootRouteImport
+    '/competitions/$id/tracks/': {
+      id: '/competitions/$id/tracks/'
+      path: '/tracks'
+      fullPath: '/competitions/$id/tracks'
+      preLoaderRoute: typeof CompetitionsIdTracksIndexRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
     }
   }
 }
 
+interface DashboardCompetitionIdRouteRouteChildren {
+  DashboardCompetitionIdConfigureIndexRoute: typeof DashboardCompetitionIdConfigureIndexRoute
+  DashboardCompetitionIdOverviewIndexRoute: typeof DashboardCompetitionIdOverviewIndexRoute
+}
+
+const DashboardCompetitionIdRouteRouteChildren: DashboardCompetitionIdRouteRouteChildren =
+  {
+    DashboardCompetitionIdConfigureIndexRoute:
+      DashboardCompetitionIdConfigureIndexRoute,
+    DashboardCompetitionIdOverviewIndexRoute:
+      DashboardCompetitionIdOverviewIndexRoute,
+  }
+
+const DashboardCompetitionIdRouteRouteWithChildren =
+  DashboardCompetitionIdRouteRoute._addFileChildren(
+    DashboardCompetitionIdRouteRouteChildren,
+  )
+
+interface DashboardRouteRouteChildren {
+  DashboardCompetitionIdRouteRoute: typeof DashboardCompetitionIdRouteRouteWithChildren
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardCompetitionIdRouteRoute:
+    DashboardCompetitionIdRouteRouteWithChildren,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
+interface CompetitionsIdRouteRouteChildren {
+  CompetitionsIdIndexRoute: typeof CompetitionsIdIndexRoute
+  CompetitionsIdTracksIndexRoute: typeof CompetitionsIdTracksIndexRoute
+}
+
+const CompetitionsIdRouteRouteChildren: CompetitionsIdRouteRouteChildren = {
+  CompetitionsIdIndexRoute: CompetitionsIdIndexRoute,
+  CompetitionsIdTracksIndexRoute: CompetitionsIdTracksIndexRoute,
+}
+
+const CompetitionsIdRouteRouteWithChildren =
+  CompetitionsIdRouteRoute._addFileChildren(CompetitionsIdRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DemoApiNamesRoute: DemoApiNamesRoute,
-  DemoStartApiRequestRoute: DemoStartApiRequestRoute,
-  DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
-  DemoStartSsrDataOnlyRoute: DemoStartSsrDataOnlyRoute,
-  DemoStartSsrFullSsrRoute: DemoStartSsrFullSsrRoute,
-  DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,
-  DemoStartSsrIndexRoute: DemoStartSsrIndexRoute,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  CompetitionsIdRouteRoute: CompetitionsIdRouteRouteWithChildren,
+  CompetitionsIndexRoute: CompetitionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

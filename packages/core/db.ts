@@ -1,4 +1,4 @@
-import { OpenCompetitionKitHooks } from "core/hook";
+import { OpenCompetitionKitHooks } from "../core/hook";
 import { Effect as E } from "effect";
 import { withHooks } from "./hook/db";
 
@@ -20,10 +20,13 @@ export class OpenCompetitionKitDatabase extends E.Service<OpenCompetitionKitData
         E.gen(function* () {
           const api = yield* hooks.get(...a);
           return {
-            competitions: yield* withHooks(api.db.competitions),
-            tracks: yield* withHooks(api.db.tracks),
+            get: hooks.try(api.db.get),
+            list: hooks.try(api.db.list),
+            create: hooks.try(api.db.create),
+            update: hooks.try(api.db.update),
+            delete: hooks.try(api.db.delete),
           };
         });
     }),
-  }
+  },
 ) {}

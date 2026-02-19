@@ -1,7 +1,8 @@
 import { once } from "lodash-es";
-import { PrismaClient } from "./generated/client";
 
-export const client = once(async () => {
+export const client = once(async (adapter: any) => {
   const { PrismaClient } = await import("./generated/client");
-  return new PrismaClient();
+  return new PrismaClient({
+    adapter,
+  });
 });

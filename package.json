@@ -3,12 +3,11 @@
   "private": true,
   "scripts": {
     "db:prisma:generate": "bun packages/packages/db/prisma/generate.ts",
-    "db:prisma:studio": "bunx prisma studio --schema packages/packages/db/prisma/schemas/schema.prisma"
+    "db:prisma:studio": "bunx prisma studio --config packages/packages/db/prisma/prisma.config.ts",
+    "db:prisma:reset": "bunx prisma migrate reset --schema packages/packages/db/prisma/schemas/schema.prisma --config packages/packages/db/prisma/prisma.config.ts"
   },
   "workspaces": [
     "packages/**"
   ],
-  "dependencies": {
-    "@prisma/client": "^6.17.1"
-  }
+  "dependencies": {}
 }

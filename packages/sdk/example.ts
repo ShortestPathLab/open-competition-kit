@@ -1,4 +1,13 @@
-import { competitions } from "sdk";
+import { competitions, } from "sdk";
+
+const myCompetition = await competitions.
+
+competitions.on(
+    'change',
+    ()=>{
+        
+    }
+)
 
 const result = await competitions.list();
 

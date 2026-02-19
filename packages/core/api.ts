@@ -1,7 +1,12 @@
+import type { Hooks } from "./hook";
+
 export type OpenCompetitionKitApi = {
+  hooks: Hooks;
   config: {
     get: unknown;
   };
+  enrolments: {};
+  users: {};
   tracks: {};
   /**
    * The competitions in this system

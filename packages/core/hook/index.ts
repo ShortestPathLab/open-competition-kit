@@ -3,12 +3,19 @@ import { OpenCompetitionKitConfig } from "core/config";
 import type { Extendable } from "core/config/schema";
 import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
 import { merge } from "lodash-es";
-import db from "./db";
+import { db } from "./db";
+import { hook } from "./hook";
 
 export const Hooks = S.Struct({
   db,
+  enrolments: S.Struct({
+    enrol: hook(S.Unknown, S.Unknown),
+  }),
   auth: S.Struct({}),
   user: S.Struct({}),
+  track: S.Struct({
+    enrol: S.Unknown,
+  }),
   form: S.Struct({
     ui: S.Unknown,
     submit: S.Unknown,
@@ -58,7 +65,7 @@ export const resolve = (p: string) =>
       // URL case
       M.when(
         (s) => s.startsWith("https://"),
-        () => E.fail(new NotImplementedError())
+        () => E.fail(new NotImplementedError()),
       ),
       // JS local file case
       M.orElse(() =>
@@ -67,9 +74,9 @@ export const resolve = (p: string) =>
             try: async () => (await import(path.resolve(p)))?.default,
             catch: (e) => new ImportError({ cause: e }),
           }),
-          E.andThen(decodePartial)
-        )
-      )
+          E.andThen(decodePartial),
+        ),
+      ),
     );
   });
 
@@ -84,9 +91,9 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
       return {
         try:
           <T extends unknown[], U>(f: (...args: T) => Promise<U>) =>
-          (...t: T) =>
+          <U1 = U>(...t: T) =>
             E.tryPromise({
-              try: () => f(...t),
+              try: () => f(...t) as unknown as Promise<U1>,
               catch: (e) => e as HookError,
             }),
         get: (accessor: (c: typeof config) => Extendable = (c) => c) => {
@@ -95,7 +102,7 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
         },
       };
     }),
-  }
+  },
 ) {}
 
 export * as db from "./db";
