@@ -1,11 +1,21 @@
 with:
   - ./packages/packages/noop
   - ./packages/packages/db/prisma
+  - ./packages/packages/auth/better-auth
 appName: GPPC
 appDescription: GPPC is etc.etc.
 db:
   provider: postgresql
   url: postgres://postgres:postgres@localhost:5433/postgres
+auth:
+  methods:
+    email:
+      providerOptions:
+      betterAuthOptions:
+      signInParams:
+      signOutParams:
+      signUpParams:
+
 competitions:
   - id: "1"
     with: []

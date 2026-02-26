@@ -6,15 +6,19 @@
   "dependencies": {
     "@effect/platform": "^0.92.1",
     "@effect/platform-bun": "^0.81.1",
-    "@types/lodash-es": "^4.17.12",
+    "core": "workspace:*",
     "effect": "^3.18.4",
-    "lodash-es": "^4.17.21",
-    "proxy-deep": "^4.0.1"
+    "es-toolkit": "^1.44.0",
+    "p-memoize": "^8.0.0",
+    "proxy-deep": "^4.0.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
+    "@types/react": "19",
+    "react": "19",
     "typescript": "^5"
   }
 }

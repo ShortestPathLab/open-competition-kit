@@ -4,7 +4,7 @@ import { SearchInput } from "*/components/search-input";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk from "sdk";
+import sdk, { unsafe } from "sdk";
 
 export const Route = createFileRoute("/competitions/")({
   component: CompetitionsPage,
@@ -34,7 +34,6 @@ function CompetitionsPage() {
     queryKey: ["competitions"],
     queryFn: () => fetchCompetitions(),
   });
-
   return (
     <div className="min-h-screen">
       <main className="mx-auto max-w-5xl px-6 py-8">

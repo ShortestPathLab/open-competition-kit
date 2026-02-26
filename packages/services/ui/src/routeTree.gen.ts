@@ -18,6 +18,7 @@ import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as DashboardCompetitionIdRouteRouteImport } from './routes/dashboard/$competitionId/route'
 import { Route as CompetitionsIdRouteRouteImport } from './routes/competitions/$id/route'
 import { Route as CompetitionsIdIndexRouteImport } from './routes/competitions/$id/index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from './routes/dashboard/$competitionId/overview/index'
 import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from './routes/dashboard/$competitionId/configure/index'
 import { Route as CompetitionsIdTracksIndexRouteImport } from './routes/competitions/$id/tracks/index'
@@ -68,6 +69,11 @@ const CompetitionsIdIndexRoute = CompetitionsIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CompetitionsIdRouteRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardCompetitionIdOverviewIndexRoute =
   DashboardCompetitionIdOverviewIndexRouteImport.update({
     id: '/overview/',
@@ -92,14 +98,15 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
-  '/about': typeof AboutIndexRoute
-  '/competitions': typeof CompetitionsIndexRoute
+  '/about/': typeof AboutIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/leaderboards': typeof LeaderboardsIndexRoute
+  '/leaderboards/': typeof LeaderboardsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
-  '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
-  '/dashboard/$competitionId/configure': typeof DashboardCompetitionIdConfigureIndexRoute
-  '/dashboard/$competitionId/overview': typeof DashboardCompetitionIdOverviewIndexRoute
+  '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
+  '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
+  '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/competitions': typeof CompetitionsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/leaderboards': typeof LeaderboardsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id': typeof CompetitionsIdIndexRoute
   '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure': typeof DashboardCompetitionIdConfigureIndexRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/leaderboards/': typeof LeaderboardsIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
@@ -135,14 +144,15 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
-    | '/about'
-    | '/competitions'
+    | '/about/'
+    | '/competitions/'
     | '/dashboard/'
-    | '/leaderboards'
+    | '/leaderboards/'
+    | '/api/auth/$'
     | '/competitions/$id/'
-    | '/competitions/$id/tracks'
-    | '/dashboard/$competitionId/configure'
-    | '/dashboard/$competitionId/overview'
+    | '/competitions/$id/tracks/'
+    | '/dashboard/$competitionId/configure/'
+    | '/dashboard/$competitionId/overview/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/dashboard'
     | '/leaderboards'
+    | '/api/auth/$'
     | '/competitions/$id'
     | '/competitions/$id/tracks'
     | '/dashboard/$competitionId/configure'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/competitions/'
     | '/dashboard/'
     | '/leaderboards/'
+    | '/api/auth/$'
     | '/competitions/$id/'
     | '/competitions/$id/tracks/'
     | '/dashboard/$competitionId/configure/'
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   AboutIndexRoute: typeof AboutIndexRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   LeaderboardsIndexRoute: typeof LeaderboardsIndexRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -199,7 +212,7 @@ declare module '@tanstack/react-router' {
     '/leaderboards/': {
       id: '/leaderboards/'
       path: '/leaderboards'
-      fullPath: '/leaderboards'
+      fullPath: '/leaderboards/'
       preLoaderRoute: typeof LeaderboardsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -213,14 +226,14 @@ declare module '@tanstack/react-router' {
     '/competitions/': {
       id: '/competitions/'
       path: '/competitions'
-      fullPath: '/competitions'
+      fullPath: '/competitions/'
       preLoaderRoute: typeof CompetitionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about/': {
       id: '/about/'
       path: '/about'
-      fullPath: '/about'
+      fullPath: '/about/'
       preLoaderRoute: typeof AboutIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -245,24 +258,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionsIdIndexRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/$competitionId/overview/': {
       id: '/dashboard/$competitionId/overview/'
       path: '/overview'
-      fullPath: '/dashboard/$competitionId/overview'
+      fullPath: '/dashboard/$competitionId/overview/'
       preLoaderRoute: typeof DashboardCompetitionIdOverviewIndexRouteImport
       parentRoute: typeof DashboardCompetitionIdRouteRoute
     }
     '/dashboard/$competitionId/configure/': {
       id: '/dashboard/$competitionId/configure/'
       path: '/configure'
-      fullPath: '/dashboard/$competitionId/configure'
+      fullPath: '/dashboard/$competitionId/configure/'
       preLoaderRoute: typeof DashboardCompetitionIdConfigureIndexRouteImport
       parentRoute: typeof DashboardCompetitionIdRouteRoute
     }
     '/competitions/$id/tracks/': {
       id: '/competitions/$id/tracks/'
       path: '/tracks'
-      fullPath: '/competitions/$id/tracks'
+      fullPath: '/competitions/$id/tracks/'
       preLoaderRoute: typeof CompetitionsIdTracksIndexRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
     }
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutIndexRoute: AboutIndexRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
   LeaderboardsIndexRoute: LeaderboardsIndexRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

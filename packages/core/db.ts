@@ -1,6 +1,5 @@
-import { OpenCompetitionKitHooks } from "../core/hook";
 import { Effect as E } from "effect";
-import { withHooks } from "./hook/db";
+import { OpenCompetitionKitHooks } from "../core/hook";
 
 export type Table<T> = {
   list: () => Promise<T[]>;

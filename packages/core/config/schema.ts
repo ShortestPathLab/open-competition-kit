@@ -26,6 +26,7 @@ export const CompetitionConfig = S.Struct({
 export const Config = S.Struct({
   appName: S.String,
   appDescription: S.String,
+  auth: S.Record({ key: S.String, value: S.Any }),
   competitions: S.Array(CompetitionConfig),
   db: S.Struct({}),
   ...Extendable.fields,

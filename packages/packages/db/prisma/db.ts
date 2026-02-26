@@ -6,6 +6,7 @@ import { toPrisma } from "./toPrisma";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 export const db = once(async () => {
+  console.log("db initialise");
   const { value } = await config.get();
   if (!value) throw new Error("No config");
   const { provider, url } = value.db as { provider: string; url: string };

@@ -1,23 +1,23 @@
 import { Path } from "@effect/platform";
-import { OpenCompetitionKitConfig } from "core/config";
-import type { Extendable } from "core/config/schema";
 import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
 import { merge } from "lodash-es";
+import { OpenCompetitionKitConfig } from "../config";
+import type { Extendable } from "../config/schema";
 import { db } from "./db";
 import { hook } from "./hook";
+import { componentSource } from "./component";
 
 export const Hooks = S.Struct({
   db,
   enrolments: S.Struct({
     enrol: hook(S.Unknown, S.Unknown),
   }),
-  auth: S.Struct({}),
   user: S.Struct({}),
   track: S.Struct({
     enrol: S.Unknown,
   }),
   form: S.Struct({
-    ui: S.Unknown,
+    ui: componentSource,
     submit: S.Unknown,
   }),
   runner: S.Struct({
@@ -53,12 +53,12 @@ const decodePartial = S.decodeUnknown(S.partial(Hooks));
 class NotImplementedError extends Data.TaggedError("NotImplementedError") {}
 
 class ImportError extends Data.TaggedError("ImportError") {
-  constructor(readonly params: { cause: unknown }) {
+  constructor(readonly params: { cause: unknown; path: string }) {
     super();
   }
 }
 
-export const resolve = (p: string) =>
+export const resolve = E.cachedFunction((p: string) =>
   E.gen(function* () {
     const path = yield* Path.Path;
     return yield* M.value(p).pipe(
@@ -72,13 +72,14 @@ export const resolve = (p: string) =>
         pipe(
           E.tryPromise({
             try: async () => (await import(path.resolve(p)))?.default,
-            catch: (e) => new ImportError({ cause: e }),
+            catch: (e) => new ImportError({ cause: e, path: p }),
           }),
           E.andThen(decodePartial),
         ),
       ),
     );
-  });
+  }),
+);
 
 export class HookError extends Data.TaggedError("HookError") {}
 
@@ -96,10 +97,12 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
               try: () => f(...t) as unknown as Promise<U1>,
               catch: (e) => e as HookError,
             }),
-        get: (accessor: (c: typeof config) => Extendable = (c) => c) => {
-          const { with: w } = accessor(config);
-          return E.mergeAll(w.map(resolve), {}, merge).pipe(E.andThen(decode));
-        },
+        get: (accessor: (c: typeof config) => Extendable = (c) => c) =>
+          E.gen(function* () {
+            const { with: w } = accessor(config);
+            const merged = yield* E.mergeAll(w.map(yield* resolve), {}, merge);
+            return yield* decode(merged);
+          }),
       };
     }),
   },

@@ -4,7 +4,7 @@ import { noop } from "lodash-es";
 import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
 import { OpenCompetitionKitConfig } from "./config";
-import { OpenCompetitionKitHooks } from "./hook";
+import { Hooks, OpenCompetitionKitHooks } from "./hook";
 import type { schemas, WithHooks } from "./hook/db";
 
 export class CollectionOwnerError extends D.TaggedError(
@@ -80,35 +80,16 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         config: { get: () => config },
         competitions,
         hooks: {
-          do: <U>(
-            call: (
-              api: ReturnType<typeof hooks.get> extends E.Effect<
-                infer O,
-                infer _E,
-                infer _C
-              >
-                ? O
-                : never,
-            ) => U,
-            ...w: Parameters<typeof hooks.get>
-          ) => {
-            return E.provideService(
-              E.gen(function* () {
-                const api = yield* hooks.get(...w);
-                return call(api);
-              }),
+          do: <U>(call: (h: Hooks) => U, ...w: Parameters<typeof hooks.get>) =>
+            E.provideService(
+              hooks.get(...w).pipe(E.map(call)),
               Path.Path,
               path,
-            );
-          },
+            ),
         },
         tracks,
         users,
         enrolments,
-        auth: {
-          logIn: undefined,
-          logOut: undefined,
-        },
       } satisfies OpenCompetitionKitApi;
     }),
   },

@@ -1,9 +1,5 @@
 export type OpenCompetitionKitApi = {
   hooks: unknown;
-  auth: {
-    logIn: unknown;
-    logOut: unknown;
-  };
   config: {
     get: unknown;
   };

@@ -11,6 +11,8 @@ import { load as _load, YAMLException } from "js-yaml";
 import { mapValues, uniq } from "lodash-es";
 import { decode, Extendable } from "./schema";
 
+export * from "./schema";
+
 const load = (s: string) =>
   E.try({
     try: () => _load(s),
@@ -25,7 +27,7 @@ export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
   return M.value(t).pipe(
     // Array case
     M.when(M.instanceOf(Array), (t) =>
-      t.map((v) => propagateExtendable(v, ctx))
+      t.map((v) => propagateExtendable(v, ctx)),
     ),
     // Object case
     M.when(M.instanceOf(Object), (t) => ({
@@ -33,7 +35,7 @@ export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
       with: ctx,
     })),
     // Primitive case
-    M.orElse(() => t)
+    M.orElse(() => t),
   ) as T;
 };
 
@@ -47,11 +49,11 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
         C.withDefault("./competition.config.yaml"),
         E.andThen(fs.readFileString),
         E.andThen(load),
-        E.andThen(decode)
+        E.andThen(decode),
       );
       return {
         config: raw.pipe(E.map(propagateExtendable)),
       };
     }),
-  }
+  },
 ) {}

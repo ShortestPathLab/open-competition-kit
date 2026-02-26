@@ -1,4 +1,4 @@
-import { competitions } from "sdk";
+import { competitions } from ".";
 
 const result = await competitions.create({ name: "Test competition" });
 console.log(result.value, result.error);

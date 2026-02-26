@@ -25,7 +25,8 @@ export function TabNav({ tabs, variant = "pill" }: TabNavProps) {
             to={tab.href}
             className={cn(
               "flex items-center  gap-1.5 px-3 py-2 text-sm text-muted-foreground transition-colors",
-              variant === "underline" && "border-b-2 hover:text-foreground",
+              variant === "underline" &&
+                "border-b-2 hover:text-foreground border-transparent",
               variant === "pill" && "rounded-md hover:text-primary ",
               variant === "pill" &&
                 isActive &&

@@ -1,9 +1,9 @@
+import { PageHeader } from "*/components/page-header";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk from "sdk";
-import { PageHeader } from "*/components/page-header";
 import { startCase } from "es-toolkit";
+import sdk from "sdk";
 
 export const Route = createFileRoute("/competitions/$id/")({
   component: CompetitionOverviewPage,
@@ -26,14 +26,12 @@ const getCompetition = createServerFn({ method: "GET" }).handler(
 function CompetitionOverviewPage() {
   const { id } = Route.useParams();
   const fetchCompetition = useServerFn(getCompetition);
-
   const { data: competition } = useQuery({
     queryKey: ["competition", id],
     queryFn: () => (fetchCompetition as any)({ data: id }),
   });
 
   if (!competition) return <div>Loading...</div>;
-
   return (
     <div className="flex flex-col gap-6 px-6 py-8">
       <PageHeader

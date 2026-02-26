@@ -16,7 +16,6 @@ export default {
     update: noop,
     delete: noop,
   },
-  auth: {},
   user: {},
   form: { ui: {}, submit: {} },
   runner: { ui: {}, submit: {} },
