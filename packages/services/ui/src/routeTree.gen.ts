@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
+import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as LeaderboardsIndexRouteImport } from './routes/leaderboards/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions/index'
@@ -31,6 +33,16 @@ const DashboardRouteRoute = DashboardRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInIndexRoute = SignInIndexRouteImport.update({
+  id: '/sign-in/',
+  path: '/sign-in/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterIndexRoute = RegisterIndexRouteImport.update({
+  id: '/register/',
+  path: '/register/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardsIndexRoute = LeaderboardsIndexRouteImport.update({
@@ -102,6 +114,8 @@ export interface FileRoutesByFullPath {
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/leaderboards/': typeof LeaderboardsIndexRoute
+  '/register/': typeof RegisterIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
@@ -115,6 +129,8 @@ export interface FileRoutesByTo {
   '/competitions': typeof CompetitionsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/leaderboards': typeof LeaderboardsIndexRoute
+  '/register': typeof RegisterIndexRoute
+  '/sign-in': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id': typeof CompetitionsIdIndexRoute
   '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
@@ -131,6 +147,8 @@ export interface FileRoutesById {
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/leaderboards/': typeof LeaderboardsIndexRoute
+  '/register/': typeof RegisterIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
@@ -148,6 +166,8 @@ export interface FileRouteTypes {
     | '/competitions/'
     | '/dashboard/'
     | '/leaderboards/'
+    | '/register/'
+    | '/sign-in/'
     | '/api/auth/$'
     | '/competitions/$id/'
     | '/competitions/$id/tracks/'
@@ -161,6 +181,8 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/dashboard'
     | '/leaderboards'
+    | '/register'
+    | '/sign-in'
     | '/api/auth/$'
     | '/competitions/$id'
     | '/competitions/$id/tracks'
@@ -176,6 +198,8 @@ export interface FileRouteTypes {
     | '/competitions/'
     | '/dashboard/'
     | '/leaderboards/'
+    | '/register/'
+    | '/sign-in/'
     | '/api/auth/$'
     | '/competitions/$id/'
     | '/competitions/$id/tracks/'
@@ -190,6 +214,8 @@ export interface RootRouteChildren {
   AboutIndexRoute: typeof AboutIndexRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   LeaderboardsIndexRoute: typeof LeaderboardsIndexRoute
+  RegisterIndexRoute: typeof RegisterIndexRoute
+  SignInIndexRoute: typeof SignInIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -207,6 +233,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in/': {
+      id: '/sign-in/'
+      path: '/sign-in'
+      fullPath: '/sign-in/'
+      preLoaderRoute: typeof SignInIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register/': {
+      id: '/register/'
+      path: '/register'
+      fullPath: '/register/'
+      preLoaderRoute: typeof RegisterIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboards/': {
@@ -342,6 +382,8 @@ const rootRouteChildren: RootRouteChildren = {
   AboutIndexRoute: AboutIndexRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
   LeaderboardsIndexRoute: LeaderboardsIndexRoute,
+  RegisterIndexRoute: RegisterIndexRoute,
+  SignInIndexRoute: SignInIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

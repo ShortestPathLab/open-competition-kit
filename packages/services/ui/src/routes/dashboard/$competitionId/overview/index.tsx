@@ -9,6 +9,7 @@ import { FilterBar } from "*/components/filter-bar";
 import { DataTable } from "*/components/data-table";
 import type { Column } from "*/components/data-table";
 import { Copy, ExternalLink } from "lucide-react";
+import { authClient } from "src/lib/auth-client";
 
 interface Submission {
   id: string;
@@ -94,6 +95,7 @@ export const Route = createFileRoute("/dashboard/$competitionId/overview/")({
 });
 
 function AdminOverviewPage() {
+  const { data: session } = authClient.useSession();
   const { competitionId } = Route.useParams();
   const fetchDashboardData = useServerFn(getDashboardData);
 
@@ -108,7 +110,7 @@ function AdminOverviewPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Welcome back, Daniel"
+        title={`Welcome back, ${session?.user?.name}`}
         description="Here's how your competition is going."
         actions={
           <>

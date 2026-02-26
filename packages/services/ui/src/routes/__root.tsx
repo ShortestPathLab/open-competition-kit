@@ -8,6 +8,7 @@ import { queryClient } from "src/router";
 import { Navbar } from "*/components/navbar";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import sdk from "sdk";
+import { authClient } from "src/lib/auth-client";
 
 const getAppConfig = createServerFn({ method: "GET" }).handler(async () => {
   const config = (await sdk.config.get()).value;
@@ -47,6 +48,7 @@ export const Route = createRootRoute({
 });
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const { data: session } = authClient.useSession();
   const fetchAppConfig = useServerFn(getAppConfig);
   const { data: config } = useQuery({
     queryKey: ["appConfig"],
@@ -54,7 +56,10 @@ function Shell({ children }: { children: React.ReactNode }) {
   });
   return (
     <div className="min-h-screen [view-transition-name:main-content]">
-      <Navbar variant="admin" appName={config?.name} />
+      <Navbar
+        variant={session?.user ? "admin" : "public"}
+        appName={config?.name}
+      />
       {children}
     </div>
   );

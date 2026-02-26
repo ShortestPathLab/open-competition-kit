@@ -17,7 +17,7 @@ export default {
     delete: noop,
   },
   user: {},
-  form: { ui: {}, submit: {} },
+  form: { ui: noop, submit: {} },
   runner: { ui: {}, submit: {} },
   track: {
     enrol: {},

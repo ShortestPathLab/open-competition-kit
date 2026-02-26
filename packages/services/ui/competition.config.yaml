@@ -1,11 +1,16 @@
 with:
   - ../../packages/noop
-  - ../../packages/auth/better-auth
   - ../../packages/db/prisma
 appName: GPPC
 appDescription: GPPC is etc.etc.
 auth:
   email:
+    providerOptions: {}
+    betterAuthOptions: {}
+    signInParams: {}
+    signOutParams: {}
+    signUpParams: {}
+  github:
     providerOptions: {}
     betterAuthOptions: {}
     signInParams: {}

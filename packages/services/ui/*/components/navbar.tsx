@@ -1,7 +1,11 @@
 import { cn } from "*/lib/utils";
-import { Link, useMatchRoute } from "@tanstack/react-router";
+import { Link, useMatchRoute, useRouter } from "@tanstack/react-router";
 import { Bell } from "lucide-react";
 import Avatar from "boring-avatars";
+import { authClient } from "@/lib/auth-client";
+import { getAuthConfig } from "src/lib/get-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 
 const publicLinks = [
   { href: "/", label: "Home" },
@@ -17,6 +21,28 @@ interface NavbarProps {
 
 export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
   const match = useMatchRoute();
+  const router = useRouter();
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+
+  const fetchAuthConfig = useServerFn(getAuthConfig);
+  const { data: authConfig } = useQuery({
+    queryKey: ["authConfig"],
+    queryFn: () => fetchAuthConfig(),
+  });
+
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.navigate({ to: "/" });
+        },
+      },
+    });
+  };
+
+  const isLoggedIn = !!session?.user;
+  const emailEnabled = authConfig?.emailEnabled ?? false;
+
   return (
     <header className="flex items-center justify-between border-b border-border px-6 py-3 h-14 [view-transition-name:header]">
       <div className="flex items-center gap-6">
@@ -43,36 +69,54 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
         </nav>
       </div>
       <div className="flex items-center gap-3">
-        {variant === "admin" ? (
+        {sessionLoading ? null : isLoggedIn ? (
           <>
-            <button className="p-2 text-muted-foreground hover:text-foreground">
-              <Bell className="h-5 w-5" />
-            </button>
-            <div className="h-8 w-8 rounded-full bg-muted" />
-            <Link
-              to="/dashboard"
-              className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+            {variant === "admin" && (
+              <button className="p-2 text-muted-foreground hover:text-foreground">
+                <Bell className="h-5 w-5" />
+              </button>
+            )}
+            <div className="h-8 w-8 rounded-full bg-muted overflow-hidden">
+              <Avatar
+                name={session.user.name ?? session.user.email}
+                width="100%"
+                height="100%"
+              />
+            </div>
+            {variant === "admin" && (
+              <Link
+                to="/dashboard"
+                className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+              >
+                Dashboard
+              </Link>
+            )}
+            <button
+              onClick={handleSignOut}
+              className="rounded-md border border-border px-4 py-1.5 text-sm hover:bg-muted transition-colors"
             >
-              Dashboard
-            </Link>
+              Sign out
+            </button>
           </>
         ) : (
           <>
+            {variant === "admin" && (
+              <Link
+                to="/dashboard"
+                className="rounded-md border border-border px-4 py-1.5 text-sm"
+              >
+                Sudo
+              </Link>
+            )}
+            {emailEnabled && (
+              <Link
+                to="/register"
+                className="rounded-md border border-border px-4 py-1.5 text-sm"
+              >
+                Register
+              </Link>
+            )}
             <Link
-              to="/dashboard"
-              className="rounded-md border border-border px-4 py-1.5 text-sm"
-            >
-              Sudo
-            </Link>
-            <Link
-              /// @ts-expect-error
-              to="/register"
-              className="rounded-md border border-border px-4 py-1.5 text-sm"
-            >
-              Register
-            </Link>
-            <Link
-              /// @ts-expect-error
               to="/sign-in"
               className="rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground"
             >
