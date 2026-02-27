@@ -24,6 +24,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from './routes/dashboard/$competitionId/overview/index'
 import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from './routes/dashboard/$competitionId/configure/index'
 import { Route as CompetitionsIdTracksIndexRouteImport } from './routes/competitions/$id/tracks/index'
+import { Route as CompetitionsIdTracksTrackIdRouteImport } from './routes/competitions/$id/tracks/$trackId'
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
@@ -104,6 +105,12 @@ const CompetitionsIdTracksIndexRoute =
     path: '/tracks/',
     getParentRoute: () => CompetitionsIdRouteRoute,
   } as any)
+const CompetitionsIdTracksTrackIdRoute =
+  CompetitionsIdTracksTrackIdRouteImport.update({
+    id: '/tracks/$trackId',
+    path: '/tracks/$trackId',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
   '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
@@ -133,6 +141,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id': typeof CompetitionsIdIndexRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
   '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure': typeof DashboardCompetitionIdConfigureIndexRoute
   '/dashboard/$competitionId/overview': typeof DashboardCompetitionIdOverviewIndexRoute
@@ -151,6 +160,7 @@ export interface FileRoutesById {
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
   '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/sign-in/'
     | '/api/auth/$'
     | '/competitions/$id/'
+    | '/competitions/$id/tracks/$trackId'
     | '/competitions/$id/tracks/'
     | '/dashboard/$competitionId/configure/'
     | '/dashboard/$competitionId/overview/'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/api/auth/$'
     | '/competitions/$id'
+    | '/competitions/$id/tracks/$trackId'
     | '/competitions/$id/tracks'
     | '/dashboard/$competitionId/configure'
     | '/dashboard/$competitionId/overview'
@@ -202,6 +214,7 @@ export interface FileRouteTypes {
     | '/sign-in/'
     | '/api/auth/$'
     | '/competitions/$id/'
+    | '/competitions/$id/tracks/$trackId'
     | '/competitions/$id/tracks/'
     | '/dashboard/$competitionId/configure/'
     | '/dashboard/$competitionId/overview/'
@@ -326,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionsIdTracksIndexRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
     }
+    '/competitions/$id/tracks/$trackId': {
+      id: '/competitions/$id/tracks/$trackId'
+      path: '/tracks/$trackId'
+      fullPath: '/competitions/$id/tracks/$trackId'
+      preLoaderRoute: typeof CompetitionsIdTracksTrackIdRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
   }
 }
 
@@ -364,11 +384,13 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 
 interface CompetitionsIdRouteRouteChildren {
   CompetitionsIdIndexRoute: typeof CompetitionsIdIndexRoute
+  CompetitionsIdTracksTrackIdRoute: typeof CompetitionsIdTracksTrackIdRoute
   CompetitionsIdTracksIndexRoute: typeof CompetitionsIdTracksIndexRoute
 }
 
 const CompetitionsIdRouteRouteChildren: CompetitionsIdRouteRouteChildren = {
   CompetitionsIdIndexRoute: CompetitionsIdIndexRoute,
+  CompetitionsIdTracksTrackIdRoute: CompetitionsIdTracksTrackIdRoute,
   CompetitionsIdTracksIndexRoute: CompetitionsIdTracksIndexRoute,
 }
 

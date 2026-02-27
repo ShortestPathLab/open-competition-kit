@@ -47,13 +47,31 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 });
 
+import { useEffect } from "react";
+import { ensureUserExists } from "src/lib/ensure-user";
+
 function Shell({ children }: { children: React.ReactNode }) {
   const { data: session } = authClient.useSession();
   const fetchAppConfig = useServerFn(getAppConfig);
+  const syncUser = useServerFn(ensureUserExists);
+
   const { data: config } = useQuery({
     queryKey: ["appConfig"],
     queryFn: () => fetchAppConfig(),
   });
+
+  useEffect(() => {
+    if (session?.user) {
+      syncUser({
+        data: {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+        },
+      }).catch((err: any) => console.error("Failed to sync user", err));
+    }
+  }, [session?.user, syncUser]);
+
   return (
     <div className="min-h-screen [view-transition-name:main-content]">
       <Navbar

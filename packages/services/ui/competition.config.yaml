@@ -10,6 +10,12 @@ auth:
     signInParams: {}
     signOutParams: {}
     signUpParams: {}
+  google:
+    providerOptions: {}
+    betterAuthOptions: {}
+    signInParams: {}
+    signOutParams: {}
+    signUpParams: {}
   github:
     providerOptions: {}
     betterAuthOptions: {}

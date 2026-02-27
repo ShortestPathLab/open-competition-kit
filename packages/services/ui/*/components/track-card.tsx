@@ -1,15 +1,29 @@
+import { Link } from "@tanstack/react-router";
+
 interface TrackCardProps {
-  name: string
-  description: string
-  imageUrl?: string
+  id: string;
+  competitionId: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
 }
 
-export function TrackCard({ name, description, imageUrl }: TrackCardProps) {
+export function TrackCard({
+  id,
+  competitionId,
+  name,
+  description,
+  imageUrl,
+}: TrackCardProps) {
   return (
     <div className="flex overflow-hidden rounded-lg border border-border">
       <div className="w-48 shrink-0 bg-muted">
         {imageUrl && (
-          <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+          <img
+            src={imageUrl}
+            alt={name}
+            className="h-full w-full object-cover"
+          />
         )}
       </div>
       <div className="flex flex-col justify-between p-4">
@@ -18,14 +32,22 @@ export function TrackCard({ name, description, imageUrl }: TrackCardProps) {
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
         <div className="mt-4 flex items-center gap-2">
-          <button className="rounded-md border border-border px-3 py-1.5 text-sm">
+          <Link
+            to="/competitions/$id/tracks/$trackId"
+            params={{ id: competitionId, trackId: id }}
+            className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted transition-colors"
+          >
             More info
-          </button>
-          <button className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground">
+          </Link>
+          <Link
+            to="/competitions/$id/tracks/$trackId"
+            params={{ id: competitionId, trackId: id }}
+            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
             Get started
-          </button>
+          </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }
