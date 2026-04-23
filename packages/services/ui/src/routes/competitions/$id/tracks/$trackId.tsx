@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "*/components/ui/card";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import sdk from "sdk";
@@ -135,6 +135,19 @@ function TrackDetailsPage() {
                   Enrolment failed. Please try again.
                 </p>
               )}
+              {isEnrolled && (
+                <Button
+                  variant="outline"
+                  render={
+                    <Link
+                      to="/competitions/$id/tracks/$trackId/submit"
+                      params={{ id: competitionId, trackId }}
+                    />
+                  }
+                >
+                  Make submission
+                </Button>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-4 items-start">
@@ -146,6 +159,8 @@ function TrackDetailsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Outlet />
     </div>
   );
 }

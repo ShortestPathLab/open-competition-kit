@@ -18,17 +18,17 @@ import {
   getCompetitionSummary,
   type TrackSummary,
 } from "src/lib/competition-data";
-
+import { z } from "zod";
 export const Route = createFileRoute("/competitions/$id")({
   component: CompetitionLayout,
 });
 
-const getCompetition = createServerFn({ method: "GET" }).handler(
-  async (ctx: any) => {
+const getCompetition = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async (ctx: any) => {
     const id = ctx.data as string;
-    return getCompetitionSummary(id);
-  },
-);
+    return await getCompetitionSummary(id);
+  });
 
 function CompetitionLayout() {
   const { id } = Route.useParams();
@@ -38,7 +38,7 @@ function CompetitionLayout() {
 
   const { data: competition } = useQuery({
     queryKey: ["competition", id],
-    queryFn: () => (fetchCompetition as any)({ data: id }),
+    queryFn: () => fetchCompetition({ data: id }),
   });
 
   return (
@@ -46,13 +46,11 @@ function CompetitionLayout() {
       <div className="bg-muted/30 border-b border-border [view-transition-name:competition-header]">
         <div className="mx-auto max-w-5xl px-6 pt-8 pb-0">
           <PageHeader
-            title={competition?.name}
-            description={competition?.description}
+            title={competition?.name ?? "--"}
+            description={competition?.description ?? "--"}
             actions={
               <Popover open={trackPickerOpen} onOpenChange={setTrackPickerOpen}>
-                <PopoverTrigger
-                  render={<Button size="lg" />}
-                >
+                <PopoverTrigger render={<Button size="lg" />}>
                   Participate in this competition
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-96 p-3">
@@ -63,10 +61,9 @@ function CompetitionLayout() {
                     </PopoverDescription>
                   </PopoverHeader>
                   <div className="flex flex-col gap-1">
-                    {competition?.tracks.map((track: TrackSummary) => (
+                    {competition?.tracks?.map?.((track) => (
                       <button
                         key={track.id}
-                        type="button"
                         onClick={() => {
                           setTrackPickerOpen(false);
                           router.navigate({

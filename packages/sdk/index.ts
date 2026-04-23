@@ -1,6 +1,7 @@
 import { kit } from "./kit";
 
 export const { competitions, config, hooks, enrolments, tracks, users } = kit;
+export const { submissions, jobs, outputs } = kit;
 
 export * from "core";
 

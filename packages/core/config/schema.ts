@@ -19,7 +19,10 @@ export const CompetitionConfig = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
   tracks: S.Array(TrackConfig),
-  runner: Extendable,
+  runner: S.Struct({
+    ...Extendable.fields,
+    body: S.optional(S.String),
+  }),
   leaderboards: S.Array(Extendable),
 });
 
@@ -33,7 +36,8 @@ export const Config = S.Struct({
 });
 
 export type Config = S.Schema.Type<typeof Config>;
-
+export type CompetitionConfig = S.Schema.Type<typeof CompetitionConfig>;
 export type Extendable = S.Schema.Type<typeof Extendable>;
+export type TrackConfig = S.Schema.Type<typeof TrackConfig>;
 
 export const decode = S.decodeUnknown(Config);

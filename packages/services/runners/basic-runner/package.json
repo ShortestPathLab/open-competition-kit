@@ -1,0 +1,16 @@
+{
+  "name": "basic-runner",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "es-toolkit": "^1.44.0",
+    "sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

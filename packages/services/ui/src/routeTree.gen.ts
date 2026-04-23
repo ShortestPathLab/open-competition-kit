@@ -27,6 +27,7 @@ import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from './route
 import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from './routes/dashboard/$competitionId/configure/index'
 import { Route as CompetitionsIdTracksIndexRouteImport } from './routes/competitions/$id/tracks/index'
 import { Route as CompetitionsIdTracksTrackIdRouteImport } from './routes/competitions/$id/tracks/$trackId'
+import { Route as CompetitionsIdTracksTrackIdSubmitRouteImport } from './routes/competitions/$id/tracks/$trackId.submit'
 
 const MeRouteRoute = MeRouteRouteImport.update({
   id: '/me',
@@ -123,6 +124,12 @@ const CompetitionsIdTracksTrackIdRoute =
     path: '/tracks/$trackId',
     getParentRoute: () => CompetitionsIdRouteRoute,
   } as any)
+const CompetitionsIdTracksTrackIdSubmitRoute =
+  CompetitionsIdTracksTrackIdSubmitRouteImport.update({
+    id: '/submit',
+    path: '/submit',
+    getParentRoute: () => CompetitionsIdTracksTrackIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -139,10 +146,11 @@ export interface FileRoutesByFullPath {
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
-  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRouteWithChildren
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
   '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
+  '/competitions/$id/tracks/$trackId/submit': typeof CompetitionsIdTracksTrackIdSubmitRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -156,10 +164,11 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id': typeof CompetitionsIdIndexRoute
-  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRouteWithChildren
   '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure': typeof DashboardCompetitionIdConfigureIndexRoute
   '/dashboard/$competitionId/overview': typeof DashboardCompetitionIdOverviewIndexRoute
+  '/competitions/$id/tracks/$trackId/submit': typeof CompetitionsIdTracksTrackIdSubmitRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,10 +186,11 @@ export interface FileRoutesById {
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
-  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRouteWithChildren
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
   '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
+  '/competitions/$id/tracks/$trackId/submit': typeof CompetitionsIdTracksTrackIdSubmitRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/competitions/$id/tracks/'
     | '/dashboard/$competitionId/configure/'
     | '/dashboard/$competitionId/overview/'
+    | '/competitions/$id/tracks/$trackId/submit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/competitions/$id/tracks'
     | '/dashboard/$competitionId/configure'
     | '/dashboard/$competitionId/overview'
+    | '/competitions/$id/tracks/$trackId/submit'
   id:
     | '__root__'
     | '/'
@@ -240,6 +252,7 @@ export interface FileRouteTypes {
     | '/competitions/$id/tracks/'
     | '/dashboard/$competitionId/configure/'
     | '/dashboard/$competitionId/overview/'
+    | '/competitions/$id/tracks/$trackId/submit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionsIdTracksTrackIdRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
     }
+    '/competitions/$id/tracks/$trackId/submit': {
+      id: '/competitions/$id/tracks/$trackId/submit'
+      path: '/submit'
+      fullPath: '/competitions/$id/tracks/$trackId/submit'
+      preLoaderRoute: typeof CompetitionsIdTracksTrackIdSubmitRouteImport
+      parentRoute: typeof CompetitionsIdTracksTrackIdRoute
+    }
   }
 }
 
@@ -430,15 +450,31 @@ const MeRouteRouteChildren: MeRouteRouteChildren = {
 const MeRouteRouteWithChildren =
   MeRouteRoute._addFileChildren(MeRouteRouteChildren)
 
+interface CompetitionsIdTracksTrackIdRouteChildren {
+  CompetitionsIdTracksTrackIdSubmitRoute: typeof CompetitionsIdTracksTrackIdSubmitRoute
+}
+
+const CompetitionsIdTracksTrackIdRouteChildren: CompetitionsIdTracksTrackIdRouteChildren =
+  {
+    CompetitionsIdTracksTrackIdSubmitRoute:
+      CompetitionsIdTracksTrackIdSubmitRoute,
+  }
+
+const CompetitionsIdTracksTrackIdRouteWithChildren =
+  CompetitionsIdTracksTrackIdRoute._addFileChildren(
+    CompetitionsIdTracksTrackIdRouteChildren,
+  )
+
 interface CompetitionsIdRouteRouteChildren {
   CompetitionsIdIndexRoute: typeof CompetitionsIdIndexRoute
-  CompetitionsIdTracksTrackIdRoute: typeof CompetitionsIdTracksTrackIdRoute
+  CompetitionsIdTracksTrackIdRoute: typeof CompetitionsIdTracksTrackIdRouteWithChildren
   CompetitionsIdTracksIndexRoute: typeof CompetitionsIdTracksIndexRoute
 }
 
 const CompetitionsIdRouteRouteChildren: CompetitionsIdRouteRouteChildren = {
   CompetitionsIdIndexRoute: CompetitionsIdIndexRoute,
-  CompetitionsIdTracksTrackIdRoute: CompetitionsIdTracksTrackIdRoute,
+  CompetitionsIdTracksTrackIdRoute:
+    CompetitionsIdTracksTrackIdRouteWithChildren,
   CompetitionsIdTracksIndexRoute: CompetitionsIdTracksIndexRoute,
 }
 

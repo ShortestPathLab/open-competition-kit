@@ -1,27 +1,11 @@
 import { differenceWith, keyBy, mapAsync } from "es-toolkit";
-import sdk, { unsafe } from "sdk";
-
-type ConfigCompetition = {
-  id: string;
-  name: string;
-  tracks: readonly ConfigTrack[];
-};
-
-type ConfigTrack = {
-  id: string;
-  name: string;
-};
-
-type DbCompetition = {
-  id: string;
-  name: string;
-};
-
-type DbTrack = {
-  id: string;
-  name: string;
-  competition: string;
-};
+import sdk, {
+  type Competition,
+  type CompetitionConfigShape,
+  type Track,
+  type TrackCreate,
+} from "sdk";
+import { unsafe } from "sdk";
 
 type SyncResult = {
   competitionsCreated: number;
@@ -30,10 +14,16 @@ type SyncResult = {
   tracksUpdated: number;
 };
 
+type ConfigTrackRecord = TrackCreate & {
+  id: string;
+  name: string;
+  competition: string;
+};
+
 const sameId = (a: { id: string }, b: { id: string }) => a.id === b.id;
 
 async function createMissingCompetitions(
-  configCompetitions: readonly ConfigCompetition[],
+  configCompetitions: readonly CompetitionConfigShape[],
 ) {
   const dbCompetitions = await unsafe(sdk.competitions.list({}));
   const missing = differenceWith(configCompetitions, dbCompetitions, sameId);
@@ -51,8 +41,8 @@ async function createMissingCompetitions(
 }
 
 async function updateChangedCompetitions(
-  configCompetitions: readonly ConfigCompetition[],
-  dbCompetitions: readonly DbCompetition[],
+  configCompetitions: readonly CompetitionConfigShape[],
+  dbCompetitions: readonly Competition[],
 ) {
   const byId = keyBy(dbCompetitions, ({ id }) => id);
   const changed = configCompetitions.filter(
@@ -71,14 +61,18 @@ async function updateChangedCompetitions(
   return changed.length;
 }
 
-async function createMissingTracks(competition: ConfigCompetition) {
+async function createMissingTracks(competition: CompetitionConfigShape) {
   const dbTracks = await unsafe(
     sdk.tracks.list({ competition: competition.id }),
   );
-  const configTracks = competition.tracks.map((track) => ({
-    ...track,
-    competition: competition.id,
-  }));
+  const configTracks = competition.tracks.map(
+    (track) =>
+      ({
+        id: track.id,
+        name: track.name,
+        competition: competition.id,
+      }) satisfies ConfigTrackRecord,
+  );
   const missing = differenceWith(configTracks, dbTracks, sameId);
 
   await mapAsync(missing, (track) =>
@@ -95,8 +89,8 @@ async function createMissingTracks(competition: ConfigCompetition) {
 }
 
 async function updateChangedTracks(
-  configTracks: DbTrack[],
-  dbTracks: readonly DbTrack[],
+  configTracks: ConfigTrackRecord[],
+  dbTracks: readonly Track[],
 ) {
   const byId = keyBy(dbTracks, ({ id }) => id);
   const changed = configTracks.filter((track) => {
@@ -122,8 +116,7 @@ async function updateChangedTracks(
 
 export async function bindConfigToDatabase(): Promise<SyncResult> {
   const config = await unsafe(sdk.config.get());
-  const configCompetitions =
-    config.competitions as readonly ConfigCompetition[];
+  const configCompetitions = config.competitions;
   console.log(`Config found: ${configCompetitions.length} competitions`);
 
   const { dbCompetitions, created: competitionsCreated } =

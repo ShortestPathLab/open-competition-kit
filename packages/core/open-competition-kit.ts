@@ -87,6 +87,21 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         (track) => competitions.get(track.competition),
         (competition) => instance.tracks.list({ competition: competition.id }),
       );
+      const submissions = yield* collectionFrom(
+        instance.submissions,
+        (submission) => tracks.get(submission.track),
+        (track) => instance.submissions.list({ track: track.id }),
+      );
+      const jobs = yield* collectionFrom(
+        instance.jobs,
+        (job) => submissions.get(job.submission),
+        (submission) => instance.jobs.list({ submission: submission.id }),
+      );
+      const outputs = yield* collectionFrom(
+        instance.outputs,
+        (output) => jobs.get(output.job),
+        (job) => instance.outputs.list({ job: job.id }),
+      );
       const enrolmentCollection = yield* collectionFrom(
         instance.enrolments,
         (enrolment) => tracks.get(enrolment.track),
@@ -118,7 +133,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             });
           }),
       };
-      return {
+      const base = {
         config: { get: () => config },
         competitions,
         hooks: {
@@ -133,6 +148,11 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         users,
         enrolments,
       } satisfies OpenCompetitionKitApi;
+      return Object.assign(base, {
+        submissions,
+        jobs,
+        outputs,
+      });
     }),
   },
 ) {}

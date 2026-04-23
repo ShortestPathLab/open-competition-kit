@@ -37,8 +37,22 @@ export const tables = {
     user: S.String,
     track: S.String,
   }),
+  job: createSchemas("open-competition-kit/db/job", {
+    submission: S.String,
+    status: S.String,
+  }),
+  output: createSchemas("open-competition-kit/db/output", {
+    job: S.String,
+    result: S.String,
+    reference: S.String,
+  }),
   competition: createSchemas("open-competition-kit/db/competition", {
     name: S.String,
+  }),
+  submission: createSchemas("open-competition-kit/db/submission", {
+    user: S.String,
+    track: S.String,
+    body: S.String,
   }),
   track: createSchemas("open-competition-kit/db/track", {
     name: S.String,
@@ -55,6 +69,35 @@ export const schemas = mapValues(tables, (v) => v.full) as {
 };
 
 export type DbKey = keyof typeof schemas;
+export type DbRecord<K extends DbKey> = S.Schema.Type<(typeof schemas)[K]>;
+export type DbCreate<K extends DbKey> = S.Schema.Type<
+  (typeof tables)[K]["create"]
+>;
+export type DbUpdate<K extends DbKey> = S.Schema.Type<
+  (typeof tables)[K]["update"]
+>;
+
+export type Competition = DbRecord<"competition">;
+export type CompetitionCreate = DbCreate<"competition">;
+export type CompetitionUpdate = DbUpdate<"competition">;
+export type Enrolment = DbRecord<"enrolment">;
+export type EnrolmentCreate = DbCreate<"enrolment">;
+export type EnrolmentUpdate = DbUpdate<"enrolment">;
+export type Job = DbRecord<"job">;
+export type JobCreate = DbCreate<"job">;
+export type JobUpdate = DbUpdate<"job">;
+export type Output = DbRecord<"output">;
+export type OutputCreate = DbCreate<"output">;
+export type OutputUpdate = DbUpdate<"output">;
+export type Submission = DbRecord<"submission">;
+export type SubmissionCreate = DbCreate<"submission">;
+export type SubmissionUpdate = DbUpdate<"submission">;
+export type Track = DbRecord<"track">;
+export type TrackCreate = DbCreate<"track">;
+export type TrackUpdate = DbUpdate<"track">;
+export type User = DbRecord<"user">;
+export type UserCreate = DbCreate<"user">;
+export type UserUpdate = DbUpdate<"user">;
 
 export type TableHooks<TCreate, TUpdate, TFull> = {
   list: (partial: Partial<TFull>) => Promise<Readonly<TFull[]>>;
@@ -91,6 +134,9 @@ export const collections = S.Struct({
   users: tableHooks(schemas.user),
   tracks: tableHooks(schemas.track),
   enrolments: tableHooks(schemas.enrolment),
+  submissions: tableHooks(schemas.submission),
+  jobs: tableHooks(schemas.job),
+  outputs: tableHooks(schemas.output),
 });
 
 const accessor = <T extends S.Struct.Field>(payload: T) =>

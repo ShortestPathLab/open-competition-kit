@@ -40,11 +40,11 @@ export function TrackCard({
             More info
           </Link>
           <Link
-            to="/competitions/$id/tracks/$trackId"
+            to="/competitions/$id/tracks/$trackId/submit"
             params={{ id: competitionId, trackId: id }}
             className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 transition-colors"
           >
-            Get started
+            Make submission
           </Link>
         </div>
       </div>

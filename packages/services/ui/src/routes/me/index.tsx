@@ -91,6 +91,45 @@ function MeIndexPage() {
             <p className="text-sm text-muted-foreground">
               {enrolment.track.description}
             </p>
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium">My submissions</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={
+                    <Link
+                      to="/competitions/$id/tracks/$trackId/submit"
+                      params={{
+                        id: enrolment.track.competitionId || enrolment.competition.id,
+                        trackId: enrolment.track.id,
+                      }}
+                    />
+                  }
+                >
+                  Make submission
+                </Button>
+              </div>
+              {enrolment.submissions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No submissions yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {enrolment.submissions.map((submission) => (
+                    <div
+                      key={submission.id}
+                      className="rounded-md border border-border px-3 py-2"
+                    >
+                      <p className="font-mono text-xs text-muted-foreground">
+                        {submission.id}
+                      </p>
+                      <p className="mt-1 text-sm break-all">{submission.body}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <Button
               variant="outline"
               render={

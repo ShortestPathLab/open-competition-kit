@@ -16,10 +16,21 @@ auth:
       signUpParams:
 
 competitions:
-  - id: "1"
+  - id: "fit5047"
     with: []
-    name: "1"
-    tracks: []
+    name: "FIT5047 Pacman Competition"
+    tracks:
+      - id: "main"
+        name: "Main Track"
+        with: []
+        form:
+          with: []
     runner:
       with: []
+      body: |
+        ({
+          ok: true,
+          track: submission.track,
+          submission: JSON.parse(submission.body),
+        })
     leaderboards: []
