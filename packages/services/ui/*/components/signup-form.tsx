@@ -16,13 +16,16 @@ import {
 import { Input } from "*/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { Link, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { storeSignupSecrets } from "src/lib/store-signup-secrets";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
+  const saveSignupSecrets = useServerFn(storeSignupSecrets);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +46,8 @@ export function SignupForm({
     await authClient.signUp.email(
       { name, email, password },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          await saveSignupSecrets();
           router.navigate({ to: "/competitions" });
         },
         onError: (ctx) => {

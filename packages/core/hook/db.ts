@@ -46,6 +46,7 @@ export const tables = {
   }),
   user: createSchemas("open-competition-kit/db/user", {
     name: S.String,
+    secrets: S.String,
   }),
 };
 

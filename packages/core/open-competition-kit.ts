@@ -52,11 +52,36 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         () => E.fail(new CollectionOwnerError()),
         () => instance.competitions.list({}),
       );
-      const users = yield* collectionFrom(
+      const userCollection = yield* collectionFrom(
         instance.users,
         () => E.fail(new CollectionOwnerError()),
         () => instance.users.list({}),
       );
+      const users = {
+        ...userCollection,
+        storeSecrets: (userId: string, secrets: Record<string, string>) =>
+          E.gen(function* () {
+            const user = yield* instance.users.get(userId);
+            let existingSecrets: Record<string, string> = {};
+
+            try {
+              existingSecrets = JSON.parse(user.secrets || "{}");
+            } catch {}
+
+            const nextSecrets = {
+              ...existingSecrets,
+              ...secrets,
+            };
+
+            yield* instance.users.update({
+              id: userId,
+              name: user.name,
+              secrets: JSON.stringify(nextSecrets),
+            });
+
+            return nextSecrets;
+          }),
+      };
       const tracks = yield* collectionFrom(
         instance.tracks,
         (track) => competitions.get(track.competition),
