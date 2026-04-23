@@ -19,9 +19,16 @@ competitions:
   - id: "fit5047"
     with: []
     name: "FIT5047 Pacman Competition"
+    organiser: "Monash University"
+    description: >
+      A programming competition for FIT5047 where participants build Pacman
+      agents and compare their performance under a shared evaluation setup.
     tracks:
       - id: "main"
         name: "Main Track"
+        description: >
+          The standard competition track for submitting and evaluating your
+          Pacman agent.
         with: []
         form:
           with: []
