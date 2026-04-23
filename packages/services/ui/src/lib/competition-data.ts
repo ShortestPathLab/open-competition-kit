@@ -11,7 +11,7 @@ export type TrackSummary = {
 export type CompetitionSummary = {
   id: string;
   name: string;
-  organizer: string;
+  organiser: string;
   description: string;
   tracks: TrackSummary[];
 };
@@ -48,18 +48,18 @@ export async function getCompetitionSummary(
   const trackSummaries: TrackSummary[] = competitionTracks.map((track) => ({
     id: track.id,
     name: track.name,
-    description: makeTrackDescription(track.name, competitionName),
+    description:
+      track.description || makeTrackDescription(track.name, competitionName),
     competitionId: id,
   }));
 
   return {
     id,
     name: competitionName,
-    organizer: "OpenCompetitionKit",
-    description: makeCompetitionDescription(
-      competitionName,
-      trackSummaries.length,
-    ),
+    organiser: competition.organiser || "OpenCompetitionKit",
+    description:
+      competition.description ||
+      makeCompetitionDescription(competitionName, trackSummaries.length),
     tracks: trackSummaries,
   };
 }
@@ -104,7 +104,7 @@ export async function listUserEnrolments(
       ({
         id: "",
         name: "Competition",
-        organizer: "OpenCompetitionKit",
+        organiser: "OpenCompetitionKit",
         description: "No description yet.",
         tracks: [],
       } satisfies CompetitionSummary);

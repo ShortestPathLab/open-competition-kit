@@ -51,7 +51,7 @@ function AboutPage() {
               </h3>
               <p className="text-base text-muted-foreground">
                 To advance the field of AI and competitive programming by
-                providing world-class tools for competition organizers and
+                providing world-class tools for competition organisers and
                 participants.
               </p>
             </div>

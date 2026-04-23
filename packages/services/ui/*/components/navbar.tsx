@@ -42,9 +42,6 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
 
   const isLoggedIn = !!session?.user;
   const emailEnabled = authConfig?.emailEnabled ?? false;
-  const links = isLoggedIn
-    ? [...publicLinks, { href: "/me", label: "Me" }]
-    : publicLinks;
 
   return (
     <header className="flex items-center justify-between border-b border-border px-6 py-3 h-14 [view-transition-name:header]">
@@ -56,7 +53,7 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
           <span>{appName}</span>
         </Link>
         <nav className="flex items-center gap-4">
-          {links.map((link) => (
+          {publicLinks.map((link) => (
             <Link
               key={link.href}
               to={link.href}
@@ -80,11 +77,13 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
               </button>
             )}
             <div className="h-8 w-8 rounded-full bg-muted overflow-hidden">
-              <Avatar
-                name={session.user.name ?? session.user.email}
-                width="100%"
-                height="100%"
-              />
+              <Link to="/me">
+                <Avatar
+                  name={session.user.name ?? session.user.email}
+                  width="100%"
+                  height="100%"
+                />
+              </Link>
             </div>
             {variant === "admin" && (
               <Link

@@ -14,10 +14,26 @@ type SyncResult = {
   tracksUpdated: number;
 };
 
+function getCompetitionOrganizer(competition: CompetitionConfigShape) {
+  return competition.organiser ?? "OpenCompetitionKit";
+}
+
+function getCompetitionDescription(competition: CompetitionConfigShape) {
+  return competition.description ?? "No description yet.";
+}
+
+function getTrackDescription(
+  competition: CompetitionConfigShape,
+  track: CompetitionConfigShape["tracks"][number],
+) {
+  return track.description ?? `${track.name} track in ${competition.name}.`;
+}
+
 type ConfigTrackRecord = TrackCreate & {
   id: string;
   name: string;
   competition: string;
+  description: string;
 };
 
 const sameId = (a: { id: string }, b: { id: string }) => a.id === b.id;
@@ -33,6 +49,8 @@ async function createMissingCompetitions(
       sdk.competitions.create({
         id: competition.id,
         name: competition.name,
+        organiser: getCompetitionOrganizer(competition),
+        description: getCompetitionDescription(competition),
       }),
     ),
   );
@@ -46,7 +64,12 @@ async function updateChangedCompetitions(
 ) {
   const byId = keyBy(dbCompetitions, ({ id }) => id);
   const changed = configCompetitions.filter(
-    (competition) => byId[competition.id]?.name !== competition.name,
+    (competition) =>
+      byId[competition.id]?.name !== competition.name ||
+      byId[competition.id]?.organiser !==
+        getCompetitionOrganizer(competition) ||
+      byId[competition.id]?.description !==
+        getCompetitionDescription(competition),
   );
 
   await mapAsync(changed, (competition) =>
@@ -54,6 +77,8 @@ async function updateChangedCompetitions(
       sdk.competitions.update({
         id: competition.id,
         name: competition.name,
+        organiser: getCompetitionOrganizer(competition),
+        description: getCompetitionDescription(competition),
       }),
     ),
   );
@@ -71,6 +96,7 @@ async function createMissingTracks(competition: CompetitionConfigShape) {
         id: track.id,
         name: track.name,
         competition: competition.id,
+        description: getTrackDescription(competition, track),
       }) satisfies ConfigTrackRecord,
   );
   const missing = differenceWith(configTracks, dbTracks, sameId);
@@ -81,6 +107,7 @@ async function createMissingTracks(competition: CompetitionConfigShape) {
         id: track.id,
         name: track.name,
         competition: competition.id,
+        description: track.description,
       }),
     ),
   );
@@ -97,7 +124,9 @@ async function updateChangedTracks(
     const current = byId[track.id];
     return (
       current != null &&
-      (current.name !== track.name || current.competition !== track.competition)
+      (current.name !== track.name ||
+        current.competition !== track.competition ||
+        current.description !== track.description)
     );
   });
 
@@ -107,6 +136,7 @@ async function updateChangedTracks(
         id: track.id,
         name: track.name,
         competition: track.competition,
+        description: track.description,
       }),
     ),
   );

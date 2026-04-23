@@ -38,7 +38,7 @@ function CompetitionsPage() {
               key={comp.id}
               id={comp.id}
               name={comp.name}
-              organizer={comp.organizer}
+              organiser={comp.organiser}
             />
           ))}
         </div>

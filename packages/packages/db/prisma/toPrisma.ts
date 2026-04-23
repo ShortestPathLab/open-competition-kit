@@ -15,7 +15,11 @@ function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
     .map(([k, v]) => {
       const type = M.value(v as S.SchemaClass<string, string, never>).pipe(
         M.when(is(Id), () => "String @id @default(cuid())"),
-        M.when(is(String), () => "String"),
+        M.when(is(String), () =>
+          k === "description" || k === "organiser"
+            ? 'String @default("")'
+            : "String",
+        ),
         M.when(is(Number), () => "Float"),
         M.when(is(Int), () => "Int"),
         M.when(is(Boolean), () => "Boolean"),

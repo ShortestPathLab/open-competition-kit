@@ -3,14 +3,14 @@ import { Link } from "@tanstack/react-router";
 interface CompetitionCardProps {
   id: string;
   name: string;
-  organizer: string;
+  organiser: string;
   imageUrl?: string;
 }
 
 export function CompetitionCard({
   id,
   name,
-  organizer,
+  organiser,
   imageUrl,
 }: CompetitionCardProps) {
   return (
@@ -30,7 +30,7 @@ export function CompetitionCard({
       </div>
       <div className="p-3">
         <p className="font-medium group-hover:underline">{name}</p>
-        <p className="text-sm text-muted-foreground">{organizer}</p>
+        <p className="text-sm text-muted-foreground">{organiser}</p>
       </div>
     </Link>
   );

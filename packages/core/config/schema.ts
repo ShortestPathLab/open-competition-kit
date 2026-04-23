@@ -12,12 +12,15 @@ export const Extendable = S.Struct({
 export const TrackConfig = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
+  description: S.optional(S.String),
   form: Extendable,
 });
 
 export const CompetitionConfig = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
+  organiser: S.optional(S.String),
+  description: S.optional(S.String),
   tracks: S.Array(TrackConfig),
   runner: S.Struct({
     ...Extendable.fields,

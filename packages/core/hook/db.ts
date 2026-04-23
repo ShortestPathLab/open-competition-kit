@@ -48,6 +48,8 @@ export const tables = {
   }),
   competition: createSchemas("open-competition-kit/db/competition", {
     name: S.String,
+    organiser: S.String,
+    description: S.String,
   }),
   submission: createSchemas("open-competition-kit/db/submission", {
     user: S.String,
@@ -57,6 +59,7 @@ export const tables = {
   track: createSchemas("open-competition-kit/db/track", {
     name: S.String,
     competition: S.String,
+    description: S.String,
   }),
   user: createSchemas("open-competition-kit/db/user", {
     name: S.String,
