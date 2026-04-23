@@ -4,28 +4,14 @@ import { SearchInput } from "*/components/search-input";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk, { unsafe } from "sdk";
+import { listCompetitionSummaries } from "src/lib/competition-data";
 
 export const Route = createFileRoute("/competitions/")({
   component: CompetitionsPage,
 });
 
 const getCompetitions = createServerFn().handler(async () => {
-  const _result = await sdk.competitions.list({});
-  // Return mock data for now
-  return [
-    { id: "gppc-2025", name: "GPPC 2025", organizer: "catalogapp.io" },
-    {
-      id: "gppc-2024",
-      name: "GPPC 2024 (Elapsed)",
-      organizer: "catalogapp.io",
-    },
-    { id: "single-agent-1", name: "Single agent", organizer: "catalogapp.io" },
-    { id: "single-agent-2", name: "Single agent", organizer: "catalogapp.io" },
-    { id: "single-agent-3", name: "Single agent", organizer: "catalogapp.io" },
-    { id: "single-agent-4", name: "Single agent", organizer: "catalogapp.io" },
-    ...(_result.value ?? []),
-  ];
+  return listCompetitionSummaries();
 });
 
 function CompetitionsPage() {

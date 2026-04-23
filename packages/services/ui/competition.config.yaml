@@ -10,7 +10,7 @@ auth:
     signInParams: {}
     signOutParams: {}
     signUpParams: {}
-  google:
+  gitlab:
     providerOptions: {}
     betterAuthOptions: {}
     signInParams: {}
@@ -26,9 +26,9 @@ db:
   provider: postgresql
   url: postgres://postgres:postgres@localhost:5433/postgres
 competitions:
-  - id: "1"
+  - id: "fit5037"
     with: []
-    name: "1"
+    name: "FIT5047 Pacman Competition"
     tracks: []
     runner:
       with: []

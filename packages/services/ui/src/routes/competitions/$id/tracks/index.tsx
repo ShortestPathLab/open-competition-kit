@@ -1,39 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { SearchInput } from "*/components/search-input";
 import { TrackCard } from "*/components/track-card";
+import {
+  getCompetitionSummary,
+  type TrackSummary,
+} from "src/lib/competition-data";
 
 export const Route = createFileRoute("/competitions/$id/tracks/")({
   component: TracksPage,
 });
 
-const tracks = [
-  {
-    id: "dynamic",
-    name: "Dynamic",
-    description:
-      "Navigate evolving grid maps that change between queries. Algorithms must quickly adapt to environmental shifts while maintaining performance.",
+const getTracks = createServerFn({ method: "GET" }).handler(
+  async (ctx: any) => {
+    const id = ctx.data as string;
+    return (await getCompetitionSummary(id)).tracks;
   },
-  {
-    id: "anyangle",
-    name: "Anyangle",
-    description:
-      "Navigate evolving grid maps that change between queries. Algorithms must quickly adapt to environmental shifts while maintaining performance.",
-  },
-  {
-    id: "classic",
-    name: "Classic",
-    description:
-      "Navigate evolving grid maps that change between queries. Algorithms must quickly adapt to environmental shifts while maintaining performance.",
-  },
-];
+);
 
 export default function TracksPage() {
   const { id } = Route.useParams();
+  const fetchTracks = useServerFn(getTracks);
+  const { data: tracks = [] } = useQuery({
+    queryKey: ["competitionTracks", id],
+    queryFn: () => (fetchTracks as any)({ data: id }),
+  });
+
   return (
     <div>
       <SearchInput placeholder="Search tracks" />
       <div className="mt-6 grid grid-cols-2 gap-4">
-        {tracks.map((track) => (
+        {tracks.map((track: TrackSummary) => (
           <TrackCard
             key={track.id}
             id={track.id}

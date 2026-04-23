@@ -9,10 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MeRouteRouteImport } from './routes/me/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as RegisterIndexRouteImport } from './routes/register/index'
+import { Route as MeIndexRouteImport } from './routes/me/index'
 import { Route as LeaderboardsIndexRouteImport } from './routes/leaderboards/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions/index'
@@ -26,6 +28,11 @@ import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from './rout
 import { Route as CompetitionsIdTracksIndexRouteImport } from './routes/competitions/$id/tracks/index'
 import { Route as CompetitionsIdTracksTrackIdRouteImport } from './routes/competitions/$id/tracks/$trackId'
 
+const MeRouteRoute = MeRouteRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -45,6 +52,11 @@ const RegisterIndexRoute = RegisterIndexRouteImport.update({
   id: '/register/',
   path: '/register/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MeIndexRoute = MeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MeRouteRoute,
 } as any)
 const LeaderboardsIndexRoute = LeaderboardsIndexRouteImport.update({
   id: '/leaderboards/',
@@ -115,12 +127,14 @@ const CompetitionsIdTracksTrackIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
   '/about/': typeof AboutIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/leaderboards/': typeof LeaderboardsIndexRoute
+  '/me/': typeof MeIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -137,6 +151,7 @@ export interface FileRoutesByTo {
   '/competitions': typeof CompetitionsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/leaderboards': typeof LeaderboardsIndexRoute
+  '/me': typeof MeIndexRoute
   '/register': typeof RegisterIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -150,12 +165,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
   '/about/': typeof AboutIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/leaderboards/': typeof LeaderboardsIndexRoute
+  '/me/': typeof MeIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -170,12 +187,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
     | '/about/'
     | '/competitions/'
     | '/dashboard/'
     | '/leaderboards/'
+    | '/me/'
     | '/register/'
     | '/sign-in/'
     | '/api/auth/$'
@@ -192,6 +211,7 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/dashboard'
     | '/leaderboards'
+    | '/me'
     | '/register'
     | '/sign-in'
     | '/api/auth/$'
@@ -204,12 +224,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
     | '/about/'
     | '/competitions/'
     | '/dashboard/'
     | '/leaderboards/'
+    | '/me/'
     | '/register/'
     | '/sign-in/'
     | '/api/auth/$'
@@ -223,6 +245,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  MeRouteRoute: typeof MeRouteRouteWithChildren
   CompetitionsIdRouteRoute: typeof CompetitionsIdRouteRouteWithChildren
   AboutIndexRoute: typeof AboutIndexRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
@@ -234,6 +257,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -261,6 +291,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/register/'
       preLoaderRoute: typeof RegisterIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/me/': {
+      id: '/me/'
+      path: '/'
+      fullPath: '/me/'
+      preLoaderRoute: typeof MeIndexRouteImport
+      parentRoute: typeof MeRouteRoute
     }
     '/leaderboards/': {
       id: '/leaderboards/'
@@ -382,6 +419,17 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
   DashboardRouteRouteChildren,
 )
 
+interface MeRouteRouteChildren {
+  MeIndexRoute: typeof MeIndexRoute
+}
+
+const MeRouteRouteChildren: MeRouteRouteChildren = {
+  MeIndexRoute: MeIndexRoute,
+}
+
+const MeRouteRouteWithChildren =
+  MeRouteRoute._addFileChildren(MeRouteRouteChildren)
+
 interface CompetitionsIdRouteRouteChildren {
   CompetitionsIdIndexRoute: typeof CompetitionsIdIndexRoute
   CompetitionsIdTracksTrackIdRoute: typeof CompetitionsIdTracksTrackIdRoute
@@ -400,6 +448,7 @@ const CompetitionsIdRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  MeRouteRoute: MeRouteRouteWithChildren,
   CompetitionsIdRouteRoute: CompetitionsIdRouteRouteWithChildren,
   AboutIndexRoute: AboutIndexRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,

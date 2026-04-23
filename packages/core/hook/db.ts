@@ -22,7 +22,10 @@ const createSchemas = <
     id: Id,
     ...fields,
   }),
-  create: S.Struct(fields),
+  create: S.Struct({
+    id: S.optional(Id),
+    ...fields,
+  }),
   update: S.Struct({
     id: Id,
     ...mapValues(fields, (f) => S.Union(f, S.Void, S.Undefined)),

@@ -42,6 +42,9 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
 
   const isLoggedIn = !!session?.user;
   const emailEnabled = authConfig?.emailEnabled ?? false;
+  const links = isLoggedIn
+    ? [...publicLinks, { href: "/me", label: "Me" }]
+    : publicLinks;
 
   return (
     <header className="flex items-center justify-between border-b border-border px-6 py-3 h-14 [view-transition-name:header]">
@@ -53,7 +56,7 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
           <span>{appName}</span>
         </Link>
         <nav className="flex items-center gap-4">
-          {publicLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               to={link.href}

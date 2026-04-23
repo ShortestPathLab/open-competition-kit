@@ -62,7 +62,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         (track) => competitions.get(track.competition),
         (competition) => instance.tracks.list({ competition: competition.id }),
       );
-      const enrolments = yield* collectionFrom(
+      const enrolmentCollection = yield* collectionFrom(
         instance.enrolments,
         (enrolment) => tracks.get(enrolment.track),
         (owner: typeof schemas.user.Type | typeof schemas.track.Type) =>
@@ -76,6 +76,23 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             M.exhaustive,
           ),
       );
+      const enrolments = {
+        ...enrolmentCollection,
+        enrol: (userId: string, trackId: string) =>
+          E.gen(function* () {
+            const existing = yield* instance.enrolments.list({
+              user: userId,
+              track: trackId,
+            });
+
+            if (existing[0]) return existing[0];
+
+            return yield* instance.enrolments.create({
+              user: userId,
+              track: trackId,
+            });
+          }),
+      };
       return {
         config: { get: () => config },
         competitions,

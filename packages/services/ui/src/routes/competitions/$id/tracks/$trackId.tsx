@@ -1,10 +1,24 @@
-import { useMutation } from "@tanstack/react-query";
+import { PageHeader } from "*/components/page-header";
+import { Badge } from "*/components/ui/badge";
+import { Button } from "*/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "*/components/ui/card";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import sdk from "sdk";
 import { authClient } from "src/lib/auth-client";
-import { PageHeader } from "*/components/page-header";
+import {
+  getTrackSummary,
+  isEnrolledInTrack,
+} from "src/lib/competition-data";
+import { queryClient } from "src/router";
 
 export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
   component: TrackDetailsPage,
@@ -13,53 +27,64 @@ export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
 const enrolInTrack = createServerFn({ method: "POST" }).handler(
   async (ctx: any) => {
     const data = ctx.data as { userId: string; trackId: string };
-    // Pretend this method exists
-    // @ts-ignore
-    await sdk.enrolments.enrol(data.userId, data.trackId);
-    return { success: true };
+    const result = await sdk.enrolments.enrol(data.userId, data.trackId);
+    if (result.error) throw result.error;
+    return { success: true, enrolment: result.value };
   },
 );
 
-const tracks = [
-  {
-    id: "dynamic",
-    name: "Dynamic",
-    description:
-      "Navigate evolving grid maps that change between queries. Algorithms must quickly adapt to environmental shifts while maintaining performance.",
+const getTrack = createServerFn({ method: "GET" }).handler(async (ctx: any) => {
+  const data = ctx.data as { competitionId: string; trackId: string };
+  return getTrackSummary(data.competitionId, data.trackId);
+});
+
+const getEnrollmentStatus = createServerFn({ method: "GET" }).handler(
+  async (ctx: any) => {
+    const data = ctx.data as { userId: string; trackId: string };
+    return isEnrolledInTrack(data.userId, data.trackId);
   },
-  {
-    id: "anyangle",
-    name: "Anyangle",
-    description:
-      "Navigate evolving grid maps that change between queries. Algorithms must quickly adapt to environmental shifts while maintaining performance.",
-  },
-  {
-    id: "classic",
-    name: "Classic",
-    description:
-      "Navigate evolving grid maps that change between queries. Algorithms must quickly adapt to environmental shifts while maintaining performance.",
-  },
-];
+);
 
 function TrackDetailsPage() {
-  // @ts-ignore
   const { id: competitionId, trackId } = Route.useParams();
   const { data: session } = authClient.useSession();
+  const fetchTrack = useServerFn(getTrack);
+  const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
   const enrolFn = useServerFn(enrolInTrack);
 
-  const track = tracks.find((t) => t.id === trackId);
+  const { data: track, isLoading: trackLoading } = useQuery({
+    queryKey: ["track", competitionId, trackId],
+    queryFn: () =>
+      (fetchTrack as any)({ data: { competitionId, trackId } }),
+  });
+
+  const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
+    queryKey: ["enrollmentStatus", session?.user?.id, trackId],
+    queryFn: () =>
+      (fetchEnrollmentStatus as any)({
+        data: { userId: session?.user?.id, trackId },
+      }),
+    enabled: Boolean(session?.user?.id),
+  });
 
   const mutation = useMutation({
     mutationFn: () => {
       if (!session?.user?.id) throw new Error("No user id");
-      return enrolFn({ data: { userId: session.user.id, trackId } });
+      return (enrolFn as any)({ data: { userId: session.user.id, trackId } });
     },
-    onSuccess: () => {
-      // In a real app we might invalidate queries or redirect
-      alert("Successfully enrolled!");
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["enrollmentStatus", session?.user?.id, trackId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["myEnrolments", session?.user?.id],
+        }),
+      ]);
     },
   });
 
+  if (trackLoading) return <div className="p-6">Loading...</div>;
   if (!track) return <div>Track not found</div>;
 
   return (
@@ -75,38 +100,52 @@ function TrackDetailsPage() {
 
       <PageHeader title={track.name} description={track.description} />
 
-      <div className="rounded-xl border border-border p-8 bg-card">
-        <h2 className="text-xl font-semibold mb-4">Enrollment</h2>
-        <p className="text-muted-foreground mb-6">
-          To participate in this track and start submitting your agents, you
-          need to enroll first.
-        </p>
-
-        {session?.user ? (
-          <button
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-          >
-            {mutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      <Card className="rounded-lg">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle>Enrolment</CardTitle>
+              <CardDescription>
+                Join this track to submit entries and follow your results.
+              </CardDescription>
+            </div>
+            {session?.user && !enrollmentLoading && isEnrolled && (
+              <Badge variant="secondary" className="gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Enrolled
+              </Badge>
             )}
-            Enrol in this track
-          </button>
-        ) : (
-          <div className="flex flex-col gap-4 items-start">
-            <p className="text-destructive text-sm font-medium">
-              You must be signed in to enroll.
-            </p>
-            <Link
-              to="/sign-in"
-              className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
-            >
-              Sign in
-            </Link>
           </div>
-        )}
-      </div>
+        </CardHeader>
+        <CardContent>
+          {session?.user ? (
+            <div className="flex flex-col items-start gap-3">
+              <Button
+                size="lg"
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending || isEnrolled || enrollmentLoading}
+              >
+                {mutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {isEnrolled ? "You are enrolled" : "Enrol in this track"}
+              </Button>
+              {mutation.isError && (
+                <p className="text-sm font-medium text-destructive">
+                  Enrolment failed. Please try again.
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 items-start">
+              <p className="text-sm font-medium text-destructive">
+                You must be signed in to enrol.
+              </p>
+              <Button render={<Link to="/sign-in" />}>Sign in</Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
