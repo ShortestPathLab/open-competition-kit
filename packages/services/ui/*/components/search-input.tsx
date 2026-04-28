@@ -1,19 +1,31 @@
 import { Search } from "lucide-react"
+import type { InputHTMLAttributes } from "react"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "*/components/ui/input-group"
 
-interface SearchInputProps {
+interface SearchInputProps extends InputHTMLAttributes<HTMLInputElement> {
   placeholder?: string
   className?: string
 }
 
-export function SearchInput({ placeholder = "Search", className }: SearchInputProps) {
+export function SearchInput({
+  placeholder = "Search",
+  className,
+  ...props
+}: SearchInputProps) {
   return (
-    <div className={`relative ${className ?? ""}`}>
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-      <input
+    <InputGroup className={className}>
+      <InputGroupInput
         type="text"
         placeholder={placeholder}
-        className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        {...props}
       />
-    </div>
+      <InputGroupAddon align="inline-end">
+        <Search className="text-muted-foreground" />
+      </InputGroupAddon>
+    </InputGroup>
   )
 }

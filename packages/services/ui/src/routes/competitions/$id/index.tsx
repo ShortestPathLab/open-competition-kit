@@ -6,9 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "*/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
 import {
   ArrowRight,
   BarChart3,
@@ -17,53 +15,27 @@ import {
   Trophy,
 } from "lucide-react";
 import {
-  listUserEnrolments,
   type CompetitionSummary,
-  type EnrolmentSummary,
-  type SubmissionSummary,
   type TrackSummary,
 } from "src/lib/competition-data";
 import { useCompetition } from "src/lib/competition-fn";
+import {
+  type SubmissionBrowserItem as CompetitionSubmission,
+  useCompetitionSubmissions,
+} from "src/lib/submission-fn";
 import { authClient } from "src/lib/auth-client";
 import type { ReactNode } from "react";
-import { z } from "zod";
+import Markdown from "react-markdown";
 
 export const Route = createFileRoute("/competitions/$id/")({
   component: CompetitionOverviewPage,
 });
-
-type CompetitionSubmission = SubmissionSummary & {
-  trackId: string;
-  trackName: string;
-  competitionId: string;
-};
 
 type OverviewStat = {
   label: string;
   value: string | number;
   valueClassName?: string;
 };
-
-const competitionSubmissionsInput = z.object({
-  userId: z.string(),
-  competitionId: z.string(),
-});
-
-const getCompetitionSubmissions = createServerFn({ method: "GET" })
-  .inputValidator(competitionSubmissionsInput)
-  .handler(async ({ data }) => {
-    const enrolments = await listUserEnrolments(data.userId);
-    return enrolments
-      .filter((enrolment) => enrolment.competition.id === data.competitionId)
-      .flatMap((enrolment: EnrolmentSummary) =>
-        enrolment.submissions.map((submission) => ({
-          ...submission,
-          trackId: enrolment.track.id,
-          trackName: enrolment.track.name,
-          competitionId: enrolment.competition.id,
-        })),
-      );
-  });
 
 function buildOverviewStats(competition: CompetitionSummary): OverviewStat[] {
   return [
@@ -96,7 +68,7 @@ function SectionHeader({
   action,
 }: {
   title: string;
-  description: string;
+  description?: string;
   action?: ReactNode;
 }) {
   return (
@@ -211,16 +183,8 @@ function CompetitionOverviewPage() {
   const { id } = Route.useParams();
   const { data: competition } = useCompetition(id);
   const { data: session, isPending: sessionLoading } = authClient.useSession();
-  const fetchCompetitionSubmissions = useServerFn(getCompetitionSubmissions);
-
-  const { data: mySubmissions = [], isLoading: submissionsLoading } = useQuery({
-    queryKey: ["competitionSubmissions", session?.user?.id, id],
-    queryFn: () =>
-      (fetchCompetitionSubmissions as any)({
-        data: { userId: session?.user?.id, competitionId: id },
-      }),
-    enabled: Boolean(session?.user?.id),
-  });
+  const { data: mySubmissions = [], isLoading: submissionsLoading } =
+    useCompetitionSubmissions(session?.user?.id, id);
 
   if (!competition) return <div>Loading...</div>;
 
@@ -389,6 +353,12 @@ function CompetitionOverviewPage() {
                 ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+      <Card className="shadow-sm">
+        <SectionHeader title="Details" />
+        <CardContent className="prose max-w-none mt-4">
+          <Markdown>{competition.overview}</Markdown>
         </CardContent>
       </Card>
     </div>

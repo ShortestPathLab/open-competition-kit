@@ -58,7 +58,7 @@ function CompetitionLayout() {
                             params: { id, trackId: track.id },
                           });
                         }}
-                        className="flex min-h-20 w-full items-start justify-between gap-3 rounded-md px-3 py-2 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="border border-border/30 flex min-h-20 w-full items-start justify-between gap-3 rounded-md px-3 py-2 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <span>
                           <span className="block font-medium">

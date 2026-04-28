@@ -51,6 +51,8 @@ export const tables = {
     name: S.String,
     organiser: S.String,
     description: S.String,
+    overview: S.String,
+    rules: S.String,
   }),
   submission: createSchemas("open-competition-kit/db/submission", {
     user: S.String,

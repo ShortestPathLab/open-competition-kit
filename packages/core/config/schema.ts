@@ -21,6 +21,8 @@ export const CompetitionConfig = S.Struct({
   ...Extendable.fields,
   organiser: S.optional(S.String),
   description: S.optional(S.String),
+  overview: S.optional(S.String),
+  rules: S.optional(S.String),
   tracks: S.Array(TrackConfig),
   runner: S.Struct({
     ...Extendable.fields,

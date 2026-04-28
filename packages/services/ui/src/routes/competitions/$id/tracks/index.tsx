@@ -30,7 +30,7 @@ export default function TracksPage() {
   return (
     <div>
       <SearchInput placeholder="Search tracks" />
-      <div className="mt-6 grid grid-cols-2 gap-4">
+      <div className="mt-6 flex flex-col gap-4">
         {tracks.map((track: TrackSummary) => (
           <TrackCard
             key={track.id}

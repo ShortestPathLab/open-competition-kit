@@ -1,5 +1,12 @@
 import { startCase } from "es-toolkit";
-import { competitions, enrolments, submissions, tracks, unsafe } from "sdk";
+import {
+  Competition,
+  competitions,
+  enrolments,
+  submissions,
+  tracks,
+  unsafe,
+} from "sdk";
 
 export type TrackSummary = {
   id: string;
@@ -8,17 +15,20 @@ export type TrackSummary = {
   competitionId: string;
 };
 
-export type CompetitionSummary = {
-  id: string;
-  name: string;
-  organiser: string;
-  description: string;
+export type CompetitionSummary = Competition & {
   tracks: TrackSummary[];
 };
 
 export type SubmissionSummary = {
   id: string;
   body: string;
+};
+
+export type UserSubmissionSummary = SubmissionSummary & {
+  trackId: string;
+  trackName: string;
+  competitionId: string;
+  competitionName: string;
 };
 
 export type EnrolmentSummary = {
@@ -50,6 +60,7 @@ export async function getCompetitionSummary(
   }));
 
   return {
+    ...competition,
     id,
     name: competitionName,
     organiser: competition.organiser || "OpenCompetitionKit",
@@ -86,26 +97,13 @@ export async function listUserEnrolments(
   ]);
 
   return userEnrolments.map((enrolment) => {
-    const competition =
-      allCompetitions.find((competition) =>
-        competition.tracks.some((track) => track.id === enrolment.track),
-      ) ??
-      ({
-        id: "",
-        name: "Competition",
-        organiser: "OpenCompetitionKit",
-        description: "No description yet.",
-        tracks: [],
-      } satisfies CompetitionSummary);
+    const competition = allCompetitions.find((competition) =>
+      competition.tracks.some((track) => track.id === enrolment.track),
+    )!;
 
-    const track =
-      competition.tracks.find((track) => track.id === enrolment.track) ??
-      ({
-        id: enrolment.track,
-        name: startCase(enrolment.track),
-        description: "No description yet.",
-        competitionId: competition.id,
-      } satisfies TrackSummary);
+    const track = competition.tracks.find(
+      (track) => track.id === enrolment.track,
+    )!;
 
     return {
       id: enrolment.id,
@@ -122,4 +120,19 @@ export async function listUserEnrolments(
         })),
     };
   });
+}
+
+export async function listUserSubmissions(
+  userId: string,
+): Promise<UserSubmissionSummary[]> {
+  const enrolments = await listUserEnrolments(userId);
+  return enrolments.flatMap((enrolment) =>
+    enrolment.submissions.map((submission) => ({
+      ...submission,
+      trackId: enrolment.track.id,
+      trackName: enrolment.track.name,
+      competitionId: enrolment.competition.id,
+      competitionName: enrolment.competition.name,
+    })),
+  );
 }

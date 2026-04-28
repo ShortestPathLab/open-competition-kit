@@ -22,6 +22,14 @@ function getCompetitionDescription(competition: CompetitionConfig) {
   return competition.description ?? "No description yet.";
 }
 
+function getCompetitionOverview(competition: CompetitionConfig) {
+  return competition.overview ?? "";
+}
+
+function getCompetitionRules(competition: CompetitionConfig) {
+  return competition.rules ?? "";
+}
+
 function getTrackDescription(
   competition: CompetitionConfig,
   track: CompetitionConfig["tracks"][number],
@@ -51,6 +59,8 @@ async function createMissingCompetitions(
         name: competition.name,
         organiser: getCompetitionOrganizer(competition),
         description: getCompetitionDescription(competition),
+        overview: getCompetitionOverview(competition),
+        rules: getCompetitionRules(competition),
       }),
     ),
   );
@@ -69,7 +79,10 @@ async function updateChangedCompetitions(
       byId[competition.id]?.organiser !==
         getCompetitionOrganizer(competition) ||
       byId[competition.id]?.description !==
-        getCompetitionDescription(competition),
+        getCompetitionDescription(competition) ||
+      byId[competition.id]?.overview !==
+        getCompetitionOverview(competition) ||
+      byId[competition.id]?.rules !== getCompetitionRules(competition),
   );
 
   await mapAsync(changed, (competition) =>
@@ -79,6 +92,8 @@ async function updateChangedCompetitions(
         name: competition.name,
         organiser: getCompetitionOrganizer(competition),
         description: getCompetitionDescription(competition),
+        overview: getCompetitionOverview(competition),
+        rules: getCompetitionRules(competition),
       }),
     ),
   );

@@ -117,15 +117,17 @@ function MeIndexPage() {
               ) : (
                 <div className="space-y-2">
                   {enrolment.submissions.map((submission) => (
-                    <div
+                    <Link
                       key={submission.id}
-                      className="rounded-md border border-border px-3 py-2"
+                      to="/me/submissions/$submissionId"
+                      params={{ submissionId: submission.id }}
+                      className="block rounded-md border border-border px-3 py-2 transition-colors hover:bg-muted"
                     >
                       <p className="font-mono text-xs text-muted-foreground">
                         {submission.id}
                       </p>
                       <p className="mt-1 text-sm break-all">{submission.body}</p>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
