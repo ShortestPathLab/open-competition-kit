@@ -7,7 +7,7 @@ import viteTsConfigPaths from "vite-tsconfig-paths";
 
 const config = defineConfig({
   plugins: [
-    nitro(),
+    nitro({ traceDeps: ["sdk"] }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ["./tsconfig.json"],
@@ -16,7 +16,7 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
   ],
-  build: { rollupOptions: { external: ["bun"] } },
+  build: { rollupOptions: { external: ["bun", "sdk"] } },
   ssr: {
     external: ["sdk"],
   },
