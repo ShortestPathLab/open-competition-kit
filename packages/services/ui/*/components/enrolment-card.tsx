@@ -1,21 +1,13 @@
 import { Button } from "*/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "*/components/ui/card";
+import { Card } from "*/components/ui/card";
+import { CheckCircle2, Lock, UserPlus } from "lucide-react";
 import type { ReactNode } from "react";
-import { CheckCircle2, Loader2, Lock, UserPlus } from "lucide-react";
 
 interface EnrolmentCardProps {
   isSignedIn: boolean;
   isLoading: boolean;
   isEnrolled: boolean;
-  isPending?: boolean;
-  isError?: boolean;
-  onEnrol: () => void;
+  enrolAction?: ReactNode;
   submitAction?: ReactNode;
   signInAction?: ReactNode;
   title?: string;
@@ -26,13 +18,9 @@ export function EnrolmentCard({
   isSignedIn,
   isLoading,
   isEnrolled,
-  isPending = false,
-  isError = false,
-  onEnrol,
+  enrolAction,
   submitAction,
   signInAction,
-  title = "Enrolment",
-  description = "Join this track to submit entries and follow your results.",
 }: EnrolmentCardProps) {
   const status = !isSignedIn
     ? {
@@ -82,23 +70,8 @@ export function EnrolmentCard({
                   : "Enrol in this track to unlock submissions and participation."}
               </div>
               <div className="flex  items-start gap-3">
-                {isEnrolled ? (
-                  submitAction
-                ) : (
-                  <Button
-                    onClick={onEnrol}
-                    disabled={isPending || isEnrolled || isLoading}
-                  >
-                    {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {isEnrolled ? "You are enrolled" : "Enrol in this track"}
-                  </Button>
-                )}
+                {isEnrolled ? submitAction : enrolAction}
               </div>
-              {isError && (
-                <p className="text-sm font-medium text-destructive">
-                  Enrolment failed. Please try again.
-                </p>
-              )}
             </div>
           ) : (
             <div className="flex gap-4 justify-between items-center ">

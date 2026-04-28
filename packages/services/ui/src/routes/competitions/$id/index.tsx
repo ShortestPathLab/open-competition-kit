@@ -124,11 +124,11 @@ function FeaturedTrackCard({
     <Link
       to="/competitions/$id/tracks/$trackId"
       params={{ id: competitionId, trackId: track.id }}
-      className="group rounded-2xl border border-border/70 bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,1))] p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
+      className="group rounded-2xl border border-border/70 bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,1))] p-4 hover:border-primary/40 hover:shadow-sm"
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs text-muted-foreground">Track {index + 1}</span>
-        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
       </div>
       <h3 className="mt-6 text-lg font-semibold text-foreground">
         {track.name}
@@ -142,7 +142,7 @@ function FeaturedTrackCard({
 
 function SubmissionCard({ submission }: { submission: CompetitionSubmission }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-[linear-gradient(180deg,_rgba(255,255,255,1),_rgba(248,250,252,0.95))] p-4">
+    <div className="rounded-2xl border border-border/70 bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.95))] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-muted-foreground">
@@ -163,15 +163,13 @@ function SubmissionCard({ submission }: { submission: CompetitionSubmission }) {
           size="sm"
           render={
             <Link
-              to="/competitions/$id/tracks/$trackId/submit"
-              params={{
-                id: submission.competitionId,
-                trackId: submission.trackId,
-              }}
+              to="/competitions/$id/submissions/new"
+              params={{ id: submission.competitionId }}
+              search={{ trackId: submission.trackId }}
             />
           }
         >
-          Open track
+          New submission
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -213,7 +211,7 @@ function CompetitionOverviewPage() {
         <CardContent className="px-6 py-6">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl space-y-4">
-              <div className="text-xs font-medium">{competition.organiser}</div>
+              <div className="text-xs font-medium">Competition</div>
               <div className="space-y-3">
                 <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
                   {competition.name}
@@ -231,7 +229,12 @@ function CompetitionOverviewPage() {
           </div>
         </CardContent>
       </Card>
-
+      <Card className="shadow-sm">
+        <SectionHeader title="Details" />
+        <CardContent className="prose prose-headings:font-medium max-w-none mt-4 prose-sm">
+          <Markdown>{competition.overview}</Markdown>
+        </CardContent>
+      </Card>
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
         <Card className="shadow-sm">
           <SectionHeader
@@ -248,7 +251,7 @@ function CompetitionOverviewPage() {
               </Button>
             }
           />
-          <CardContent className="grid gap-3 pt-4 md:grid-cols-2 xl:grid-cols-3">
+          <CardContent className="grid gap-3  md:grid-cols-2 xl:grid-cols-3">
             {featuredTracks.length > 0 ? (
               featuredTracks.map((track, index) => (
                 <FeaturedTrackCard
@@ -281,7 +284,7 @@ function CompetitionOverviewPage() {
               </Button>
             }
           />
-          <CardContent className="pt-4">
+          <CardContent className="">
             <DashedPanel className="border-border/80 bg-muted/20 px-6 py-10 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Trophy className="h-6 w-6 text-primary" />
@@ -304,7 +307,7 @@ function CompetitionOverviewPage() {
           description="Your recent work in this competition, grouped across enrolled tracks."
           action={browseTracksAction}
         />
-        <CardContent className="pt-4">
+        <CardContent className="">
           {sessionLoading ? (
             <DashedPanel className="text-sm text-muted-foreground">
               Loading your account details...
@@ -353,12 +356,6 @@ function CompetitionOverviewPage() {
                 ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-      <Card className="shadow-sm">
-        <SectionHeader title="Details" />
-        <CardContent className="prose max-w-none mt-4">
-          <Markdown>{competition.overview}</Markdown>
         </CardContent>
       </Card>
     </div>

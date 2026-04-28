@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-
+import BoringAvatar from "boring-avatars";
 interface CompetitionCardProps {
   id: string;
   name: string;
@@ -19,12 +19,19 @@ export function CompetitionCard({
       params={{ id }}
       className="group block rounded-lg border border-border overflow-hidden"
     >
-      <div className="aspect-[4/3] bg-muted">
-        {imageUrl && (
+      <div className="aspect-4/3 bg-muted">
+        {imageUrl ? (
           <img
             src={imageUrl}
             alt={name}
             className="h-full w-full object-cover"
+          />
+        ) : (
+          <BoringAvatar
+            name={name}
+            square
+            preserveAspectRatio="none"
+            className="h-full w-full"
           />
         )}
       </div>

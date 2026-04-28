@@ -61,6 +61,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "*/components/ui/select"
@@ -447,6 +448,7 @@ function FormExample() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
+                        <SelectLabel>Roles</SelectLabel>
                         {roleItems.map((item) => (
                           <SelectItem key={item.value} value={item.value}>
                             {item.label}

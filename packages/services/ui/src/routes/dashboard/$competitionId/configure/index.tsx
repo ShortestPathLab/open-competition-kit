@@ -181,7 +181,7 @@ function ConfigurePage() {
       </section>
 
       {/* Bottom actions */}
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+      <div className="flex items-center justify-end gap-2 border-t border-border ">
         <button className="rounded-md border border-border px-3 py-1.5 text-sm">
           Cancel
         </button>

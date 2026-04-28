@@ -49,6 +49,7 @@ export const Route = createRootRoute({
 
 import { useEffect } from "react";
 import { ensureUserExists } from "src/lib/ensure-user";
+import { Toaster } from "*/components/ui/sonner";
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { data: session } = authClient.useSession();
@@ -105,6 +106,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           />
           <Scripts />
         </QueryClientProvider>
+        <Toaster position="top-center" />
       </body>
     </html>
   );

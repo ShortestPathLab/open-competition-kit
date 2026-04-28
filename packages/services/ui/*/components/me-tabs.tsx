@@ -5,7 +5,8 @@ export function MeTabs() {
     <TabNav
       variant="underline"
       tabs={[
-        { label: "Overview", href: "/me" },
+        { label: "Overview", href: "/me", exact: true },
+        { label: "Enrolments", href: "/me/enrolments" },
         { label: "Submissions", href: "/me/submissions" },
         { label: "Settings", href: "/me/settings" },
       ]}

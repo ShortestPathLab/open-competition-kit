@@ -1,6 +1,6 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import {
+import sdk, {
   competitions,
   jobs,
   outputs,
@@ -13,6 +13,7 @@ import {
   type UserSubmissionSummary,
 } from "./competition-data";
 import { z } from "zod";
+import { ensureSession } from "./auth.server";
 
 const competitionSubmissionsInput = z.object({
   userId: z.string(),
@@ -63,8 +64,7 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
         id: job.id,
         status: job.status,
         outputs: await unsafe(outputs.list({ job: job.id })),
-        logs:
-          "Logs are not available in the current runner implementation yet.",
+        logs: "Logs are not available in the current runner implementation yet.",
       })),
     );
 
@@ -124,6 +124,7 @@ export function useSubmissionDetail(userId?: string, submissionId?: string) {
   const getSubmissionDetailFn = useServerFn(getSubmissionDetail);
   return useQuery({
     queryKey: ["submissionDetail", userId, submissionId],
+    refetchInterval: 1000,
     queryFn:
       userId && submissionId
         ? () =>
@@ -133,3 +134,34 @@ export function useSubmissionDetail(userId?: string, submissionId?: string) {
         : skipToken,
   });
 }
+
+const submissionInput = z.object({
+  competitionId: z.string(),
+  trackId: z.string(),
+  value: z.string(),
+});
+
+export const createSubmission = createServerFn({ method: "POST" })
+  .inputValidator(submissionInput)
+  .handler(async ({ data }) => {
+    const session = await ensureSession();
+    const enrolmentStatus = await sdk.enrolments.isEnrolled(
+      session.user.id,
+      data.competitionId,
+      data.trackId,
+    );
+    if (enrolmentStatus.error) throw enrolmentStatus.error;
+    if (!enrolmentStatus.value) {
+      throw new Error("You must enrol in this track before submitting.");
+    }
+
+    const result = await sdk.submissions.create({
+      user: session.user.id,
+      track: data.trackId,
+      body: JSON.stringify({ value: data.value }),
+    });
+
+    if (result.error) throw result.error;
+
+    return { success: true, submission: result.value };
+  });

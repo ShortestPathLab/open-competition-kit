@@ -1,6 +1,7 @@
 import { SubmissionBrowser } from "*/components/submission-browser";
 import { SectionHeader } from "*/components/section-header";
-import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "*/components/ui/button";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { authClient } from "src/lib/auth-client";
 import { useUserSubmissions } from "src/lib/submission-fn";
 
@@ -25,6 +26,23 @@ function MeSubmissionsPage() {
           isSessionLoading={sessionLoading}
           isSignedIn={Boolean(session?.user)}
           isLoading={submissionsLoading}
+          renderActions={(submission) => (
+            <Button
+              variant="outline"
+              size="sm"
+              render={
+                <Link
+                  to="/competitions/$id/tracks/$trackId"
+                  params={{
+                    id: submission.competitionId,
+                    trackId: submission.trackId,
+                  }}
+                />
+              }
+            >
+              Open track
+            </Button>
+          )}
         />
       </div>
     </div>

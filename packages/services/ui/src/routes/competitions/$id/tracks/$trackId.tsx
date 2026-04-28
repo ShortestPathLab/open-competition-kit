@@ -1,14 +1,21 @@
 import { EnrolmentCard } from "*/components/enrolment-card";
-import { PageHeader } from "*/components/page-header";
 import { Button } from "*/components/ui/button";
-import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "*/components/ui/card";
+import { skipToken, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ArrowLeft } from "lucide-react";
-import sdk, { unsafe } from "sdk";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import sdk from "sdk";
 import { authClient } from "src/lib/auth-client";
 import { getTrackSummary } from "src/lib/competition-data";
-import { queryClient } from "src/router";
 import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
@@ -25,12 +32,6 @@ const trackInput = z.object({
   competitionId: z.string(),
   trackId: z.string(),
 });
-
-const enrolInTrack = createServerFn({ method: "POST" })
-  .inputValidator(enrolmentInput)
-  .handler(({ data }) =>
-    unsafe(sdk.enrolments.enrol(data.userId, data.competitionId, data.trackId)),
-  );
 
 const getTrack = createServerFn({ method: "GET" })
   .inputValidator(trackInput)
@@ -50,16 +51,26 @@ const getEnrollmentStatus = createServerFn({ method: "GET" })
     return result.value;
   });
 
+function TrackMetaCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-background p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-2 break-all text-sm font-medium text-foreground">
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function TrackDetailsPage() {
   const { id: competitionId, trackId } = Route.useParams();
   const { data: session } = authClient.useSession();
   const fetchTrack = useServerFn(getTrack);
   const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
-  const enrolFn = useServerFn(enrolInTrack);
 
   const { data: track, isLoading: trackLoading } = useQuery({
     queryKey: ["track", competitionId, trackId],
-    queryFn: () => (fetchTrack as any)({ data: { competitionId, trackId } }),
+    queryFn: () => fetchTrack({ data: { competitionId, trackId } }),
   });
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
@@ -72,34 +83,6 @@ function TrackDetailsPage() {
       : skipToken,
   });
 
-  const mutation = useMutation({
-    mutationFn: () => {
-      if (!session?.user?.id) throw new Error("No user id");
-      return enrolFn({
-        data: {
-          userId: session.user.id,
-          competitionId,
-          trackId,
-        },
-      });
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            "enrollmentStatus",
-            session?.user?.id,
-            competitionId,
-            trackId,
-          ],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["myEnrolments", session?.user?.id],
-        }),
-      ]);
-    },
-  });
-
   if (trackLoading) return <div className="p-6">Loading...</div>;
   if (!track) return <div>Track not found</div>;
 
@@ -108,29 +91,37 @@ function TrackDetailsPage() {
       <Link
         to="/competitions/$id/tracks"
         params={{ id: competitionId }}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to tracks
       </Link>
-
-      <PageHeader title={track.name} description={track.description} />
-
       <EnrolmentCard
         isSignedIn={Boolean(session?.user)}
         isLoading={enrollmentLoading}
         isEnrolled={isEnrolled}
-        isPending={mutation.isPending}
-        isError={mutation.isError}
-        onEnrol={() => mutation.mutate()}
         signInAction={<Button render={<Link to="/sign-in" />}>Sign in</Button>}
+        enrolAction={
+          <Button
+            render={
+              <Link
+                to="/competitions/$id/enrol"
+                params={{ id: competitionId }}
+                search={{ trackId }}
+              />
+            }
+          >
+            Enrol in this track
+          </Button>
+        }
         submitAction={
           <Button
             variant="outline"
             render={
               <Link
-                to="/competitions/$id/tracks/$trackId/submit"
-                params={{ id: competitionId, trackId }}
+                to="/competitions/$id/submissions/new"
+                params={{ id: competitionId }}
+                search={{ trackId }}
               />
             }
           >
@@ -139,7 +130,43 @@ function TrackDetailsPage() {
         }
       />
 
-      <Outlet />
+      <Card className="overflow-hidden rounded-lg border-border shadow-sm">
+        <CardContent className="px-6 py-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl space-y-4">
+              <div className="text-xs font-medium text-muted-foreground">
+                Track
+              </div>
+              <div className="space-y-3">
+                <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
+                  {track.name}
+                </h1>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  {track.description}
+                </p>
+              </div>
+            </div>
+            <div className="grid w-full max-w-md gap-3 sm:grid-cols-2">
+              <TrackMetaCard label="Competition" value={competitionId} />
+              <TrackMetaCard label="Track ID" value={track.id} />
+              <TrackMetaCard
+                label="Submissions"
+                value="Available after enrolment"
+              />
+              <TrackMetaCard label="Status" value="Open for participation" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card key={track.id} className="shadow-sm">
+        <CardHeader className="border-b border-border/60">
+          <CardTitle>Rules</CardTitle>
+          <CardDescription>{track.name}</CardDescription>
+        </CardHeader>
+        <CardContent className="prose max-w-none prose-sm">
+          <Markdown remarkPlugins={[remarkGfm]}>{track.rules}</Markdown>
+        </CardContent>
+      </Card>
     </div>
   );
 }

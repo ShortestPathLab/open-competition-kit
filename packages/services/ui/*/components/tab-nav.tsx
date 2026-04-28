@@ -4,6 +4,7 @@ import { cn } from "*/lib/utils";
 export interface Tab {
   label: string;
   href: string;
+  exact?: boolean;
   badge?: string | number;
 }
 
@@ -18,7 +19,9 @@ export function TabNav({ tabs, variant = "pill" }: TabNavProps) {
   return (
     <nav className="flex items-center gap-1">
       {tabs.map((tab) => {
-        const isActive = pathname === tab.href;
+        const isActive = tab.exact
+          ? pathname === tab.href
+          : pathname.startsWith(tab.href);
         return (
           <Link
             key={tab.href}

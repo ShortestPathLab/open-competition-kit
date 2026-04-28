@@ -1,5 +1,11 @@
 import { Button } from "*/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "*/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "*/components/ui/card";
 import {
   Item,
   ItemContent,
@@ -12,7 +18,8 @@ import { Separator } from "*/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
+import { last } from "es-toolkit";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "sdk";
 import { authClient } from "src/lib/auth-client";
@@ -51,6 +58,25 @@ function prettyResult(result: string) {
   }
 }
 
+function statusLabel(status: string) {
+  return status.replace(/[-_]/g, " ");
+}
+
+function statusTone(status: string) {
+  switch (status.toLowerCase()) {
+    case "completed":
+    case "success":
+      return "bg-emerald-500/10 text-emerald-700";
+    case "failed":
+    case "error":
+      return "bg-red-500/10 text-red-700";
+    case "running":
+      return "bg-blue-500/10 text-blue-700";
+    default:
+      return "bg-amber-500/10 text-amber-700";
+  }
+}
+
 function SubmissionDetailPage() {
   const { submissionId } = Route.useParams();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -71,7 +97,7 @@ function SubmissionDetailPage() {
     }
 
     if (!selectedJobId) {
-      setSelectedJobId(detail.jobs[0]?.id);
+      setSelectedJobId(last(detail?.jobs)?.id);
     }
   }, [detail?.jobs, selectedJobId]);
 
@@ -112,65 +138,126 @@ function SubmissionDetailPage() {
         Back to submissions
       </Button>
 
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-        <Card className="shadow-sm">
-          <CardHeader className="border-b border-border">
-            <div className="space-y-3">
-              <div>
-                <CardTitle>{detail.trackName}</CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">
+      <Card className="shadow-sm">
+        <CardContent className="px-6 py-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl space-y-3">
+              <div className="text-xs font-medium">Submission</div>
+              <div className="space-y-3">
+                <h1 className="text-3xl font-semibold text-foreground">
+                  {detail.trackName}
+                </h1>
+                <p className="text-sm text-muted-foreground">
                   {detail.competitionName}
                 </p>
+                <p className="font-mono text-xs text-muted-foreground">
+                  {detail.id}
+                </p>
               </div>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p className="font-mono text-xs">{detail.id}</p>
+            </div>
+            <div className="grid w-full max-w-md gap-3 sm:grid-cols-2 ">
+              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                <p className="text-xs text-muted-foreground">Runs</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {detail.jobs.length}
+                </p>
               </div>
-              <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-                {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                <RotateCcw className="h-4 w-4" />
-                Rerun submission
-              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+        <Card className="shadow-sm">
+          <CardHeader className="border-b border-border">
+            <div className="space-y-4">
+              <div>
+                <CardTitle>Choose a run</CardTitle>
+                <CardDescription>
+                  Select a job on the left to inspect its outputs and logs on
+                  the right.
+                </CardDescription>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  render={
+                    <Link
+                      to="/competitions/$id/tracks/$trackId"
+                      params={{
+                        id: detail.competitionId,
+                        trackId: detail.trackId,
+                      }}
+                    />
+                  }
+                >
+                  Open track
+                </Button>
+                <Button
+                  onClick={() => mutation.mutate()}
+                  disabled={mutation.isPending}
+                >
+                  {mutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-4 w-4" />
+                  )}
+                  Re-run
+                </Button>
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="mb-3">
-              <h3 className="text-sm font-semibold text-foreground">Jobs</h3>
-              <p className="text-sm text-muted-foreground">
-                Select a job to inspect its status and outputs.
-              </p>
-            </div>
+          <CardContent className="">
             {detail.jobs.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
                 No jobs exist yet for this submission. Use rerun to create one.
               </div>
             ) : (
               <ItemGroup className="gap-2">
-                {detail.jobs.map((job) => (
-                  <button
-                    key={job.id}
-                    type="button"
-                    onClick={() => setSelectedJobId(job.id)}
-                    className="w-full text-left"
-                  >
-                    <Item
-                      variant={selectedJob?.id === job.id ? "muted" : "outline"}
+                {detail.jobs
+                  .map((job, index) => (
+                    <button
+                      key={job.id}
+                      type="button"
+                      onClick={() => setSelectedJobId(job.id)}
+                      className="w-full text-left"
                     >
-                      <ItemContent>
-                        <ItemHeader>
-                          <ItemTitle>{job.status}</ItemTitle>
-                          <p className="font-mono text-xs text-muted-foreground">
-                            {job.id}
-                          </p>
-                        </ItemHeader>
-                        <ItemDescription>
-                          {job.outputs.length > 0
-                            ? `${job.outputs.length} output record${job.outputs.length === 1 ? "" : "s"}`
-                            : "No outputs yet"}
-                        </ItemDescription>
-                      </ItemContent>
-                    </Item>
-                  </button>
-                ))}
+                      <Item
+                        variant={
+                          selectedJob?.id === job.id ? "muted" : "outline"
+                        }
+                        className={
+                          selectedJob?.id === job.id
+                            ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                            : ""
+                        }
+                      >
+                        <ItemContent>
+                          <ItemHeader>
+                            <div className="min-w-0">
+                              <ItemTitle>Run {index + 1}</ItemTitle>
+                            </div>
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusTone(job.status)}`}
+                            >
+                              {statusLabel(job.status)}
+                            </span>
+                          </ItemHeader>
+                          <div className="mt-2 flex items-center justify-between gap-3">
+                            <ItemDescription>
+                              {job.outputs.length > 0
+                                ? `${job.outputs.length} output record${job.outputs.length === 1 ? "" : "s"}`
+                                : "No outputs yet"}
+                            </ItemDescription>
+                            <p className="font-mono text-[11px] text-muted-foreground">
+                              {job.id}
+                            </p>
+                          </div>
+                        </ItemContent>
+                      </Item>
+                    </button>
+                  ))
+                  .reverse()}
               </ItemGroup>
             )}
           </CardContent>
@@ -179,9 +266,12 @@ function SubmissionDetailPage() {
         <div className="space-y-4">
           <Card className="shadow-sm">
             <CardHeader className="border-b border-border">
-              <CardTitle>Submission details</CardTitle>
+              <CardTitle>Submission payload</CardTitle>
+              <CardDescription>
+                The original content that was sent for this submission.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 pt-4">
+            <CardContent className="space-y-4 ">
               <div>
                 <p className="text-sm font-medium text-foreground">Payload</p>
                 <pre className="mt-2 overflow-x-auto rounded-lg border border-border bg-muted/30 p-4 text-sm whitespace-pre-wrap break-all">
@@ -193,20 +283,46 @@ function SubmissionDetailPage() {
 
           <Card className="shadow-sm">
             <CardHeader className="border-b border-border">
-              <CardTitle>Job details</CardTitle>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle>
+                    {selectedJob ? "Selected run" : "Run details"}
+                  </CardTitle>
+                  <CardDescription>
+                    {selectedJob
+                      ? "This panel shows the outputs and logs for the run selected on the left."
+                      : "Choose a run from the left-hand list to inspect it here."}
+                  </CardDescription>
+                </div>
+                {selectedJob ? (
+                  <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">
+                      {statusLabel(selectedJob.status)}
+                    </span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    <span>Viewing run details</span>
+                  </div>
+                ) : null}
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4 pt-4">
+            <CardContent className="space-y-4 ">
               {selectedJob ? (
                 <>
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className="grid gap-3 md:grid-cols-3">
                     <div className="rounded-lg border border-border p-3">
-                      <p className="text-sm text-muted-foreground">Job ID</p>
+                      <p className="text-sm text-muted-foreground">Run ID</p>
                       <p className="mt-1 font-mono text-xs">{selectedJob.id}</p>
                     </div>
                     <div className="rounded-lg border border-border p-3">
                       <p className="text-sm text-muted-foreground">Status</p>
                       <p className="mt-1 text-sm font-medium capitalize">
-                        {selectedJob.status}
+                        {statusLabel(selectedJob.status)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border p-3">
+                      <p className="text-sm text-muted-foreground">Outputs</p>
+                      <p className="mt-1 text-sm font-medium">
+                        {selectedJob.outputs.length}
                       </p>
                     </div>
                   </div>
@@ -214,7 +330,9 @@ function SubmissionDetailPage() {
                   <Separator />
 
                   <div>
-                    <p className="text-sm font-medium text-foreground">Outputs</p>
+                    <p className="text-sm font-medium text-foreground">
+                      Outputs
+                    </p>
                     {selectedJob.outputs.length === 0 ? (
                       <div className="mt-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
                         No outputs have been produced for this job yet.

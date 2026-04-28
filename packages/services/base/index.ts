@@ -37,11 +37,21 @@ function getTrackDescription(
   return track.description ?? `${track.name} track in ${competition.name}.`;
 }
 
+function getTrackOverview(track: CompetitionConfig["tracks"][number]) {
+  return track.overview ?? "";
+}
+
+function getTrackRules(track: CompetitionConfig["tracks"][number]) {
+  return track.rules ?? "";
+}
+
 type ConfigTrackRecord = TrackCreate & {
   id: string;
   name: string;
   competition: string;
   description: string;
+  overview: string;
+  rules: string;
 };
 
 const sameId = (a: { id: string }, b: { id: string }) => a.id === b.id;
@@ -112,6 +122,8 @@ async function createMissingTracks(competition: CompetitionConfig) {
         name: track.name,
         competition: competition.id,
         description: getTrackDescription(competition, track),
+        overview: getTrackOverview(track),
+        rules: getTrackRules(track),
       }) satisfies ConfigTrackRecord,
   );
   const missing = differenceWith(configTracks, dbTracks, sameId);
@@ -123,6 +135,8 @@ async function createMissingTracks(competition: CompetitionConfig) {
         name: track.name,
         competition: competition.id,
         description: track.description,
+        overview: track.overview,
+        rules: track.rules,
       }),
     ),
   );
@@ -141,7 +155,9 @@ async function updateChangedTracks(
       current != null &&
       (current.name !== track.name ||
         current.competition !== track.competition ||
-        current.description !== track.description)
+        current.description !== track.description ||
+        current.overview !== track.overview ||
+        current.rules !== track.rules)
     );
   });
 
@@ -152,6 +168,8 @@ async function updateChangedTracks(
         name: track.name,
         competition: track.competition,
         description: track.description,
+        overview: track.overview,
+        rules: track.rules,
       }),
     ),
   );

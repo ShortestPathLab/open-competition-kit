@@ -12,6 +12,8 @@ export type TrackSummary = {
   id: string;
   name: string;
   description: string;
+  overview: string;
+  rules: string;
   competitionId: string;
 };
 
@@ -56,6 +58,8 @@ export async function getCompetitionSummary(
     id: track.id,
     name: track.name,
     description: track.description ?? "No description",
+    overview: track.overview ?? "",
+    rules: track.rules ?? "",
     competitionId: id,
   }));
 

@@ -10,11 +10,11 @@ export function CompetitionTabs({ competitionId }: CompetitionTabsProps) {
     <TabNav
       variant="underline"
       tabs={[
-        { label: "Overview", href: base },
+        { label: "Overview", href: base, exact: true },
         { label: "Tracks", href: `${base}/tracks` },
         { label: "Rules", href: `${base}/rules` },
+        { label: "Submissions", href: `${base}/submissions` },
         { label: "Leaderboard", href: "/leaderboards", badge: 4 },
-        { label: "My submissions", href: `${base}/submissions` },
       ]}
     />
   );

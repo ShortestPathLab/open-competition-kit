@@ -13,6 +13,8 @@ export const TrackConfig = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
   description: S.optional(S.String),
+  overview: S.optional(S.String),
+  rules: S.optional(S.String),
   form: Extendable,
 });
 
