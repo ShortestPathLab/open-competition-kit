@@ -1,3 +1,4 @@
+import { Loader } from "*/components/loader";
 import { Button } from "*/components/ui/button";
 import {
   Card,
@@ -11,7 +12,6 @@ import {
   ArrowRight,
   BarChart3,
   ClipboardList,
-  Sparkles,
   Trophy,
 } from "lucide-react";
 import {
@@ -184,7 +184,7 @@ function CompetitionOverviewPage() {
   const { data: mySubmissions = [], isLoading: submissionsLoading } =
     useCompetitionSubmissions(session?.user?.id, id);
 
-  if (!competition) return <div>Loading...</div>;
+  if (!competition) return <Loader />;
 
   const featuredTracks = competition.tracks.slice(0, 3);
   const overviewStats = buildOverviewStats(competition);
@@ -309,8 +309,11 @@ function CompetitionOverviewPage() {
         />
         <CardContent className="">
           {sessionLoading ? (
-            <DashedPanel className="text-sm text-muted-foreground">
-              Loading your account details...
+            <DashedPanel>
+              <Loader
+                label="Loading your account details..."
+                className="min-h-0"
+              />
             </DashedPanel>
           ) : !session?.user ? (
             <DashedPanel className="sm:flex sm:flex-row sm:items-center sm:justify-between">
@@ -327,8 +330,8 @@ function CompetitionOverviewPage() {
               </div>
             </DashedPanel>
           ) : submissionsLoading ? (
-            <DashedPanel className="text-sm text-muted-foreground">
-              Loading your submissions...
+            <DashedPanel>
+              <Loader label="Loading your submissions..." className="min-h-0" />
             </DashedPanel>
           ) : mySubmissions.length === 0 ? (
             <DashedPanel>

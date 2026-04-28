@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
+import { Loader } from "*/components/loader";
 import sdk from "sdk";
 import { SectionHeader } from "*/components/section-header";
 import { FormField } from "*/components/form-field";
@@ -48,7 +49,7 @@ function ConfigurePage() {
     queryFn: () => (fetchConfig as any)({ data: competitionId }),
   });
 
-  if (!config) return <div className="p-6">Loading...</div>;
+  if (!config) return <Loader className="p-6" />;
 
   return (
     <div className="flex flex-col gap-8">

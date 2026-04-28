@@ -1,3 +1,4 @@
+import { Loader } from "*/components/loader";
 import { Button } from "*/components/ui/button";
 import {
   Card,
@@ -96,7 +97,7 @@ function CompetitionEnrolPage() {
     },
   });
 
-  if (!competition) return <div>Loading...</div>;
+  if (!competition) return <Loader />;
 
   return (
     <div className="space-y-6">

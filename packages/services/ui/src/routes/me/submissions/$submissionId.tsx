@@ -1,3 +1,4 @@
+import { Loader } from "*/components/loader";
 import { Button } from "*/components/ui/button";
 import {
   Card,
@@ -19,7 +20,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { last, startCase } from "es-toolkit";
-import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "sdk";
 import { authClient } from "src/lib/auth-client";
@@ -111,7 +112,7 @@ function SubmissionDetailPage() {
     },
   });
 
-  if (sessionLoading || isLoading) return <div>Loading...</div>;
+  if (sessionLoading || isLoading) return <Loader />;
 
   if (!session?.user) {
     return (

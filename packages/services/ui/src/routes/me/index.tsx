@@ -1,3 +1,4 @@
+import { Loader } from "*/components/loader";
 import { Button } from "*/components/ui/button";
 import {
   Card,
@@ -61,7 +62,7 @@ function MeIndexPage() {
   const { data: submissions = [], isLoading: submissionsLoading } =
     useUserSubmissions(session?.user?.id);
 
-  if (sessionLoading) return <div>Loading...</div>;
+  if (sessionLoading) return <Loader />;
 
   if (!session?.user) {
     return (
@@ -106,7 +107,7 @@ function MeIndexPage() {
     );
   }
 
-  if (enrolmentsLoading || submissionsLoading) return <div>Loading...</div>;
+  if (enrolmentsLoading || submissionsLoading) return <Loader />;
 
   return (
     <div className="space-y-6">

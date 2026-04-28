@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Loader } from "*/components/loader";
 import {
   Card,
   CardContent,
@@ -18,7 +19,7 @@ function CompetitionRulesPage() {
   const { id } = Route.useParams();
   const { data: competition } = useCompetition(id);
 
-  if (!competition) return <div>Loading...</div>;
+  if (!competition) return <Loader />;
 
   const tracksWithRules = competition.tracks.filter((track) => track.rules);
 

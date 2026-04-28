@@ -1,4 +1,5 @@
 import { EnrolmentCard } from "*/components/enrolment-card";
+import { Loader } from "*/components/loader";
 import { Button } from "*/components/ui/button";
 import {
   Card,
@@ -83,7 +84,7 @@ function TrackDetailsPage() {
       : skipToken,
   });
 
-  if (trackLoading) return <div className="p-6">Loading...</div>;
+  if (trackLoading) return <Loader className="p-6" />;
   if (!track) return <div>Track not found</div>;
 
   return (

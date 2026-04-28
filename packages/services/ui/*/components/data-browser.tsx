@@ -1,3 +1,4 @@
+import { Loader } from "*/components/loader";
 import { SearchInput } from "*/components/search-input";
 import { Button } from "*/components/ui/button";
 import { cn } from "*/lib/utils";
@@ -104,8 +105,8 @@ export function DataBrowser<T>({
       </div>
 
       {isSessionLoading ? (
-        <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-          Loading your account details...
+        <div className="rounded-2xl border border-dashed border-border p-6">
+          <Loader label="Loading your account details..." className="min-h-0" />
         </div>
       ) : !isSignedIn ? (
         <div className="rounded-2xl border border-dashed border-border p-6">
@@ -122,8 +123,8 @@ export function DataBrowser<T>({
           </div>
         </div>
       ) : isLoading ? (
-        <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-          {loadingLabel}
+        <div className="rounded-2xl border border-dashed border-border p-6">
+          <Loader label={loadingLabel} className="min-h-0" />
         </div>
       ) : filteredItems.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center">
