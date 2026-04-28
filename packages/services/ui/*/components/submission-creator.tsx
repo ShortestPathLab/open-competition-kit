@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "*/components/ui/select";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -40,6 +40,7 @@ export function SubmissionCreator({
   initialTrackId,
 }: SubmissionCreatorProps) {
   const { data: session } = authClient.useSession();
+  const router = useRouter();
   const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
   const submitFn = useServerFn(createSubmission);
   const tracks = competition.tracks;
@@ -84,7 +85,7 @@ export function SubmissionCreator({
           value,
         },
       }),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       setValue("");
       await Promise.all([
         queryClient.invalidateQueries({
@@ -101,6 +102,10 @@ export function SubmissionCreator({
           queryKey: ["myEnrolments", session?.user?.id],
         }),
       ]);
+      await router.navigate({
+        to: "/me/submissions/$submissionId",
+        params: { submissionId: result.submission.id },
+      });
     },
   });
 

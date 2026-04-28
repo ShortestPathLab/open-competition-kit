@@ -18,7 +18,7 @@ import { Separator } from "*/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { last } from "es-toolkit";
+import { last, startCase } from "es-toolkit";
 import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "sdk";
@@ -194,6 +194,18 @@ function SubmissionDetailPage() {
                   Open track
                 </Button>
                 <Button
+                  variant="outline"
+                  render={
+                    <Link
+                      to="/competitions/$id/submissions/new"
+                      params={{ id: detail.competitionId }}
+                      search={{ trackId: detail.trackId }}
+                    />
+                  }
+                >
+                  Make another submission
+                </Button>
+                <Button
                   onClick={() => mutation.mutate()}
                   disabled={mutation.isPending}
                 >
@@ -297,10 +309,8 @@ function SubmissionDetailPage() {
                 {selectedJob ? (
                   <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">
-                      {statusLabel(selectedJob.status)}
+                      {startCase(statusLabel(selectedJob.status))}
                     </span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                    <span>Viewing run details</span>
                   </div>
                 ) : null}
               </div>
