@@ -15,8 +15,8 @@ import { useState } from "react";
 import sdk from "sdk";
 import { authClient } from "src/lib/auth-client";
 import { ensureSession } from "src/lib/auth.server";
-import { isEnrolledInTrack } from "src/lib/competition-data";
 import { queryClient } from "src/router";
+import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id/tracks/$trackId/submit")(
   {
@@ -24,23 +24,41 @@ export const Route = createFileRoute("/competitions/$id/tracks/$trackId/submit")
   },
 );
 
-const getEnrollmentStatus = createServerFn({ method: "GET" }).handler(
-  async (ctx: any) => {
-    const data = ctx.data as { userId: string; trackId: string };
-    return isEnrolledInTrack(data.userId, data.trackId);
-  },
-);
+const enrolmentInput = z.object({
+  userId: z.string(),
+  competitionId: z.string(),
+  trackId: z.string(),
+});
 
-const createSubmission = createServerFn({ method: "POST" }).handler(
-  async (ctx: any) => {
-    const data = ctx.data as { trackId: string; value: string };
+const submissionInput = z.object({
+  competitionId: z.string(),
+  trackId: z.string(),
+  value: z.string(),
+});
+
+const getEnrollmentStatus = createServerFn({ method: "GET" })
+  .inputValidator(enrolmentInput)
+  .handler(async ({ data }) => {
+    const result = await sdk.enrolments.isEnrolled(
+      data.userId,
+      data.competitionId,
+      data.trackId,
+    );
+    if (result.error) throw result.error;
+    return result.value;
+  });
+
+const createSubmission = createServerFn({ method: "POST" })
+  .inputValidator(submissionInput)
+  .handler(async ({ data }) => {
     const session = await ensureSession();
-    const enrolments = await sdk.enrolments.list({
-      user: session.user.id,
-      track: data.trackId,
-    });
-
-    if (!enrolments.value?.length) {
+    const enrolmentStatus = await sdk.enrolments.isEnrolled(
+      session.user.id,
+      data.competitionId,
+      data.trackId,
+    );
+    if (enrolmentStatus.error) throw enrolmentStatus.error;
+    if (!enrolmentStatus.value) {
       throw new Error("You must enrol in this track before submitting.");
     }
 
@@ -53,27 +71,27 @@ const createSubmission = createServerFn({ method: "POST" }).handler(
     if (result.error) throw result.error;
 
     return { success: true, submission: result.value };
-  },
-);
+  });
 
 function TrackSubmissionPage() {
-  const { trackId } = Route.useParams();
+  const { id: competitionId, trackId } = Route.useParams();
   const { data: session } = authClient.useSession();
   const [value, setValue] = useState("");
   const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
   const submitFn = useServerFn(createSubmission);
 
   const { data: isEnrolled = false } = useQuery({
-    queryKey: ["enrollmentStatus", session?.user?.id, trackId],
+    queryKey: ["enrollmentStatus", session?.user?.id, competitionId, trackId],
     queryFn: () =>
       (fetchEnrollmentStatus as any)({
-        data: { userId: session?.user?.id, trackId },
+        data: { userId: session?.user?.id, competitionId, trackId },
       }),
     enabled: Boolean(session?.user?.id),
   });
 
   const mutation = useMutation({
-    mutationFn: () => (submitFn as any)({ data: { trackId, value } }),
+    mutationFn: () =>
+      (submitFn as any)({ data: { competitionId, trackId, value } }),
     onSuccess: async () => {
       setValue("");
       await queryClient.invalidateQueries({

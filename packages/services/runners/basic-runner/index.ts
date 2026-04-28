@@ -1,7 +1,7 @@
 import { differenceWith, flatMap, keyBy, mapAsync } from "es-toolkit";
 import {
   config,
-  type CompetitionConfigShape,
+  type CompetitionConfig,
   jobs,
   outputs,
   submissions,
@@ -14,8 +14,8 @@ import { createPollingWorker } from "./polling";
 
 type ConfiguredTrackRunner = {
   trackId: string;
-  track: CompetitionConfigShape["tracks"][number];
-  competition: CompetitionConfigShape;
+  track: CompetitionConfig["tracks"][number];
+  competition: CompetitionConfig;
   body?: string;
 };
 
@@ -38,8 +38,8 @@ function evaluateRunnerBody(
   body: string,
   context: {
     submission: Submission;
-    competition: CompetitionConfigShape;
-    track: CompetitionConfigShape["tracks"][number];
+    competition: CompetitionConfig;
+    track: CompetitionConfig["tracks"][number];
   },
 ) {
   const { submission, competition, track } = context;
@@ -51,13 +51,16 @@ async function getConfiguredTrackRunners() {
   const competitions = appConfig.competitions;
 
   return keyBy(
-    flatMap(competitions, (competition: CompetitionConfigShape) =>
-      competition.tracks.map((track: CompetitionConfigShape["tracks"][number]) => ({
-        trackId: track.id,
-        track,
-        competition,
-        body: competition.runner.body,
-      }) satisfies ConfiguredTrackRunner),
+    flatMap(competitions, (competition: CompetitionConfig) =>
+      competition.tracks.map(
+        (track: CompetitionConfig["tracks"][number]) =>
+          ({
+            trackId: track.id,
+            track,
+            competition,
+            body: competition.runner.body,
+          }) satisfies ConfiguredTrackRunner,
+      ),
     ),
     ({ trackId }: { trackId: string }) => trackId,
   ) as Record<string, ConfiguredTrackRunner>;

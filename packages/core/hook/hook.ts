@@ -5,6 +5,10 @@ export const hook = <T extends S.Struct.Field, U extends S.Struct.Field>(
   _b: U,
 ) =>
   S.declare(
-    (input): input is (a: S.Schema.Type<T>) => Promise<S.Schema.Type<U>> =>
-      typeof input === "function",
+    (
+      input,
+    ): input is (
+      a: S.Schema.Type<T>,
+      next?: (a: S.Schema.Type<T>) => Promise<S.Schema.Type<U>>,
+    ) => Promise<S.Schema.Type<U>> => typeof input === "function",
   );

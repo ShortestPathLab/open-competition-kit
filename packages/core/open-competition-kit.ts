@@ -116,34 +116,34 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             M.exhaustive,
           ),
       );
+      const doHook = <U>(
+        call: (h: Hooks) => U,
+        ...w: Parameters<typeof hooks.get>
+      ) => E.provideService(hooks.get(...w).pipe(E.map(call)), Path.Path, path);
       const enrolments = {
         ...enrolmentCollection,
-        enrol: (userId: string, trackId: string) =>
+        isEnrolled: (user: string, competition: string, track: string) =>
           E.gen(function* () {
-            const existing = yield* instance.enrolments.list({
-              user: userId,
-              track: trackId,
+            const enrolments = yield* enrolmentCollection.list({
+              track,
+              competition,
+              user,
             });
-
-            if (existing[0]) return existing[0];
-
-            return yield* instance.enrolments.create({
-              user: userId,
-              track: trackId,
-            });
+            return !!enrolments.length;
           }),
+        enrol: (user: string, competition: string, track: string) =>
+          doHook(
+            (h) => h.enrolments.enrol({ user, track, competition }),
+            (c) =>
+              c.competitions
+                .find((c) => c.id === competition)
+                ?.tracks?.find((t) => t.id === track)!,
+          ),
       };
       const base = {
         config: { get: () => config },
         competitions,
-        hooks: {
-          do: <U>(call: (h: Hooks) => U, ...w: Parameters<typeof hooks.get>) =>
-            E.provideService(
-              hooks.get(...w).pipe(E.map(call)),
-              Path.Path,
-              path,
-            ),
-        },
+        hooks: { do: doHook },
         tracks,
         users,
         enrolments,

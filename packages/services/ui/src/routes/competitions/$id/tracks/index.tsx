@@ -7,17 +7,17 @@ import {
   getCompetitionSummary,
   type TrackSummary,
 } from "src/lib/competition-data";
+import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id/tracks/")({
   component: TracksPage,
 });
 
-const getTracks = createServerFn({ method: "GET" }).handler(
-  async (ctx: any) => {
-    const id = ctx.data as string;
+const getTracks = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data: id }) => {
     return (await getCompetitionSummary(id)).tracks;
-  },
-);
+  });
 
 export default function TracksPage() {
   const { id } = Route.useParams();

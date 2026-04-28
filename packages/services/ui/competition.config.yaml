@@ -1,5 +1,6 @@
 with:
   - ../../packages/noop
+  - ../../packages/standard
   - ../../packages/db/prisma
 appName: GPPC
 appDescription: GPPC is etc.etc.
@@ -25,11 +26,30 @@ auth:
 db:
   provider: postgresql
   url: postgres://postgres:postgres@localhost:5433/postgres
+
 competitions:
-  - id: "fit5037"
+  - id: "fit5047"
     with: []
     name: "FIT5047 Pacman Competition"
-    tracks: []
+    organiser: "Monash University"
+    description: >
+      A programming competition for FIT5047 where participants build Pacman
+      agents and compare their performance under a shared evaluation setup.
+    tracks:
+      - id: "main"
+        name: "Main Track"
+        description: >
+          The standard competition track for submitting and evaluating your
+          Pacman agent.
+        with: []
+        form:
+          with: []
     runner:
       with: []
+      body: |
+        ({
+          ok: true,
+          track: submission.track,
+          submission: JSON.parse(submission.body),
+        })
     leaderboards: []

@@ -14,33 +14,20 @@ import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
-import {
-  getCompetitionSummary,
-  type TrackSummary,
-} from "src/lib/competition-data";
+import { getCompetitionSummary } from "src/lib/competition-data";
+import { useCompetition } from "src/lib/competition-fn";
 import { z } from "zod";
+
 export const Route = createFileRoute("/competitions/$id")({
   component: CompetitionLayout,
 });
-
-const getCompetition = createServerFn({ method: "GET" })
-  .inputValidator(z.string())
-  .handler(async (ctx: any) => {
-    const id = ctx.data as string;
-    return await getCompetitionSummary(id);
-  });
 
 function CompetitionLayout() {
   const { id } = Route.useParams();
   const router = useRouter();
   const [trackPickerOpen, setTrackPickerOpen] = useState(false);
-  const fetchCompetition = useServerFn(getCompetition);
 
-  const { data: competition } = useQuery({
-    queryKey: ["competition", id],
-    queryFn: () => fetchCompetition({ data: id }),
-  });
-
+  const { data: competition } = useCompetition(id);
   return (
     <div className="min-h-screen">
       <div className="bg-muted/30 border-b border-border [view-transition-name:competition-header]">

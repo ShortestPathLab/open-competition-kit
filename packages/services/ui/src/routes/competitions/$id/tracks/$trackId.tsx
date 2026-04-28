@@ -8,42 +8,54 @@ import {
   CardHeader,
   CardTitle,
 } from "*/components/ui/card";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
-import sdk from "sdk";
+import sdk, { unsafe } from "sdk";
 import { authClient } from "src/lib/auth-client";
-import {
-  getTrackSummary,
-  isEnrolledInTrack,
-} from "src/lib/competition-data";
+import { getTrackSummary } from "src/lib/competition-data";
 import { queryClient } from "src/router";
+import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
   component: TrackDetailsPage,
 });
 
-const enrolInTrack = createServerFn({ method: "POST" }).handler(
-  async (ctx: any) => {
-    const data = ctx.data as { userId: string; trackId: string };
-    const result = await sdk.enrolments.enrol(data.userId, data.trackId);
-    if (result.error) throw result.error;
-    return { success: true, enrolment: result.value };
-  },
-);
-
-const getTrack = createServerFn({ method: "GET" }).handler(async (ctx: any) => {
-  const data = ctx.data as { competitionId: string; trackId: string };
-  return getTrackSummary(data.competitionId, data.trackId);
+const enrolmentInput = z.object({
+  userId: z.string(),
+  competitionId: z.string(),
+  trackId: z.string(),
 });
 
-const getEnrollmentStatus = createServerFn({ method: "GET" }).handler(
-  async (ctx: any) => {
-    const data = ctx.data as { userId: string; trackId: string };
-    return isEnrolledInTrack(data.userId, data.trackId);
-  },
-);
+const trackInput = z.object({
+  competitionId: z.string(),
+  trackId: z.string(),
+});
+
+const enrolInTrack = createServerFn({ method: "POST" })
+  .inputValidator(enrolmentInput)
+  .handler(({ data }) =>
+    unsafe(sdk.enrolments.enrol(data.userId, data.competitionId, data.trackId)),
+  );
+
+const getTrack = createServerFn({ method: "GET" })
+  .inputValidator(trackInput)
+  .handler(async ({ data }) => {
+    return getTrackSummary(data.competitionId, data.trackId);
+  });
+
+const getEnrollmentStatus = createServerFn({ method: "GET" })
+  .inputValidator(enrolmentInput)
+  .handler(async ({ data }) => {
+    const result = await sdk.enrolments.isEnrolled(
+      data.userId,
+      data.competitionId,
+      data.trackId,
+    );
+    if (result.error) throw result.error;
+    return result.value;
+  });
 
 function TrackDetailsPage() {
   const { id: competitionId, trackId } = Route.useParams();
@@ -54,28 +66,39 @@ function TrackDetailsPage() {
 
   const { data: track, isLoading: trackLoading } = useQuery({
     queryKey: ["track", competitionId, trackId],
-    queryFn: () =>
-      (fetchTrack as any)({ data: { competitionId, trackId } }),
+    queryFn: () => (fetchTrack as any)({ data: { competitionId, trackId } }),
   });
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
-    queryKey: ["enrollmentStatus", session?.user?.id, trackId],
-    queryFn: () =>
-      (fetchEnrollmentStatus as any)({
-        data: { userId: session?.user?.id, trackId },
-      }),
-    enabled: Boolean(session?.user?.id),
+    queryKey: ["enrollmentStatus", session?.user?.id, competitionId, trackId],
+    queryFn: session?.user?.id
+      ? () =>
+          fetchEnrollmentStatus({
+            data: { userId: session.user.id, competitionId, trackId },
+          })
+      : skipToken,
   });
 
   const mutation = useMutation({
     mutationFn: () => {
       if (!session?.user?.id) throw new Error("No user id");
-      return (enrolFn as any)({ data: { userId: session.user.id, trackId } });
+      return enrolFn({
+        data: {
+          userId: session.user.id,
+          competitionId,
+          trackId,
+        },
+      });
     },
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ["enrollmentStatus", session?.user?.id, trackId],
+          queryKey: [
+            "enrollmentStatus",
+            session?.user?.id,
+            competitionId,
+            trackId,
+          ],
         }),
         queryClient.invalidateQueries({
           queryKey: ["myEnrolments", session?.user?.id],

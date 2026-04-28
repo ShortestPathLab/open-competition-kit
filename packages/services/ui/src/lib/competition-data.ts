@@ -34,22 +34,18 @@ function makeCompetitionDescription(name: string, trackCount: number) {
   return `${name} currently has ${trackCount} tracks available.`;
 }
 
-function makeTrackDescription(trackName: string, competitionName: string) {
-  return `${trackName} track in ${competitionName}.`;
-}
-
 export async function getCompetitionSummary(
   id: string,
 ): Promise<CompetitionSummary> {
   const competition = await unsafe(competitions.get(id));
+
   const competitionTracks = await unsafe(tracks.of(competition));
 
   const competitionName = competition?.name ?? startCase(id);
   const trackSummaries: TrackSummary[] = competitionTracks.map((track) => ({
     id: track.id,
     name: track.name,
-    description:
-      track.description || makeTrackDescription(track.name, competitionName),
+    description: track.description ?? "No description",
     competitionId: id,
   }));
 
@@ -78,13 +74,6 @@ export async function listCompetitionSummaries(): Promise<
 export async function getTrackSummary(competitionId: string, trackId: string) {
   const competition = await getCompetitionSummary(competitionId);
   return competition.tracks.find((track) => track.id === trackId);
-}
-
-export async function isEnrolledInTrack(userId: string, trackId: string) {
-  const matchingEnrolments = await unsafe(
-    enrolments.list({ user: userId, track: trackId }),
-  );
-  return matchingEnrolments.length > 0;
 }
 
 export async function listUserEnrolments(

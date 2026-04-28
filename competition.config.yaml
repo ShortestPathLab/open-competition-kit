@@ -1,5 +1,6 @@
 with:
   - ./packages/packages/noop
+  - ./packages/packages/standard
   - ./packages/packages/db/prisma
 appName: GPPC
 appDescription: GPPC is etc.etc.

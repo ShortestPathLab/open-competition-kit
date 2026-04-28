@@ -9,11 +9,6 @@ export {
   CompetitionConfig,
   TrackConfig,
 } from "./config";
-export type {
-  Config as ConfigShape,
-  CompetitionConfig as CompetitionConfigShape,
-  TrackConfig as TrackConfigShape,
-} from "./config";
 export type { Package, Hooks } from "./hook";
 export { OpenCompetitionKit } from "./open-competition-kit";
 export type {

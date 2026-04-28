@@ -1,9 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import sdk from "sdk";
+import { z } from "zod";
 
-export const ensureUserExists = createServerFn({ method: "POST" }).handler(
-  async (ctx: any) => {
-    const data = ctx.data as { id: string; email: string; name: string };
+const ensureUserInput = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string(),
+});
+
+export const ensureUserExists = createServerFn({ method: "POST" })
+  .inputValidator(ensureUserInput)
+  .handler(async ({ data }) => {
     try {
       const existing = await sdk.users.get(data.id);
       if (existing.value) {
@@ -25,5 +32,4 @@ export const ensureUserExists = createServerFn({ method: "POST" }).handler(
     });
 
     return { success: true, created: true };
-  },
-);
+  });

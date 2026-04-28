@@ -1,7 +1,7 @@
 import { differenceWith, keyBy, mapAsync } from "es-toolkit";
 import sdk, {
   type Competition,
-  type CompetitionConfigShape,
+  type CompetitionConfig,
   type Track,
   type TrackCreate,
 } from "sdk";
@@ -14,17 +14,17 @@ type SyncResult = {
   tracksUpdated: number;
 };
 
-function getCompetitionOrganizer(competition: CompetitionConfigShape) {
+function getCompetitionOrganizer(competition: CompetitionConfig) {
   return competition.organiser ?? "OpenCompetitionKit";
 }
 
-function getCompetitionDescription(competition: CompetitionConfigShape) {
+function getCompetitionDescription(competition: CompetitionConfig) {
   return competition.description ?? "No description yet.";
 }
 
 function getTrackDescription(
-  competition: CompetitionConfigShape,
-  track: CompetitionConfigShape["tracks"][number],
+  competition: CompetitionConfig,
+  track: CompetitionConfig["tracks"][number],
 ) {
   return track.description ?? `${track.name} track in ${competition.name}.`;
 }
@@ -39,7 +39,7 @@ type ConfigTrackRecord = TrackCreate & {
 const sameId = (a: { id: string }, b: { id: string }) => a.id === b.id;
 
 async function createMissingCompetitions(
-  configCompetitions: readonly CompetitionConfigShape[],
+  configCompetitions: readonly CompetitionConfig[],
 ) {
   const dbCompetitions = await unsafe(sdk.competitions.list({}));
   const missing = differenceWith(configCompetitions, dbCompetitions, sameId);
@@ -59,7 +59,7 @@ async function createMissingCompetitions(
 }
 
 async function updateChangedCompetitions(
-  configCompetitions: readonly CompetitionConfigShape[],
+  configCompetitions: readonly CompetitionConfig[],
   dbCompetitions: readonly Competition[],
 ) {
   const byId = keyBy(dbCompetitions, ({ id }) => id);
@@ -86,7 +86,7 @@ async function updateChangedCompetitions(
   return changed.length;
 }
 
-async function createMissingTracks(competition: CompetitionConfigShape) {
+async function createMissingTracks(competition: CompetitionConfig) {
   const dbTracks = await unsafe(
     sdk.tracks.list({ competition: competition.id }),
   );

@@ -16,17 +16,17 @@ import {
   type EnrolmentSummary,
 } from "src/lib/competition-data";
 import { authClient } from "src/lib/auth-client";
+import { z } from "zod";
 
 export const Route = createFileRoute("/me/")({
   component: MeIndexPage,
 });
 
-const getMyEnrolments = createServerFn({ method: "GET" }).handler(
-  async (ctx: any) => {
-    const userId = ctx.data as string;
+const getMyEnrolments = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data: userId }) => {
     return listUserEnrolments(userId);
-  },
-);
+  });
 
 function MeIndexPage() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();

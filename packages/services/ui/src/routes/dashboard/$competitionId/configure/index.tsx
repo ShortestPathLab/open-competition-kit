@@ -15,11 +15,11 @@ import {
   List,
   ListOrdered,
 } from "lucide-react";
+import { z } from "zod";
 
-const getCompetitionConfig = createServerFn({ method: "GET" }).handler(
-  async (ctx: any) => {
-    const id = ctx.data as string;
-
+const getCompetitionConfig = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data: id }) => {
     // TODO: Implement SDK function
     // @ts-ignore
     const _config = await sdk.competitions.getConfig(id);
@@ -33,8 +33,7 @@ const getCompetitionConfig = createServerFn({ method: "GET" }).handler(
         url: "mongodb://smsthsmth",
       },
     };
-  },
-);
+  });
 
 export const Route = createFileRoute("/dashboard/$competitionId/configure/")({
   component: ConfigurePage,

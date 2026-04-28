@@ -1,6 +1,6 @@
 import { Path } from "@effect/platform";
 import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
-import { merge } from "lodash-es";
+import { isFunction, merge, mergeWith } from "lodash-es";
 import { OpenCompetitionKitConfig } from "../config";
 import type { Extendable } from "../config/schema";
 import { db } from "./db";
@@ -10,7 +10,20 @@ import { componentSource } from "./component";
 export const Hooks = S.Struct({
   db,
   enrolments: S.Struct({
-    enrol: hook(S.Unknown, S.Unknown),
+    /**
+     * The enrol handler.
+     */
+    enrol: hook(
+      S.Struct({
+        track: S.String,
+        competition: S.String,
+        user: S.String,
+      }),
+      /**
+       * The ID of the created enrolment record.
+       */
+      S.String,
+    ),
   }),
   user: S.Struct({}),
   track: S.Struct({
@@ -83,6 +96,13 @@ export const resolve = E.cachedFunction((p: string) =>
 
 export class HookError extends Data.TaggedError("HookError") {}
 
+const mergeHooks = <T extends object>(acc: T, next: T): T =>
+  mergeWith(acc, next, (f, g) => {
+    if (isFunction(f) && isFunction(g)) {
+      return (...args: unknown[]) => g(...args, f);
+    }
+  });
+
 export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>()(
   "open-competition-kit/Hooks",
   {
@@ -100,7 +120,11 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
         get: (accessor: (c: typeof config) => Extendable = (c) => c) =>
           E.gen(function* () {
             const { with: w } = accessor(config);
-            const merged = yield* E.mergeAll(w.map(yield* resolve), {}, merge);
+            const merged = yield* E.mergeAll(
+              w.map(yield* resolve),
+              {},
+              mergeHooks,
+            );
             return yield* decode(merged);
           }),
       };

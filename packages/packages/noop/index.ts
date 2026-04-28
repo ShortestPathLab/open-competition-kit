@@ -1,11 +1,11 @@
-import { NoopError, type Package, competitions } from "sdk";
+import { type Package } from "sdk";
 
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
 }>;
 
 const noop = async () => {
-  throw new NoopError();
+  return undefined as never;
 };
 
 export default {
@@ -23,8 +23,6 @@ export default {
     enrol: {},
   },
   enrolments: {
-    enrol: function (a: unknown): Promise<unknown> {
-      throw new Error("Function not implemented.");
-    },
+    enrol: noop,
   },
 } satisfies DeepRequired<Package>;

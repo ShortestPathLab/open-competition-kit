@@ -36,6 +36,7 @@ export const tables = {
   enrolment: createSchemas("open-competition-kit/db/enrolment", {
     user: S.String,
     track: S.String,
+    competition: S.String,
   }),
   job: createSchemas("open-competition-kit/db/job", {
     submission: S.String,

@@ -10,6 +10,7 @@ import { DataTable } from "*/components/data-table";
 import type { Column } from "*/components/data-table";
 import { Copy, ExternalLink } from "lucide-react";
 import { authClient } from "src/lib/auth-client";
+import { z } from "zod";
 
 interface Submission {
   id: string;
@@ -17,10 +18,9 @@ interface Submission {
   result: number;
 }
 
-const getDashboardData = createServerFn({ method: "GET" }).handler(
-  async (ctx: any) => {
-    const id = ctx.data as string;
-
+const getDashboardData = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data: id }) => {
     // TODO: Implement SDK functions
     // @ts-ignore
     const _stats = await sdk.competitions.getStats(id);
@@ -39,8 +39,7 @@ const getDashboardData = createServerFn({ method: "GET" }).handler(
         result: Math.random() * 100,
       })),
     };
-  },
-);
+  });
 
 const columns: Column<Submission>[] = [
   {

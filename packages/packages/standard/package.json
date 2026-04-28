@@ -2,6 +2,9 @@
   "name": "packages",
   "module": "index.ts",
   "type": "module",
+  "dependencies": {
+    "sdk": "workspace:*"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
