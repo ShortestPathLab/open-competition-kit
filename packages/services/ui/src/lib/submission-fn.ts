@@ -13,7 +13,7 @@ import {
   type UserSubmissionSummary,
 } from "./competition-data";
 import { z } from "zod";
-import { ensureSession } from "./auth.server";
+import { ensureAuthSession } from "./auth.server";
 
 const competitionSubmissionsInput = z.object({
   userId: z.string(),
@@ -144,7 +144,7 @@ const submissionInput = z.object({
 export const createSubmission = createServerFn({ method: "POST" })
   .inputValidator(submissionInput)
   .handler(async ({ data }) => {
-    const session = await ensureSession();
+    const session = await ensureAuthSession();
     const enrolmentStatus = await sdk.enrolments.isEnrolled(
       session.user.id,
       data.competitionId,

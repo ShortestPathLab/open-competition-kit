@@ -71,28 +71,28 @@ class ImportError extends Data.TaggedError("ImportError") {
   }
 }
 
-export const resolve = E.cachedFunction((p: string) =>
-  E.gen(function* () {
-    const path = yield* Path.Path;
-    return yield* M.value(p).pipe(
-      // URL case
-      M.when(
-        (s) => s.startsWith("https://"),
-        () => E.fail(new NotImplementedError()),
-      ),
-      // JS local file case
-      M.orElse(() =>
-        pipe(
-          E.tryPromise({
-            try: async () => (await import(path.resolve(p)))?.default,
-            catch: (e) => new ImportError({ cause: e, path: p }),
-          }),
-          E.andThen(decodePartial),
+export const createPackageResolver = (root: string) =>
+  E.cachedFunction((p: string) =>
+    E.gen(function* () {
+      const path = yield* Path.Path;
+      return M.value(p).pipe(
+        M.when(
+          (s) => s.startsWith("https://"),
+          () => E.fail(new NotImplementedError()),
         ),
-      ),
-    );
-  }),
-);
+        M.orElse(() =>
+          pipe(
+            E.tryPromise({
+              try: async () =>
+                (await import(path.resolve(path.dirname(root), p)))?.default,
+              catch: (e) => new ImportError({ cause: e, path: p }),
+            }),
+            E.andThen(decodePartial),
+          ),
+        ),
+      );
+    }),
+  );
 
 export class HookError extends Data.TaggedError("HookError") {}
 
@@ -109,6 +109,7 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
     effect: E.gen(function* () {
       const c = yield* OpenCompetitionKitConfig;
       const config = yield* c.config;
+      const resolve = createPackageResolver(yield* c.path);
       return {
         try:
           <T extends unknown[], U>(f: (...args: T) => Promise<U>) =>

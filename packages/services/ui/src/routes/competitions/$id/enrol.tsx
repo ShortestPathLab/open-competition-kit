@@ -22,7 +22,7 @@ import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import sdk, { unsafe } from "sdk";
 import { authClient } from "src/lib/auth-client";
-import { ensureSession } from "src/lib/auth.server";
+import { ensureAuthSession } from "src/lib/auth.server";
 import { useCompetition } from "src/lib/competition-fn";
 import { queryClient } from "src/router";
 import { toast } from "sonner";
@@ -40,7 +40,7 @@ const enrolInput = z.object({
 const enrolInTrack = createServerFn({ method: "POST" })
   .inputValidator(enrolInput)
   .handler(async ({ data }) => {
-    const session = await ensureSession();
+    const session = await ensureAuthSession();
     return unsafe(
       sdk.enrolments.enrol(session.user.id, data.competitionId, data.trackId),
     );

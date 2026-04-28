@@ -24,7 +24,7 @@ import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "sdk";
 import { authClient } from "src/lib/auth-client";
-import { ensureSession } from "src/lib/auth.server";
+import { ensureAuthSession } from "src/lib/auth.server";
 import { useSubmissionDetail } from "src/lib/submission-fn";
 import { queryClient } from "src/router";
 import { z } from "zod";
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/me/submissions/$submissionId")({
 const rerunSubmission = createServerFn({ method: "POST" })
   .inputValidator(z.object({ submissionId: z.string() }))
   .handler(async ({ data }) => {
-    const session = await ensureSession();
+    const session = await ensureAuthSession();
     const submission = await unsafe(sdk.submissions.get(data.submissionId));
 
     if (submission.user !== session.user.id) {

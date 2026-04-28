@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+.git
+.agents
+dist
+out
+coverage
+.cache
+.tanstack
+.vite
+.vite-temp
+*.tsbuildinfo
+*.log
+.DS_Store

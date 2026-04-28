@@ -1,0 +1,17 @@
+FROM oven/bun:latest
+
+WORKDIR /
+
+COPY . .
+
+RUN bun install
+
+WORKDIR /packages/services/ui
+
+RUN bun run build
+
+EXPOSE 80
+
+ENV CONFIG=/competition.config.yaml
+
+CMD ["bunx","--bun","vite","preview","--port","80"]

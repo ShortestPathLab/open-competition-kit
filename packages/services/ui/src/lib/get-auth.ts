@@ -1,9 +1,10 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createIsomorphicFn, createServerFn } from "@tanstack/react-start";
 import { betterAuth, BetterAuthOptions } from "better-auth";
 import { mapValues, omit, once, toMerged } from "es-toolkit";
-import { getMigrations } from "node_modules/better-auth/dist/db/get-migration.mjs";
 import { config, unsafe } from "sdk";
 import { z } from "zod";
+
+import { getAuthBaseConfig } from "./auth-base-config";
 
 const _authConfig = createServerFn().handler(async () =>
   z
@@ -41,12 +42,15 @@ const _options = createServerFn().handler(async () => {
 const options = once(_options);
 
 export const auth = once(async () => {
-  const { config: baseAuthConfig } = await import("./auth");
-  const { runMigrations } = await getMigrations(baseAuthConfig);
-  await runMigrations();
+  await createIsomorphicFn()
+    .client(() => {})
+    .server(async () => {
+      const { migrate } = await import("./migrate.server");
+      await migrate();
+    })();
   return betterAuth({
     ...(await options()),
-    ...baseAuthConfig,
+    ...getAuthBaseConfig(),
   });
 });
 

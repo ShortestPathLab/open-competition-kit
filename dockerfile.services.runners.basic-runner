@@ -1,0 +1,13 @@
+FROM oven/bun:latest
+
+WORKDIR /
+
+COPY . .
+
+RUN bun install
+
+WORKDIR /packages/services/runners/basic-runner
+
+ENV CONFIG=/competition.config.yaml
+
+CMD ["bun", "run", "index.ts"]

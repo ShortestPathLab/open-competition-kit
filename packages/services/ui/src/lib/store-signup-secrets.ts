@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { ensureSession } from "src/lib/auth.server";
+import { ensureAuthSession } from "src/lib/auth.server";
 import sdk from "sdk";
 
 export const storeSignupSecrets = createServerFn({ method: "POST" }).handler(
   async () => {
-    const session = await ensureSession();
+    const session = await ensureAuthSession();
     const userId = session.user.id;
     const userName = session.user.name ?? session.user.email;
 

@@ -44,14 +44,18 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
   {
     effect: E.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const raw = pipe(
+      const path = pipe(
         C.string("CONFIG"),
         C.withDefault("./competition.config.yaml"),
+      );
+      const raw = pipe(
+        path,
         E.andThen(fs.readFileString),
         E.andThen(load),
         E.andThen(decode),
       );
       return {
+        path,
         config: raw.pipe(E.map(propagateExtendable)),
       };
     }),
