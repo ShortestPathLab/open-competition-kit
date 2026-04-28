@@ -1,5 +1,6 @@
 services:
   db:
+    hostname: db
     image: postgres
     ports:
       - "5433:5432"
@@ -8,30 +9,27 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
   ui:
-    build:
-      context: .
-      dockerfile: dockerfile.services.ui
+    build: { context: ., dockerfile: dockerfile.services.ui }
     ports:
       - "3007:80"
     depends_on:
       - db
     environment:
+      # Set this to a random string in production
       BETTER_AUTH_SECRET: secret
+      # Set this to your website's URL
+      BASE_URL: http://localhost:3007
     volumes:
-      - ./competition.config.ts:/competition.config.ts
+      - ./competition.local-docker.config.yaml:/competition.config.yaml
   base:
-    build:
-      context: .
-      dockerfile: dockerfile.services.base
+    build: { context: ., dockerfile: dockerfile.services.base }
     depends_on:
       - db
     volumes:
-      - ./competition.config.ts:/competition.config.ts
+      - ./competition.local-docker.config.yaml:/competition.config.yaml
   basic-runner:
-    build:
-      context: .
-      dockerfile: dockerfile.services.runners.basic-runner
+    build: { context: ., dockerfile: dockerfile.services.runners.basic-runner }
     depends_on:
       - db
     volumes:
-      - ./competition.config.ts:/competition.config.ts
+      - ./competition.local-docker.config.yaml:/competition.config.yaml

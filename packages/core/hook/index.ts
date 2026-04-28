@@ -75,7 +75,7 @@ export const createPackageResolver = (root: string) =>
   E.cachedFunction((p: string) =>
     E.gen(function* () {
       const path = yield* Path.Path;
-      return M.value(p).pipe(
+      return yield* M.value(p).pipe(
         M.when(
           (s) => s.startsWith("https://"),
           () => E.fail(new NotImplementedError()),

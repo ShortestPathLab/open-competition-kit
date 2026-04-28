@@ -14,4 +14,4 @@ EXPOSE 80
 
 ENV CONFIG=/competition.config.yaml
 
-CMD ["bunx","--bun","vite","preview","--port","80"]
+CMD ["bunx","--bun","vite","preview","--port","80","--host"]
