@@ -9,14 +9,10 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "*/components/ui/popover";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { getCompetitionSummary } from "src/lib/competition-data";
 import { useCompetition } from "src/lib/competition-fn";
-import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id")({
   component: CompetitionLayout,

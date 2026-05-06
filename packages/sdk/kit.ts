@@ -48,20 +48,22 @@ type Fn<In extends unknown[], Out, Error = unknown> = (
   ...args: In
 ) => Promise<Result<Out, Error>>;
 
-export type MapEffectToPromise<T> = T extends (
-  ...args: infer In
-) => // Effect case
-E.Effect<infer Out, infer Error, never>
-  ? Fn<In, Out, Error>
-  : // Promise case
-    T extends (...args: infer In) => Promise<infer Out>
-    ? Fn<In, Out>
-    : // Object case
-      T extends { [K in infer U]: unknown }
-      ? {
-          [K in U]: MapEffectToPromise<T[K]>;
-        }
-      : never;
+export type MapEffectToPromise<T> =
+  // Effect case
+  T extends (...args: infer In) => E.Effect<infer Out, infer Error, never>
+    ? Fn<In, Out, Error>
+    : // Promise case
+      T extends (...args: infer In) => Promise<infer Out>
+      ? Fn<In, Out>
+      : // Other return type case
+        T extends (...args: infer In) => infer Out
+        ? Fn<In, Out>
+        : // Object case
+          T extends { [K in infer U]: unknown }
+          ? {
+              [K in U]: MapEffectToPromise<T[K]>;
+            }
+          : never;
 
 type Kit = MapEffectToPromise<Awaited<ReturnType<typeof init>>>;
 

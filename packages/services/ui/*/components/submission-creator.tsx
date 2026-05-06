@@ -60,27 +60,23 @@ export function SubmissionCreator({
   const selectedTrack = tracks.find((track) => track.id === trackId);
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
-    queryKey: ["enrollmentStatus", session?.user?.id, competition.id, trackId],
+    queryKey: ["enrollmentStatus", session?.user?.id, trackId],
     queryFn:
       session?.user?.id && trackId
         ? () =>
             fetchEnrollmentStatus({
               data: {
                 userId: session.user.id,
-                competitionId: competition.id,
                 trackId,
               },
             })
         : skipToken,
   });
 
-  console.log(session?.user.id, competition.id, trackId);
-
   const mutation = useMutation({
     mutationFn: () =>
       submitFn({
         data: {
-          competitionId: competition.id,
           trackId,
           value,
         },
@@ -104,7 +100,7 @@ export function SubmissionCreator({
       ]);
       await router.navigate({
         to: "/me/submissions/$submissionId",
-        params: { submissionId: result.submission.id },
+        params: { submissionId: result.submission },
       });
     },
   });

@@ -98,6 +98,43 @@ export type OpenCompetitionKitApi = {
     enrol: unknown;
   };
 
+  submissions: CollectionApi & {
+    /**
+     * Create a submission through the configured runner submission hook.
+     *
+     * Hook implementations are responsible for persisting the submission and any
+     * initial jobs they want to create.
+     */
+    submit: unknown;
+  };
+
+  jobs: CollectionApi & {
+    /**
+     * Create pending jobs for an existing submission.
+     *
+     * This is an infrastructure convenience for re-running an existing
+     * submission without creating a new submission record.
+     */
+    createFromSubmission: unknown;
+
+    /**
+     * Run a job through the configured runner hook.
+     *
+     * Hook implementations may update job state and write outputs as needed.
+     */
+    run: unknown;
+  };
+
+  outputs: CollectionApi & {
+    /**
+     * Upsert output bodies for a job/reference pair.
+     *
+     * All matching outputs for the given job and reference are updated; if none
+     * exist, a new output is created.
+     */
+    set: unknown;
+  };
+
   /**
    * Users participating in competitions.
    */

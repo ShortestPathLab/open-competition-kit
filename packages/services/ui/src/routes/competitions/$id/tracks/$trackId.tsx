@@ -25,29 +25,23 @@ export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
 
 const enrolmentInput = z.object({
   userId: z.string(),
-  competitionId: z.string(),
   trackId: z.string(),
 });
 
 const trackInput = z.object({
-  competitionId: z.string(),
   trackId: z.string(),
 });
 
 const getTrack = createServerFn({ method: "GET" })
   .inputValidator(trackInput)
   .handler(async ({ data }) => {
-    return getTrackSummary(data.competitionId, data.trackId);
+    return getTrackSummary(data.trackId);
   });
 
 const getEnrollmentStatus = createServerFn({ method: "GET" })
   .inputValidator(enrolmentInput)
   .handler(async ({ data }) => {
-    const result = await sdk.enrolments.isEnrolled(
-      data.userId,
-      data.competitionId,
-      data.trackId,
-    );
+    const result = await sdk.enrolments.isEnrolled(data.userId, data.trackId);
     if (result.error) throw result.error;
     return result.value;
   });
@@ -70,16 +64,16 @@ function TrackDetailsPage() {
   const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
 
   const { data: track, isLoading: trackLoading } = useQuery({
-    queryKey: ["track", competitionId, trackId],
-    queryFn: () => fetchTrack({ data: { competitionId, trackId } }),
+    queryKey: ["track", trackId],
+    queryFn: () => fetchTrack({ data: { trackId } }),
   });
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
-    queryKey: ["enrollmentStatus", session?.user?.id, competitionId, trackId],
+    queryKey: ["enrollmentStatus", session?.user?.id, trackId],
     queryFn: session?.user?.id
       ? () =>
           fetchEnrollmentStatus({
-            data: { userId: session.user.id, competitionId, trackId },
+            data: { userId: session.user.id, trackId },
           })
       : skipToken,
   });

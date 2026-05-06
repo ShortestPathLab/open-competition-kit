@@ -136,7 +136,6 @@ export function useSubmissionDetail(userId?: string, submissionId?: string) {
 }
 
 const submissionInput = z.object({
-  competitionId: z.string(),
   trackId: z.string(),
   value: z.string(),
 });
@@ -147,7 +146,6 @@ export const createSubmission = createServerFn({ method: "POST" })
     const session = await ensureAuthSession();
     const enrolmentStatus = await sdk.enrolments.isEnrolled(
       session.user.id,
-      data.competitionId,
       data.trackId,
     );
     if (enrolmentStatus.error) throw enrolmentStatus.error;
@@ -155,13 +153,13 @@ export const createSubmission = createServerFn({ method: "POST" })
       throw new Error("You must enrol in this track before submitting.");
     }
 
-    const result = await sdk.submissions.create({
-      user: session.user.id,
-      track: data.trackId,
-      body: JSON.stringify({ value: data.value }),
-    });
+    const result = await sdk.submissions.submit(
+      session.user.id,
+      JSON.stringify({ value: data.value }),
+      data.trackId,
+    );
 
     if (result.error) throw result.error;
 
-    return { success: true, submission: result.value };
+    return { success: true, submission: result.value.submission };
   });

@@ -21,14 +21,11 @@ export function useUserEnrolments(userId?: string) {
 }
 const enrolmentInput = z.object({
   userId: z.string(),
-  competitionId: z.string(),
   trackId: z.string(),
 });
 
 export const getEnrollmentStatus = createServerFn({ method: "GET" })
   .inputValidator(enrolmentInput)
   .handler(({ data }) =>
-    unsafe(
-      sdk.enrolments.isEnrolled(data.userId, data.competitionId, data.trackId),
-    ),
+    unsafe(sdk.enrolments.isEnrolled(data.userId, data.trackId)),
   );

@@ -33,7 +33,6 @@ const enrolSearch = z.object({
 });
 
 const enrolInput = z.object({
-  competitionId: z.string(),
   trackId: z.string(),
 });
 
@@ -41,9 +40,7 @@ const enrolInTrack = createServerFn({ method: "POST" })
   .inputValidator(enrolInput)
   .handler(async ({ data }) => {
     const session = await ensureAuthSession();
-    return unsafe(
-      sdk.enrolments.enrol(session.user.id, data.competitionId, data.trackId),
-    );
+    return unsafe(sdk.enrolments.enrol(session.user.id, data.trackId));
   });
 
 export const Route = createFileRoute("/competitions/$id/enrol")({
@@ -73,7 +70,6 @@ function CompetitionEnrolPage() {
       if (!selectedTrack) throw new Error("No track selected");
       return enrolFn({
         data: {
-          competitionId: id,
           trackId: selectedTrack.id,
         },
       });
@@ -84,12 +80,7 @@ function CompetitionEnrolPage() {
           queryKey: ["myEnrolments", session?.user?.id],
         }),
         queryClient.invalidateQueries({
-          queryKey: [
-            "enrollmentStatus",
-            session?.user?.id,
-            id,
-            selectedTrack?.id,
-          ],
+          queryKey: ["enrollmentStatus", session?.user?.id, selectedTrack?.id],
         }),
       ]);
       toast.success("Enrolled successfully");

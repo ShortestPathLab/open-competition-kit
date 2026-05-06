@@ -43,12 +43,7 @@ const rerunSubmission = createServerFn({ method: "POST" })
       throw new Error("Unauthorized");
     }
 
-    return unsafe(
-      sdk.jobs.create({
-        submission: submission.id,
-        status: "pending",
-      }),
-    );
+    return unsafe(sdk.jobs.createFromSubmission(submission.id));
   });
 
 function prettyResult(result: string) {
@@ -104,8 +99,8 @@ function SubmissionDetailPage() {
 
   const mutation = useMutation({
     mutationFn: () => (rerunSubmissionFn as any)({ data: { submissionId } }),
-    onSuccess: async (job: { id: string }) => {
-      setSelectedJobId(job.id);
+    onSuccess: async (result: { jobs: string[] }) => {
+      setSelectedJobId(result.jobs.at(-1));
       await queryClient.invalidateQueries({
         queryKey: ["submissionDetail", session?.user?.id, submissionId],
       });

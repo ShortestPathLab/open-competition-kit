@@ -1,6 +1,6 @@
 import { Path } from "@effect/platform";
 import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
-import { isFunction, merge, mergeWith } from "lodash-es";
+import { isFunction, mergeWith } from "lodash-es";
 import { OpenCompetitionKitConfig } from "../config";
 import type { Extendable } from "../config/schema";
 import { db } from "./db";
@@ -16,7 +16,6 @@ export const Hooks = S.Struct({
     enrol: hook(
       S.Struct({
         track: S.String,
-        competition: S.String,
         user: S.String,
       }),
       /**
@@ -36,9 +35,30 @@ export const Hooks = S.Struct({
   leaderboard: S.Struct({
     ui: componentSource,
   }),
+  submissions: S.Struct({
+    submit: hook(
+      S.Struct({
+        user: S.String,
+        body: S.String,
+        track: S.String,
+      }),
+      S.Struct({
+        submission: S.String,
+        jobs: S.Array(S.String),
+      }),
+    ),
+  }),
   runner: S.Struct({
     ui: S.Unknown,
-    submit: S.Unknown,
+
+    run: hook(
+      S.Struct({
+        job: S.String,
+      }),
+      S.Struct({
+        status: S.String,
+      }),
+    ),
   }),
 });
 
@@ -98,6 +118,7 @@ export const createPackageResolver = (root: string) =>
   );
 
 export class HookError extends Data.TaggedError("HookError") {}
+export class AccessorError extends Data.TaggedError("AccessorError") {}
 
 const mergeHooks = <T extends object>(acc: T, next: T): T =>
   mergeWith(acc, next, (f, g) => {
@@ -121,11 +142,14 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
               try: () => f(...t) as unknown as Promise<U1>,
               catch: (e) => e as HookError,
             }),
-        get: (accessor: (c: typeof config) => Extendable = (c) => c) =>
+        get: (
+          accessor: (c: typeof config) => Extendable | undefined = (c) => c,
+        ) =>
           E.gen(function* () {
-            const { with: w } = accessor(config);
+            const a = accessor(config);
+            if (!a) throw new AccessorError();
             const merged = yield* E.mergeAll(
-              w.map(yield* resolve),
+              a.with.map(yield* resolve),
               {},
               mergeHooks,
             );

@@ -86,9 +86,10 @@ export async function listCompetitionSummaries(): Promise<
   );
 }
 
-export async function getTrackSummary(competitionId: string, trackId: string) {
-  const competition = await getCompetitionSummary(competitionId);
-  return competition.tracks.find((track) => track.id === trackId);
+export async function getTrackSummary(trackId: string) {
+  const track = await unsafe(tracks.get(trackId));
+  const competition = await getCompetitionSummary(track.competition);
+  return competition.tracks.find((candidate) => candidate.id === trackId);
 }
 
 export async function listUserEnrolments(

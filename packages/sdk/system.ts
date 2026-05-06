@@ -1,7 +1,3 @@
-declare global {
-  const window: unknown;
-}
-
 export const isBrowserLike = () => {
-  return typeof window !== "undefined";
+  return typeof globalThis.window !== "undefined";
 };

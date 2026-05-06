@@ -18,7 +18,8 @@ export default {
   },
   user: {},
   form: { ui: noop, submit: {} },
-  runner: { ui: {}, submit: {} },
+  submissions: { submit: noop },
+  runner: { ui: {}, run: noop },
   track: {
     enrol: {},
   },
