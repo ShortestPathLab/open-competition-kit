@@ -74,6 +74,7 @@ export function useKitComponent<T extends ComponentHookPath>(
         const packages = {
           react: await import("react"),
           "react-dom": await import("react-dom"),
+          "react/jsx-runtime": await import("react/jsx-runtime"),
         };
         const module = new Function(
           "require",

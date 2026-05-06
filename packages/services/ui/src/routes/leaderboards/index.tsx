@@ -8,6 +8,7 @@ export const Route = createFileRoute("/leaderboards/")({
 
 function LeaderboardsPage() {
   const Test = useKitComponent("leaderboard.ui");
+  const Test2 = useKitComponent("form.ui");
   return (
     <div className="min-h-screen">
       <main className="mx-auto max-w-5xl px-6 py-8">
@@ -16,6 +17,7 @@ function LeaderboardsPage() {
           description="Track the top performing agents across all active competitions."
         />
         <Test />
+        <Test2 />
       </main>
     </div>
   );

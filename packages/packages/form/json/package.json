@@ -1,0 +1,24 @@
+{
+  "name": "json",
+  "module": "index.ts",
+  "type": "module",
+  "dependencies": {
+    "@rjsf/core": "^6.5.2",
+    "@rjsf/shadcn": "^6.5.2",
+    "@rjsf/utils": "^6.5.2",
+    "@rjsf/validator-ajv8": "^6.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "es-toolkit": "^1.46.1",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": true
+}

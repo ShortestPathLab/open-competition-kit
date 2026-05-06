@@ -3,6 +3,7 @@ with:
   - ../../packages/standard
   - ../../packages/db/prisma
   - ../../packages/leaderboard/ag-grid
+  - ../../packages/form/json
 appName: GPPC
 appDescription: GPPC is etc.etc.
 auth:

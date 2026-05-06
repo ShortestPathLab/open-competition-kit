@@ -19,7 +19,7 @@ export function defineComponent(def: ComponentDef) {
 
 export async function makeComponent(def: ComponentDef) {
   const output =
-    await $`bunx esbuild ${def.path} --bundle --jsx=transform --external:react --external:react-dom --format=cjs`.quiet();
+    await $`bunx esbuild ${def.path} --bundle --jsx=transform --external:react --external:react-dom --external:react/jsx-runtime --format=cjs`.quiet();
   console.error(output.stderr.toString("utf-8"));
   return {
     type: "open-competition-kit/hook/component-source",
