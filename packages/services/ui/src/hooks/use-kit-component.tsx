@@ -5,16 +5,15 @@ import { CatchBoundary } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { assert } from "es-toolkit";
 import hash from "object-hash";
-import * as React from "react";
 import { useCallback } from "react";
 import {
+  type ComponentOnly,
   Config,
   hooks,
   Hooks,
   isSource,
   Source,
   unsafe,
-  type ComponentDef,
 } from "sdk";
 import z from "zod";
 
@@ -42,16 +41,15 @@ const getKitComponentModule = createServerFn()
     return result;
   });
 
-function isComponent(module: unknown): module is ComponentDef {
+function isComponent(module: unknown): module is ComponentOnly {
   return z
     .object({
       component: z.function(),
-      path: z.string().optional(),
     })
     .safeParse(module).success;
 }
 
-const cache: Record<string, ComponentDef> = {};
+const cache: Record<string, ComponentOnly> = {};
 
 export function useKitComponent(
   hook: ComponentHookPath,
@@ -75,13 +73,13 @@ export function useKitComponent(
         };
         const module = new Function(
           "require",
-          `var module = {}; ${source}; return module.exports;`,
-        )((p: string) => packages[p as keyof typeof packages])?.default;
+          `var module = {}; ${source}; return module;`,
+        )((p: keyof typeof packages) => packages[p])?.exports?.default;
         assert(isComponent(module), "Hook output is is not a component");
         cache[id] = module;
         return module.component;
       } catch (e) {
-        console.log(e);
+        console.error(e);
         return null;
       }
     },

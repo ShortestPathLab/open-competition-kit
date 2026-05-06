@@ -6,8 +6,10 @@ import { z } from "zod";
 export type ClientProps = {};
 
 export { type Source } from "core/hook/component";
-export type ComponentDef = {
+export type ComponentOnly = {
   component: (props: ClientProps) => ReactNode;
+};
+export type ComponentDef = ComponentOnly & {
   path: string;
 };
 
