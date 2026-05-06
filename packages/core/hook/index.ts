@@ -33,6 +33,9 @@ export const Hooks = S.Struct({
     ui: componentSource,
     submit: S.Unknown,
   }),
+  leaderboard: S.Struct({
+    ui: componentSource,
+  }),
   runner: S.Struct({
     ui: S.Unknown,
     submit: S.Unknown,

@@ -19,6 +19,7 @@ const getAppConfig = createServerFn({ method: "GET" }).handler(async () => {
 });
 
 export const Route = createRootRoute({
+  notFoundComponent: () => <>Not found</>,
   head: () => ({
     meta: [
       {

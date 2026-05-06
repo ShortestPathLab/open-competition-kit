@@ -22,6 +22,7 @@ export default {
   track: {
     enrol: {},
   },
+  leaderboard: { ui: noop },
   enrolments: {
     enrol: noop,
   },

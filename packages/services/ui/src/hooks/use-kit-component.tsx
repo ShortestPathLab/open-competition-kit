@@ -1,17 +1,22 @@
+import { Spinner } from "*/components/ui/spinner";
+import { getByPath, Path, PathValue } from "@clickbar/dot-diver";
+import { useQuery } from "@tanstack/react-query";
+import { CatchBoundary } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { useSuspenseQuery } from "node_modules/@tanstack/react-query/build/modern";
+import { assert } from "es-toolkit";
+import hash from "object-hash";
+import * as React from "react";
+import { useCallback } from "react";
 import {
-  unsafe,
-  hooks,
-  isSource,
-  Hooks,
   Config,
+  hooks,
+  Hooks,
+  isSource,
   Source,
-  isComponent,
+  unsafe,
+  type ComponentDef,
 } from "sdk";
 import z from "zod";
-import { getByPath, Path, PathValue } from "@clickbar/dot-diver";
-import { assert } from "es-toolkit";
 
 type PathWhereValue<T, V> = {
   [K in Path<T>]: PathValue<T, K> extends V ? K : never;
@@ -37,22 +42,57 @@ const getKitComponentModule = createServerFn()
     return result;
   });
 
+function isComponent(module: unknown): module is ComponentDef {
+  return z
+    .object({
+      component: z.function(),
+      path: z.string().optional(),
+    })
+    .safeParse(module).success;
+}
+
+const cache: Record<string, ComponentDef> = {};
+
 export function useKitComponent(
   hook: ComponentHookPath,
   accessor?: Path<Config>,
 ) {
   const getKitComponentModuleFn = useServerFn(getKitComponentModule);
-  const { data: KitComponent } = useSuspenseQuery({
+  const { data: KitComponent } = useQuery({
     queryKey: ["kit-component", hook, accessor],
+    staleTime: Infinity,
     queryFn: async () => {
-      const { source } = await getKitComponentModuleFn({
-        data: { hook, accessor },
-      });
-      const module = (await import(`data:text/javascript;base64,${source}`))
-        .default;
-      assert(isComponent(module), "Hook output is is not a component");
-      return module.component;
+      try {
+        const id = hash({ hook, accessor });
+
+        if (cache[id]) return cache[id].component;
+        const { source } = await getKitComponentModuleFn({
+          data: { hook, accessor },
+        });
+        const packages = {
+          react: await import("react"),
+          "react-dom": await import("react-dom"),
+        };
+        const module = new Function(
+          "require",
+          `var module = {}; ${source}; return module.exports;`,
+        )((p: string) => packages[p as keyof typeof packages])?.default;
+        assert(isComponent(module), "Hook output is is not a component");
+        cache[id] = module;
+        return module.component;
+      } catch (e) {
+        console.log(e);
+        return null;
+      }
     },
   });
-  return KitComponent;
+  return useCallback(() => {
+    return KitComponent ? (
+      <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
+        <KitComponent />
+      </CatchBoundary>
+    ) : (
+      <Spinner />
+    );
+  }, [KitComponent]);
 }

@@ -1,13 +1,12 @@
-import { build } from "bun";
+import { $ } from "bun";
 import type { Source } from "core/hook/component";
-import { assert } from "es-toolkit";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
 export type ClientProps = {};
 
 export { type Source } from "core/hook/component";
-type ComponentDef = {
+export type ComponentDef = {
   component: (props: ClientProps) => ReactNode;
   path: string;
 };
@@ -17,15 +16,12 @@ export function defineComponent(def: ComponentDef) {
 }
 
 export async function makeComponent(def: ComponentDef) {
-  const { success, outputs } = await build({
-    entrypoints: [def.path],
-    target: "browser",
-  });
-  assert(success, "Failed to build component");
-  assert(outputs[0]?.kind === "entry-point", "Component is invalid");
+  const output =
+    await $`bunx esbuild ${def.path} --bundle --jsx=transform --external:react --external:react-dom --format=cjs`.quiet();
+  console.error(output.stderr.toString("utf-8"));
   return {
     type: "open-competition-kit/hook/component-source",
-    source: await outputs[0].text(),
+    source: output.text(),
   } satisfies Source;
 }
 
@@ -34,15 +30,6 @@ export function isSource(value: unknown): value is Source {
     .object({
       type: z.literal("open-competition-kit/hook/component-source"),
       source: z.string(),
-    })
-    .safeParse(value).success;
-}
-
-export function isComponent(value: unknown): value is ComponentDef {
-  return z
-    .object({
-      component: z.function(),
-      path: z.string(),
     })
     .safeParse(value).success;
 }

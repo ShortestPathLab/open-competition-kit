@@ -2,6 +2,7 @@ with:
   - ../../packages/noop
   - ../../packages/standard
   - ../../packages/db/prisma
+  - ../../packages/leaderboards/ag-grid
 appName: GPPC
 appDescription: GPPC is etc.etc.
 auth:
