@@ -12,6 +12,8 @@ export class CollectionOwnerError extends D.TaggedError(
   "CollectionOwnerError",
 ) {}
 
+export class MissingContextError extends D.TaggedError("MissingContextError") {}
+
 export function collectionFrom<
   TCreate,
   TUpdate,
@@ -182,6 +184,48 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             );
           }),
       };
+      const context = {
+        ...(yield* collectionFrom(
+          instance.context,
+          (context) => jobs.get(context.job),
+          (job) => instance.context.list({ job: job.id }),
+        )),
+        set: (job: string, reference: string, body: string) =>
+          E.gen(function* () {
+            const existing = yield* context.list({ job, reference });
+            if (existing.length === 0) {
+              const created = yield* instance.context.create({
+                job,
+                reference,
+                value: body,
+              });
+              return {
+                context: [created.id],
+              };
+            }
+
+            yield* E.forEach(existing, (entry) =>
+              instance.context.update({
+                id: entry.id,
+                job: entry.job,
+                reference: entry.reference,
+                value: body,
+              }),
+            );
+            return {
+              context: existing.map((entry) => entry.id),
+            };
+          }),
+        require: <T>(job: string, reference: string) =>
+          E.gen(function* () {
+            const existing = yield* context.list({ job, reference });
+            const match = existing[0];
+            if (!match) {
+              return yield* E.fail(new MissingContextError());
+            }
+            return match.value as unknown as T;
+          }),
+      };
       const outputs = {
         ...(yield* collectionFrom(
           instance.outputs,
@@ -195,7 +239,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
               const created = yield* instance.outputs.create({
                 job,
                 reference,
-                result: body,
+                value: body,
               });
               return {
                 outputs: [created.id],
@@ -207,7 +251,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
                 id: output.id,
                 job: output.job,
                 reference: output.reference,
-                result: body,
+                value: body,
               }),
             );
             return {
@@ -224,6 +268,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         enrolments,
         submissions,
         jobs,
+        context,
         outputs,
       } satisfies OpenCompetitionKitApi;
     }),

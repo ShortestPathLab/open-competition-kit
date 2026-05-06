@@ -1,4 +1,4 @@
-import { Spinner } from "*/components/ui/spinner";
+import { Loader } from "*/components/loader";
 import { getByPath, Path, PathValue } from "@clickbar/dot-diver";
 import { useQuery } from "@tanstack/react-query";
 import { CatchBoundary } from "@tanstack/react-router";
@@ -16,12 +16,16 @@ import {
   unsafe,
 } from "sdk";
 import z from "zod";
+type OmitNever<T> = {
+  [K in keyof T as T[K] extends never ? never : K]: T[K];
+};
+type ComponentHookMap = OmitNever<{
+  [K in Path<Hooks>]: PathValue<Hooks, K> extends () => Promise<Source<infer R>>
+    ? R
+    : never;
+}>;
 
-type PathWhereValue<T, V> = {
-  [K in Path<T>]: PathValue<T, K> extends V ? K : never;
-}[Path<T>];
-
-type ComponentHookPath = PathWhereValue<Hooks, () => Promise<Source>>;
+type ComponentHookPath = keyof ComponentHookMap;
 
 const getKitComponentModule = createServerFn()
   .inputValidator(
@@ -51,8 +55,8 @@ function isComponent(module: unknown): module is ComponentOnly {
 
 const cache: Record<string, ComponentOnly> = {};
 
-export function useKitComponent(
-  hook: ComponentHookPath,
+export function useKitComponent<T extends ComponentHookPath>(
+  hook: T,
   accessor?: Path<Config>,
 ) {
   const getKitComponentModuleFn = useServerFn(getKitComponentModule);
@@ -84,13 +88,16 @@ export function useKitComponent(
       }
     },
   });
-  return useCallback(() => {
-    return KitComponent ? (
-      <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
-        <KitComponent />
-      </CatchBoundary>
-    ) : (
-      <Spinner />
-    );
-  }, [KitComponent]);
+  return useCallback(
+    (props: ComponentHookMap[T]) => {
+      return KitComponent ? (
+        <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
+          <KitComponent {...props} />
+        </CatchBoundary>
+      ) : (
+        <Loader />
+      );
+    },
+    [KitComponent],
+  );
 }

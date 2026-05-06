@@ -13,6 +13,7 @@ export const db = once(async () => {
     await toPrisma({ datasource: { provider } });
     // Set up db
     await $`
+    bunx --package prisma@7.4.0 prisma generate --schema ${import.meta.dir}/schemas/schema.prisma
     DATABASE_URL=${url} bunx --package prisma@7.4.0 prisma db push dev --schema ${import.meta.dir}/schemas/schema.prisma --config ${import.meta.dir}/prisma.config.ts
   `;
   } catch (e) {

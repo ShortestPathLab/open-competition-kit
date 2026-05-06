@@ -1,6 +1,5 @@
 import { Effect as E, Schema as S } from "effect";
-import { keys, mapValues } from "lodash-es";
-import { OpenCompetitionKitHooks } from ".";
+import { mapValues } from "lodash-es";
 import { hook } from "./hook";
 
 export const { Number, Boolean, Date, String, Int } = S;
@@ -44,7 +43,12 @@ export const tables = {
   }),
   output: createSchemas("open-competition-kit/db/output", {
     job: S.String,
-    result: S.String,
+    value: S.String,
+    reference: S.String,
+  }),
+  context: createSchemas("open-competition-kit/db/context", {
+    job: S.String,
+    value: S.String,
     reference: S.String,
   }),
   competition: createSchemas("open-competition-kit/db/competition", {
@@ -53,6 +57,7 @@ export const tables = {
     description: S.String,
     overview: S.String,
     rules: S.String,
+    index: S.Int,
   }),
   submission: createSchemas("open-competition-kit/db/submission", {
     user: S.String,
@@ -65,6 +70,7 @@ export const tables = {
     description: S.String,
     overview: S.String,
     rules: S.String,
+    index: S.Int,
   }),
   user: createSchemas("open-competition-kit/db/user", {
     name: S.String,
@@ -88,6 +94,9 @@ export type DbUpdate<K extends DbKey> = S.Schema.Type<
 export type Competition = DbRecord<"competition">;
 export type CompetitionCreate = DbCreate<"competition">;
 export type CompetitionUpdate = DbUpdate<"competition">;
+export type Context = DbRecord<"context">;
+export type ContextCreate = DbCreate<"context">;
+export type ContextUpdate = DbUpdate<"context">;
 export type Enrolment = DbRecord<"enrolment">;
 export type EnrolmentCreate = DbCreate<"enrolment">;
 export type EnrolmentUpdate = DbUpdate<"enrolment">;
@@ -125,52 +134,38 @@ export type WithHooks<TCreate, TUpdate, TFull, E, C> = {
     : never;
 };
 
-const tableHooks = <F extends S.Struct.Fields>(b: S.Struct<F>) =>
+const tableHooks = <F>() =>
   S.Struct({
     /**
      * Get a list of items in this collection.
      */
-    list: hook(S.partial(b), S.Array(b)),
-    get: hook(S.String, b),
-    create: hook(S.partial(b), b),
-    update: hook(S.partial(b), S.Void),
-    delete: hook(S.String, S.Void),
+    list: hook<Partial<F>, F[]>(),
+    get: hook<string, F>(),
+    create: hook<Partial<F>, F>(),
+    update: hook<Partial<F>, void>(),
+    delete: hook<string, void>(),
   });
 
 export const collections = S.Struct({
-  competitions: tableHooks(schemas.competition),
-  users: tableHooks(schemas.user),
-  tracks: tableHooks(schemas.track),
-  enrolments: tableHooks(schemas.enrolment),
-  submissions: tableHooks(schemas.submission),
-  jobs: tableHooks(schemas.job),
-  outputs: tableHooks(schemas.output),
+  competitions: tableHooks<typeof schemas.competition>(),
+  users: tableHooks<typeof schemas.user>(),
+  tracks: tableHooks<typeof schemas.track>(),
+  enrolments: tableHooks<typeof schemas.enrolment>(),
+  submissions: tableHooks<typeof schemas.submission>(),
+  jobs: tableHooks<typeof schemas.job>(),
+  context: tableHooks<typeof schemas.context>(),
+  outputs: tableHooks<typeof schemas.output>(),
 });
 
-const accessor = <T extends S.Struct.Field>(payload: T) =>
-  S.Struct({
-    collection: S.Literal(...(keys(schemas) as (keyof typeof schemas)[])),
-    payload,
-  });
+type Acc<T> = {
+  collection: keyof typeof schemas;
+  payload: T;
+};
 
 export const db = S.Struct({
-  list: hook(accessor(S.Any), S.Array(S.Unknown)),
-  get: hook(accessor(S.String), S.Unknown),
-  create: hook(accessor(S.Any), S.Unknown),
-  update: hook(accessor(S.Any), S.Void),
-  delete: hook(accessor(S.String), S.Void),
+  list: hook<Acc<any>, unknown>(),
+  get: hook<Acc<string>, unknown>(),
+  create: hook<Acc<any>, unknown>(),
+  update: hook<Acc<any>, void>(),
+  delete: hook<Acc<string>, void>(),
 });
-
-export const withHooks = <TCreate, TUpdate, TFull>(
-  h: TableHooks<TCreate, TUpdate, TFull>,
-) =>
-  E.gen(function* () {
-    const hooks = yield* OpenCompetitionKitHooks;
-    return {
-      list: hooks.try(h.list),
-      get: hooks.try(h.get),
-      create: hooks.try(h.create),
-      update: hooks.try(h.update),
-      delete: hooks.try(h.delete),
-    };
-  });

@@ -1,10 +1,5 @@
-import { differenceWith, keyBy, mapAsync } from "es-toolkit";
-import sdk, {
-  type Competition,
-  type CompetitionConfig,
-  type Track,
-  type TrackCreate,
-} from "sdk";
+import { isEqual } from "es-toolkit";
+import sdk, { type CompetitionConfig } from "sdk";
 import { unsafe } from "sdk";
 
 type SyncResult = {
@@ -14,203 +9,84 @@ type SyncResult = {
   tracksUpdated: number;
 };
 
-function getCompetitionOrganizer(competition: CompetitionConfig) {
-  return competition.organiser ?? "OpenCompetitionKit";
+function competitionDocument(competition: CompetitionConfig, index: number) {
+  return {
+    index,
+    id: competition.id,
+    name: competition.name,
+    organiser: competition.organiser ?? "OpenCompetitionKit",
+    description: competition.description ?? "No description yet.",
+    overview: competition.overview ?? "",
+    rules: competition.rules ?? "",
+  };
 }
 
-function getCompetitionDescription(competition: CompetitionConfig) {
-  return competition.description ?? "No description yet.";
-}
-
-function getCompetitionOverview(competition: CompetitionConfig) {
-  return competition.overview ?? "";
-}
-
-function getCompetitionRules(competition: CompetitionConfig) {
-  return competition.rules ?? "";
-}
-
-function getTrackDescription(
+function trackDocument(
   competition: CompetitionConfig,
   track: CompetitionConfig["tracks"][number],
+  index: number,
 ) {
-  return track.description ?? `${track.name} track in ${competition.name}.`;
-}
-
-function getTrackOverview(track: CompetitionConfig["tracks"][number]) {
-  return track.overview ?? "";
-}
-
-function getTrackRules(track: CompetitionConfig["tracks"][number]) {
-  return track.rules ?? "";
-}
-
-type ConfigTrackRecord = TrackCreate & {
-  id: string;
-  name: string;
-  competition: string;
-  description: string;
-  overview: string;
-  rules: string;
-};
-
-const sameId = (a: { id: string }, b: { id: string }) => a.id === b.id;
-
-async function createMissingCompetitions(
-  configCompetitions: readonly CompetitionConfig[],
-) {
-  const dbCompetitions = await unsafe(sdk.competitions.list({}));
-  const missing = differenceWith(configCompetitions, dbCompetitions, sameId);
-
-  await mapAsync(missing, (competition) =>
-    unsafe(
-      sdk.competitions.create({
-        id: competition.id,
-        name: competition.name,
-        organiser: getCompetitionOrganizer(competition),
-        description: getCompetitionDescription(competition),
-        overview: getCompetitionOverview(competition),
-        rules: getCompetitionRules(competition),
-      }),
-    ),
-  );
-
-  return { dbCompetitions, created: missing.length };
-}
-
-async function updateChangedCompetitions(
-  configCompetitions: readonly CompetitionConfig[],
-  dbCompetitions: readonly Competition[],
-) {
-  const byId = keyBy(dbCompetitions, ({ id }) => id);
-  const changed = configCompetitions.filter(
-    (competition) =>
-      byId[competition.id]?.name !== competition.name ||
-      byId[competition.id]?.organiser !==
-        getCompetitionOrganizer(competition) ||
-      byId[competition.id]?.description !==
-        getCompetitionDescription(competition) ||
-      byId[competition.id]?.overview !==
-        getCompetitionOverview(competition) ||
-      byId[competition.id]?.rules !== getCompetitionRules(competition),
-  );
-
-  await mapAsync(changed, (competition) =>
-    unsafe(
-      sdk.competitions.update({
-        id: competition.id,
-        name: competition.name,
-        organiser: getCompetitionOrganizer(competition),
-        description: getCompetitionDescription(competition),
-        overview: getCompetitionOverview(competition),
-        rules: getCompetitionRules(competition),
-      }),
-    ),
-  );
-
-  return changed.length;
-}
-
-async function createMissingTracks(competition: CompetitionConfig) {
-  const dbTracks = await unsafe(
-    sdk.tracks.list({ competition: competition.id }),
-  );
-  const configTracks = competition.tracks.map(
-    (track) =>
-      ({
-        id: track.id,
-        name: track.name,
-        competition: competition.id,
-        description: getTrackDescription(competition, track),
-        overview: getTrackOverview(track),
-        rules: getTrackRules(track),
-      }) satisfies ConfigTrackRecord,
-  );
-  const missing = differenceWith(configTracks, dbTracks, sameId);
-
-  await mapAsync(missing, (track) =>
-    unsafe(
-      sdk.tracks.create({
-        id: track.id,
-        name: track.name,
-        competition: competition.id,
-        description: track.description,
-        overview: track.overview,
-        rules: track.rules,
-      }),
-    ),
-  );
-
-  return { dbTracks, configTracks, created: missing.length };
-}
-
-async function updateChangedTracks(
-  configTracks: ConfigTrackRecord[],
-  dbTracks: readonly Track[],
-) {
-  const byId = keyBy(dbTracks, ({ id }) => id);
-  const changed = configTracks.filter((track) => {
-    const current = byId[track.id];
-    return (
-      current != null &&
-      (current.name !== track.name ||
-        current.competition !== track.competition ||
-        current.description !== track.description ||
-        current.overview !== track.overview ||
-        current.rules !== track.rules)
-    );
-  });
-
-  await mapAsync(changed, (track) =>
-    unsafe(
-      sdk.tracks.update({
-        id: track.id,
-        name: track.name,
-        competition: track.competition,
-        description: track.description,
-        overview: track.overview,
-        rules: track.rules,
-      }),
-    ),
-  );
-
-  return changed.length;
+  return {
+    index,
+    id: track.id,
+    name: track.name,
+    competition: competition.id,
+    description:
+      track.description ?? `${track.name} track in ${competition.name}.`,
+    overview: track.overview ?? "",
+    rules: track.rules ?? "",
+  };
 }
 
 export async function bindConfigToDatabase(): Promise<SyncResult> {
   const config = await unsafe(sdk.config.get());
-  const configCompetitions = config.competitions;
-  console.log(`Config found: ${configCompetitions.length} competitions`);
+  console.log(`Config found: ${config.competitions.length} competitions`);
 
-  const { dbCompetitions, created: competitionsCreated } =
-    await createMissingCompetitions(configCompetitions);
-  const competitionsUpdated = await updateChangedCompetitions(
-    configCompetitions,
-    dbCompetitions,
-  );
+  const dbCompetitions = await unsafe(sdk.competitions.list({}));
+  const dbTracks = await unsafe(sdk.tracks.list({}));
 
-  const trackResults = await mapAsync(
-    configCompetitions,
-    async (competition) => {
-      const { dbTracks, configTracks, created } =
-        await createMissingTracks(competition);
-      const updated = await updateChangedTracks(configTracks, dbTracks);
+  let competitionsCreated = 0;
+  let competitionsUpdated = 0;
+  let tracksCreated = 0;
+  let tracksUpdated = 0;
 
-      return { created, updated };
-    },
-  );
+  for (const [competition, i] of config.competitions.map(
+    (c, i) => [c, i] as const,
+  )) {
+    const nextCompetition = competitionDocument(competition, i);
+    const currentCompetition = dbCompetitions.find(
+      ({ id }) => id === competition.id,
+    );
+
+    if (!currentCompetition) {
+      await unsafe(sdk.competitions.create(nextCompetition));
+      competitionsCreated++;
+    } else if (!isEqual(nextCompetition, currentCompetition)) {
+      await unsafe(sdk.competitions.update(nextCompetition));
+      competitionsUpdated++;
+    }
+
+    for (const [track, j] of competition.tracks.map(
+      (c, i) => [c, i] as const,
+    )) {
+      const nextTrack = trackDocument(competition, track, j);
+      const currentTrack = dbTracks.find(({ id }) => id === track.id);
+
+      if (!currentTrack) {
+        await unsafe(sdk.tracks.create(nextTrack));
+        tracksCreated++;
+      } else if (!isEqual(nextTrack, currentTrack)) {
+        await unsafe(sdk.tracks.update(nextTrack));
+        tracksUpdated++;
+      }
+    }
+  }
 
   return {
     competitionsCreated,
     competitionsUpdated,
-    tracksCreated: trackResults.reduce(
-      (total, result) => total + result.created,
-      0,
-    ),
-    tracksUpdated: trackResults.reduce(
-      (total, result) => total + result.updated,
-      0,
-    ),
+    tracksCreated,
+    tracksUpdated,
   };
 }
 

@@ -1,14 +1,7 @@
 import { Schema as S } from "effect";
 
-export const hook = <T extends S.Struct.Field, U extends S.Struct.Field>(
-  _a: T,
-  _b: U,
-) =>
+export const hook = <T, U>() =>
   S.declare(
-    (
-      input,
-    ): input is (
-      a: S.Schema.Type<T>,
-      next?: (a: S.Schema.Type<T>) => Promise<S.Schema.Type<U>>,
-    ) => Promise<S.Schema.Type<U>> => typeof input === "function",
+    (input): input is (a: T, next?: (a: U) => Promise<U>) => Promise<U> =>
+      typeof input === "function",
   );

@@ -125,6 +125,22 @@ export type OpenCompetitionKitApi = {
     run: unknown;
   };
 
+  context: CollectionApi & {
+    /**
+     * Upsert context values for a job/reference pair.
+     *
+     * All matching context rows for the given job and reference are updated; if
+     * none exist, a new context row is created.
+     */
+    set: unknown;
+
+    /**
+     * Read a required context value for a job/reference pair and throw if it
+     * does not exist.
+     */
+    require: unknown;
+  };
+
   outputs: CollectionApi & {
     /**
      * Upsert output bodies for a job/reference pair.

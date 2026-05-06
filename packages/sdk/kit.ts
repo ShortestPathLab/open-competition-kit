@@ -12,6 +12,7 @@ import { once } from "es-toolkit";
 import { get } from "es-toolkit/compat";
 import DeepProxy from "proxy-deep";
 import type { Result } from "./result";
+import { Youch } from "youch";
 
 const OpenCompetitionKitHooksLive = L.provide(
   OpenCompetitionKitHooks.Default,
@@ -82,7 +83,8 @@ export const kit = new DeepProxy({} as OpenCompetitionKitApi & Kit, {
         error: undefined,
       } satisfies Result<unknown, unknown>;
     } catch (e) {
-      console.error(e);
+      const youch = new Youch();
+      console.error(await youch.toANSI(e));
       return {
         error: e,
         value: undefined,

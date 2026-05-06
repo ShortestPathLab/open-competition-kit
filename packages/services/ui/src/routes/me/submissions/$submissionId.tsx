@@ -359,7 +359,7 @@ function SubmissionDetailPage() {
                               </p>
                             </div>
                             <pre className="mt-3 overflow-x-auto rounded-md bg-muted/30 p-3 text-sm whitespace-pre-wrap break-all">
-                              {prettyResult(output.result)}
+                              {prettyResult(output.value)}
                             </pre>
                           </div>
                         ))}

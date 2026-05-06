@@ -16,9 +16,9 @@ function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
       const type = M.value(v as S.SchemaClass<string, string, never>).pipe(
         M.when(is(Id), () => "String @id @default(cuid())"),
         M.when(is(String), () => 'String @default("")'),
-        M.when(is(Number), () => "Float"),
-        M.when(is(Int), () => "Int"),
-        M.when(is(Boolean), () => "Boolean"),
+        M.when(is(Number), () => "Float @default(0.0)"),
+        M.when(is(Int), () => "Int @default(0)"),
+        M.when(is(Boolean), () => "Boolean @default(false)"),
         M.when(is(Date), () => "DateTime"),
         M.orElse(() => ""),
       );

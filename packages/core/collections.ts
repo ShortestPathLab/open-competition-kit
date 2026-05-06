@@ -69,6 +69,7 @@ export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitC
             submissions: yield* createAccessor("submission", ...a),
             jobs: yield* createAccessor("job", ...a),
             outputs: yield* createAccessor("output", ...a),
+            context: yield* createAccessor("context", ...a),
           };
         });
     }),

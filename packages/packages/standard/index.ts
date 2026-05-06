@@ -1,4 +1,5 @@
 import {
+  context,
   enrolments,
   jobs,
   outputs,
@@ -52,6 +53,8 @@ export default {
       if (inherited) return inherited;
 
       const jobRecord = await unsafe(jobs.get(job));
+      const jobContext = await unsafe(context.list({ job: jobRecord.id }));
+      void jobContext;
       const submission = await unsafe(submissions.get(jobRecord.submission));
       const trackRecord = await unsafe(tracks.get(submission.track));
       const appConfig = await unsafe(sdk.config.get());

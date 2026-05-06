@@ -89,7 +89,7 @@ export type SubmissionDetail = SubmissionBrowserItem & {
     outputs: Array<{
       id: string;
       job: string;
-      result: string;
+      value: string;
       reference: string;
     }>;
   }>;

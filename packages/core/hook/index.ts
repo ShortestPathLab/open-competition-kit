@@ -13,52 +13,28 @@ export const Hooks = S.Struct({
     /**
      * The enrol handler.
      */
-    enrol: hook(
-      S.Struct({
-        track: S.String,
-        user: S.String,
-      }),
-      /**
-       * The ID of the created enrolment record.
-       */
-      S.String,
-    ),
+    enrol: hook<{ track: string; user: string }, string>(),
   }),
   user: S.Struct({}),
   track: S.Struct({
     enrol: S.Unknown,
   }),
   form: S.Struct({
-    ui: componentSource,
+    ui: componentSource(),
     submit: S.Unknown,
   }),
   leaderboard: S.Struct({
-    ui: componentSource,
+    ui: componentSource<{ test?: string }>(),
   }),
   submissions: S.Struct({
-    submit: hook(
-      S.Struct({
-        user: S.String,
-        body: S.String,
-        track: S.String,
-      }),
-      S.Struct({
-        submission: S.String,
-        jobs: S.Array(S.String),
-      }),
-    ),
+    submit: hook<
+      { user: string; body: string; track: string },
+      { submission: string; jobs: string[] }
+    >(),
   }),
   runner: S.Struct({
     ui: S.Unknown,
-
-    run: hook(
-      S.Struct({
-        job: S.String,
-      }),
-      S.Struct({
-        status: S.String,
-      }),
-    ),
+    run: hook<{ job: string }, { status: string }>(),
   }),
 });
 
@@ -118,7 +94,10 @@ export const createPackageResolver = (root: string) =>
   );
 
 export class HookError extends Data.TaggedError("HookError") {}
-export class AccessorError extends Data.TaggedError("AccessorError") {}
+export class AccessorError extends Data.TaggedError("AccessorError")<{
+  accessor: string;
+  config: any;
+}> {}
 
 const mergeHooks = <T extends object>(acc: T, next: T): T =>
   mergeWith(acc, next, (f, g) => {
@@ -147,7 +126,10 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
         ) =>
           E.gen(function* () {
             const a = accessor(config);
-            if (!a) throw new AccessorError();
+            if (!a)
+              return yield* E.fail(
+                new AccessorError({ accessor: accessor.toString(), config }),
+              );
             const merged = yield* E.mergeAll(
               a.with.map(yield* resolve),
               {},

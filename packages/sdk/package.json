@@ -11,6 +11,7 @@
     "es-toolkit": "^1.44.0",
     "p-memoize": "^8.0.0",
     "proxy-deep": "^4.0.1",
+    "youch": "^4.1.0-beta.14",
     "zod": "^4.3.6"
   },
   "devDependencies": {
