@@ -84,10 +84,10 @@ competitions:
         form:
           with: []
           shape:
-            - key: github-reference
+            - key: github:ref
               # The GitHub integration package picks this up
               # and populates a selector with the user's branches
-              kind: github:branch-select
+              kind: github:ref-select
 
     runner:
       with: []

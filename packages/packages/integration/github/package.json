@@ -6,9 +6,10 @@
     "@types/bun": "latest"
   },
   "dependencies": {
-    "@octokit/app": "^16.1.2",
     "es-toolkit": "^1.46.1",
-    "sdk": "workspace:*"
+    "octokit": "^5.0.5",
+    "sdk": "workspace:*",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "typescript": "^5"
