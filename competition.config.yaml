@@ -2,10 +2,12 @@ with:
   - ./packages/packages/noop
   - ./packages/packages/standard
   - ./packages/packages/db/prisma
+  - ./packages/packages/integration/github
   - ./packages/packages/form/json
   - ./packages/packages/leaderboard/ag-grid
 appName: GPPC
 appDescription: GPPC is etc.etc.
+secrets: {}
 auth:
   email:
     providerOptions: {}
@@ -81,6 +83,12 @@ competitions:
         with: []
         form:
           with: []
+          shape:
+            - key: github-reference
+              # The GitHub integration package picks this up
+              # and populates a selector with the user's branches
+              kind: github:branch-select
+
     runner:
       with: []
       body: |
@@ -89,4 +97,11 @@ competitions:
           track: submission.track,
           submission: JSON.parse(submission.body),
         })
-    leaderboards: []
+    leaderboards:
+      - id: some-leaderboard
+        with:
+          - placeholder # leaderboard package override here
+        absolutely_any_other_configuration_here: 1
+        columns:
+          - column_example: 1
+            etc: 2

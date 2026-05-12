@@ -64,6 +64,10 @@ type CollectionApi = {
 };
 
 export type OpenCompetitionKitApi = {
+  secrets: {
+    global: { get: unknown };
+    user: { get: unknown };
+  };
   /**
    * Hook package access.
    */

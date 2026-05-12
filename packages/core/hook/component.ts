@@ -12,3 +12,7 @@ export function componentSource<TProps = any>() {
       typeof input === "function",
   );
 }
+
+export type InferProps<T> = T extends () => Promise<Source<infer R>>
+  ? R
+  : never;

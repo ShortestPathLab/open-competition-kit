@@ -1,72 +1,142 @@
 import Form from "@rjsf/shadcn";
-import validator from "@rjsf/validator-ajv8";
 import type { RJSFSchema, UiSchema } from "@rjsf/utils";
+import validator from "@rjsf/validator-ajv8";
 import React from "react";
-import type { ComponentDef } from "sdk";
+import type { $props, ComponentDef } from "sdk";
+import { meta, point, shape, value } from "sdk/z";
+import { z } from "zod";
 
-const schema: RJSFSchema = {
-  title: "Competition Registration",
-  description: "A sample JSON schema form rendered with react-jsonschema-form.",
-  type: "object",
-  required: ["teamName", "contactEmail", "track"],
-  properties: {
-    teamName: {
-      type: "string",
-      title: "Team name",
-      minLength: 2,
-    },
-    contactEmail: {
-      type: "string",
-      title: "Contact email",
-      format: "email",
-    },
-    track: {
-      title: "Track",
-      oneOf: [
-        { const: "vision", title: "Vision" },
-        { const: "nlp", title: "NLP" },
-        { const: "forecasting", title: "Forecasting" },
-      ],
-    },
-    acceptRules: {
-      type: "boolean",
-      title: "I agree to the competition rules",
-      default: false,
-    },
-    notes: {
-      type: "string",
-      title: "Notes",
-    },
-  },
-};
+const jsonFormProps = z.object({
+  ...meta.shape,
+  shape: z
+    .object({
+      ...shape.shape,
+      ...meta.shape,
+      kind: z
+        .enum(["text", "email", "number", "textarea", "select", "checkbox"])
+        .optional(),
+      placeholder: z.string().optional(),
+      /**
+       * Options for multiple-choice fields.
+       */
+      options: z
+        .object({
+          ...point.shape,
+          ...meta.shape,
+        })
+        .array()
+        .optional(),
+      /**
+       * Line count for textareas.
+       */
+      lines: z.number().optional(),
+      defaultValue: value.optional(),
+      required: z.boolean().optional(),
+    })
+    .array(),
+  initialData: z.record(z.string(), value).optional(),
+  submitLabel: z.string().optional(),
+}) satisfies z.ZodType<(typeof $props.form.ui)["def"]>;
 
-const uiSchema: UiSchema = {
-  teamName: {
-    "ui:placeholder": "Enter your team name",
-  },
-  contactEmail: {
-    "ui:placeholder": "team@example.com",
-  },
-  track: {
-    "ui:placeholder": "Choose a track",
-  },
-  notes: {
-    "ui:widget": "textarea",
-    "ui:options": {
-      rows: 5,
+type FormDef = z.infer<typeof jsonFormProps> & (typeof $props.form.ui)["def"];
+
+function buildSchema(props: FormDef): RJSFSchema {
+  const properties = Object.fromEntries(
+    props.shape.map((shapeItem) => {
+      const property: Record<string, unknown> = {
+        title: shapeItem.label ?? shapeItem.key,
+      };
+
+      if (shapeItem.description) {
+        property.description = shapeItem.description;
+      }
+
+      if (shapeItem.kind === "checkbox") {
+        property.type = "boolean";
+      } else if (shapeItem.kind === "number") {
+        property.type = "number";
+      } else {
+        property.type = "string";
+      }
+
+      if (shapeItem.kind === "email") {
+        property.format = "email";
+      }
+
+      if (shapeItem.kind === "select" && shapeItem.options?.length) {
+        property.oneOf = shapeItem.options.map((option) => ({
+          const: option.value ?? option.key,
+          title: option.label ?? option.key,
+        }));
+      }
+
+      if (shapeItem.defaultValue !== undefined) {
+        property.default = shapeItem.defaultValue;
+      }
+
+      return [shapeItem.key, property];
+    }),
+  );
+
+  return {
+    title: props.label ?? "JSON Schema Form Sample",
+    description:
+      props.description ??
+      "This package renders a form UI from a generic shape definition.",
+    type: "object",
+    required: props.shape
+      .filter((shapeItem) => shapeItem.required)
+      .map((shapeItem) => shapeItem.key),
+    properties,
+  };
+}
+
+function buildUiSchema(props: FormDef): UiSchema {
+  const shapeUiSchema = Object.fromEntries(
+    props.shape.map((shapeItem) => {
+      const config: Record<string, unknown> = {};
+
+      if (shapeItem.placeholder) {
+        config["ui:placeholder"] = shapeItem.placeholder;
+      }
+
+      if (shapeItem.kind === "textarea") {
+        config["ui:widget"] = "textarea";
+        config["ui:options"] = {
+          rows: shapeItem.lines ?? 5,
+        };
+      }
+
+      return [shapeItem.key, config];
+    }),
+  );
+
+  return {
+    ...shapeUiSchema,
+    "ui:submitButtonOptions": {
+      submitText: props.submitLabel ?? "Submit",
     },
-    "ui:placeholder": "Share anything the organizers should know",
-  },
-  "ui:submitButtonOptions": {
-    submitText: "Submit registration",
-  },
-};
+  };
+}
 
-const formData = {
-  track: "vision",
-};
+function buildFormData(props: FormDef) {
+  return {
+    ...Object.fromEntries(
+      props.shape
+        .filter((shapeItem) => shapeItem.defaultValue !== undefined)
+        .map((shapeItem) => [shapeItem.key, shapeItem.defaultValue]),
+    ),
+    ...props.initialData,
+  };
+}
 
-export function JsonForm() {
+export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
+  const result = z.safeParse(jsonFormProps as z.ZodType<FormDef>, def);
+  if (!result.success) throw new Error(z.prettifyError(result.error));
+  const schema = buildSchema(result.data);
+  const uiSchema = buildUiSchema(result.data);
+  const formData = buildFormData(result.data);
+
   return (
     <>
       <link
@@ -77,12 +147,9 @@ export function JsonForm() {
       <div className="grid gap-5 bg-linear-to-b from-orange-50 via-amber-50 to-white p-6">
         <div>
           <h2 className="m-0 text-2xl font-semibold tracking-tight text-stone-950">
-            JSON Schema Form Sample
+            {result.data.label}
           </h2>
-          <p className="mt-2 text-stone-600">
-            This package renders a form UI from JSON schema using the shadcn
-            theme from `react-jsonschema-form`.
-          </p>
+          <p className="mt-2 text-stone-600">{jsonFormProps.description}</p>
         </div>
 
         <div className="rounded-4xl border border-orange-200 bg-white p-6 shadow-[0_18px_40px_rgba(120,53,15,0.08)]">
@@ -92,7 +159,7 @@ export function JsonForm() {
             formData={formData}
             validator={validator}
             onSubmit={({ formData }) => {
-              console.log("Submitted form data", formData);
+              onSubmit?.(formData);
             }}
           />
         </div>
@@ -104,4 +171,4 @@ export function JsonForm() {
 export default {
   component: JsonForm,
   path: import.meta.path,
-} satisfies ComponentDef;
+} satisfies ComponentDef<typeof $props.form.ui>;

@@ -1,6 +1,7 @@
-import { FileSystem } from "@effect/platform";
+import { FileSystem, Path } from "@effect/platform";
 import {
   Config as C,
+  Data,
   Effect as E,
   Match as M,
   Option as O,
@@ -39,22 +40,44 @@ export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
   ) as T;
 };
 
+class FileNotResolvedError extends Data.TaggedError("FileNotResolvedError")<{
+  file: string;
+}> {}
+
+const resolveRecursive = (file: string, from: string = "./") =>
+  E.gen(function* () {
+    const path = yield* Path.Path;
+    const fs = yield* FileSystem.FileSystem;
+    let dir = path.resolve(from);
+    do {
+      const full = path.resolve(dir, file);
+      const directory = path.dirname(full);
+      if (yield* fs.exists(full)) {
+        return { cwd: directory, path: full };
+      }
+      dir = path.resolve(dir, "..");
+    } while (dir !== "/");
+    return yield* E.fail(new FileNotResolvedError({ file }));
+  });
+
 export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig>()(
   "open-competition-kit/Config",
   {
     effect: E.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const path = pipe(
+      const { cwd, path } = yield* pipe(
         C.string("CONFIG"),
         C.withDefault("./competition.config.yaml"),
+        E.andThen(resolveRecursive),
       );
+      yield* E.logInfo(`Using configuration at ${path}`);
       const raw = pipe(
-        path,
-        E.andThen(fs.readFileString),
+        fs.readFileString(path),
         E.andThen(load),
         E.andThen(decode),
       );
       return {
+        cwd,
         path,
         config: raw.pipe(E.map(propagateExtendable)),
       };

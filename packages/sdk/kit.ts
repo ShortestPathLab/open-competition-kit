@@ -7,7 +7,7 @@ import {
   type OpenCompetitionKitApi,
 } from "core";
 import { OpenCompetitionKitCollections } from "core/collections";
-import { Effect as E, Layer as L } from "effect";
+import { Effect as E, Layer as L, Logger } from "effect";
 import { once } from "es-toolkit";
 import { get } from "es-toolkit/compat";
 import DeepProxy from "proxy-deep";
@@ -41,6 +41,7 @@ export const init = once(
       OpenCompetitionKit.pipe(
         E.provide(OpenCompetitionKitLive),
         E.provide(BunContext.layer),
+        E.provide(Logger.pretty),
       ),
     ),
 );

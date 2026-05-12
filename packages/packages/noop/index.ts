@@ -17,13 +17,13 @@ export default {
     delete: noop,
   },
   user: {},
-  form: { ui: noop, submit: {} },
+  form: { loader: noop, ui: noop, submit: {} },
   submissions: { submit: noop },
   runner: { ui: {}, run: noop },
   track: {
     enrol: {},
   },
-  leaderboard: { ui: noop },
+  leaderboard: { ui: noop, loader: noop },
   enrolments: {
     enrol: noop,
   },

@@ -16,6 +16,7 @@ import {
   unsafe,
 } from "sdk";
 import z from "zod";
+import root from "react-shadow";
 type OmitNever<T> = {
   [K in keyof T as T[K] extends never ? never : K]: T[K];
 };
@@ -45,7 +46,7 @@ const getKitComponentModule = createServerFn()
     return result;
   });
 
-function isComponent(module: unknown): module is ComponentOnly {
+function isComponent(module: unknown): module is ComponentOnly<any> {
   return z
     .object({
       component: z.function(),
@@ -53,7 +54,7 @@ function isComponent(module: unknown): module is ComponentOnly {
     .safeParse(module).success;
 }
 
-const cache: Record<string, ComponentOnly> = {};
+const cache: Record<string, ComponentOnly<any>> = {};
 
 export function useKitComponent<T extends ComponentHookPath>(
   hook: T,
@@ -67,7 +68,11 @@ export function useKitComponent<T extends ComponentHookPath>(
       try {
         const id = hash({ hook, accessor });
 
-        if (cache[id]) return cache[id].component;
+        if (cache[id]) {
+          return cache[id].component as ComponentOnly<
+            ComponentHookMap[T]
+          >["component"];
+        }
         const { source } = await getKitComponentModuleFn({
           data: { hook, accessor },
         });
@@ -82,7 +87,9 @@ export function useKitComponent<T extends ComponentHookPath>(
         )((p: keyof typeof packages) => packages[p])?.exports?.default;
         assert(isComponent(module), "Hook output is is not a component");
         cache[id] = module;
-        return module.component;
+        return module.component as ComponentOnly<
+          ComponentHookMap[T]
+        >["component"];
       } catch (e) {
         console.error(e);
         return null;
@@ -93,7 +100,10 @@ export function useKitComponent<T extends ComponentHookPath>(
     (props: ComponentHookMap[T]) => {
       return KitComponent ? (
         <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
-          <KitComponent {...props} />
+          <root.div>
+            <style>{"* { font-family: 'Geist' }"}</style>
+            <KitComponent {...props} />
+          </root.div>
         </CatchBoundary>
       ) : (
         <Loader />

@@ -1,5 +1,5 @@
 import { Path } from "@effect/platform";
-import { Data as D, Effect as E, Match as M } from "effect";
+import { Config, Data as D, Effect as E, Match as M } from "effect";
 import { find, noop } from "lodash-es";
 import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
@@ -260,6 +260,14 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
           }),
       };
       return {
+        secrets: {
+          global: { get: (s: string) => Config.string(s) },
+          user: {
+            get: (s: string) => {
+              // Not implemented
+            },
+          },
+        },
         config: { get: () => config },
         competitions,
         hooks: { do: doHook },

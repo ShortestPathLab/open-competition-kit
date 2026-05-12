@@ -3,10 +3,13 @@ import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
 import { isFunction, mergeWith } from "lodash-es";
 import { OpenCompetitionKitConfig } from "../config";
 import type { Extendable } from "../config/schema";
+import { componentSource } from "./component";
 import { db } from "./db";
 import { hook } from "./hook";
-import { componentSource } from "./component";
-
+import type { Meta, Shape, Value } from "./shape";
+type FormDef = Meta & {
+  shape: (Shape & Meta)[];
+};
 export const Hooks = S.Struct({
   db,
   enrolments: S.Struct({
@@ -20,11 +23,21 @@ export const Hooks = S.Struct({
     enrol: S.Unknown,
   }),
   form: S.Struct({
-    ui: componentSource(),
+    loader: hook<{ def: FormDef }, { def: FormDef }>(),
+    ui: componentSource<{
+      def: FormDef;
+      onSubmit?: (values: Record<string, Value>) => Promise<void>;
+    }>(),
     submit: S.Unknown,
   }),
   leaderboard: S.Struct({
-    ui: componentSource<{ test?: string }>(),
+    loader: hook(),
+    ui: componentSource<
+      Meta & {
+        shape: Shape[];
+        items: Record<string, Value>[];
+      }
+    >(),
   }),
   submissions: S.Struct({
     submit: hook<
@@ -60,7 +73,6 @@ type DotNotationKeys<T, Prev extends string = ""> = {
 export type HookKey = DotNotationKeys<Hooks>;
 
 const decode = S.decodeUnknown(Hooks);
-const decodePartial = S.decodeUnknown(S.partial(Hooks));
 
 class NotImplementedError extends Data.TaggedError("NotImplementedError") {}
 
@@ -86,7 +98,6 @@ export const createPackageResolver = (root: string) =>
                 (await import(path.resolve(path.dirname(root), p)))?.default,
               catch: (e) => new ImportError({ cause: e, path: p }),
             }),
-            E.andThen(decodePartial),
           ),
         ),
       );
@@ -104,6 +115,7 @@ const mergeHooks = <T extends object>(acc: T, next: T): T =>
     if (isFunction(f) && isFunction(g)) {
       return (...args: unknown[]) => g(...args, f);
     }
+    if (isFunction(f) || isFunction(g)) return f ?? g;
   });
 
 export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>()(
@@ -112,7 +124,7 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
     effect: E.gen(function* () {
       const c = yield* OpenCompetitionKitConfig;
       const config = yield* c.config;
-      const resolve = createPackageResolver(yield* c.path);
+      const resolve = createPackageResolver(c.path);
       return {
         try:
           <T extends unknown[], U>(f: (...args: T) => Promise<U>) =>
@@ -142,4 +154,6 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
   },
 ) {}
 
+export * from "./component";
 export * as db from "./db";
+export * from "./shape";

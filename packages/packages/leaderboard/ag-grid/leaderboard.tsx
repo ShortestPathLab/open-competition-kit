@@ -1,114 +1,11 @@
-import type { ComponentDef } from "sdk";
+import type { ComponentDef, $props } from "sdk";
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule, themeQuartz } from "ag-grid-community";
 import { AgGridProvider, AgGridReact } from "ag-grid-react";
 import React from "react";
 
-type LeaderboardRow = {
-  rank: number;
-  team: string;
-  score: number;
-  submissions: number;
-  accuracy: number;
-  lastUpdated: string;
-  status: "Qualified" | "Review" | "Pending";
-};
-
-const rowData: LeaderboardRow[] = [
-  {
-    rank: 1,
-    team: "Gradient Boosters",
-    score: 98.42,
-    submissions: 14,
-    accuracy: 0.9842,
-    lastUpdated: "2026-05-06 09:12",
-    status: "Qualified",
-  },
-  {
-    rank: 2,
-    team: "Feature Foundry",
-    score: 97.88,
-    submissions: 11,
-    accuracy: 0.9788,
-    lastUpdated: "2026-05-06 08:47",
-    status: "Qualified",
-  },
-  {
-    rank: 3,
-    team: "Token Titans",
-    score: 97.31,
-    submissions: 9,
-    accuracy: 0.9731,
-    lastUpdated: "2026-05-06 08:29",
-    status: "Review",
-  },
-  {
-    rank: 4,
-    team: "Baseline Breakers",
-    score: 95.67,
-    submissions: 7,
-    accuracy: 0.9567,
-    lastUpdated: "2026-05-05 21:03",
-    status: "Pending",
-  },
-  {
-    rank: 5,
-    team: "Loss Function Club",
-    score: 94.95,
-    submissions: 12,
-    accuracy: 0.9495,
-    lastUpdated: "2026-05-05 18:40",
-    status: "Qualified",
-  },
-];
-
-const columnDefs: ColDef<LeaderboardRow>[] = [
-  {
-    field: "rank",
-    headerName: "Rank",
-    width: 92,
-    pinned: "left",
-    sort: "asc",
-  },
-  {
-    field: "team",
-    headerName: "Team",
-    minWidth: 220,
-    flex: 1,
-    pinned: "left",
-  },
-  {
-    field: "score",
-    headerName: "Score",
-    minWidth: 120,
-    cellDataType: "number",
-    valueFormatter: ({ value }) => value?.toFixed(2) ?? "-",
-  },
-  {
-    field: "accuracy",
-    headerName: "Accuracy",
-    minWidth: 130,
-    cellDataType: "number",
-    valueFormatter: ({ value }) =>
-      typeof value === "number" ? `${(value * 100).toFixed(2)}%` : "-",
-  },
-  {
-    field: "submissions",
-    headerName: "Submissions",
-    minWidth: 140,
-    cellDataType: "number",
-  },
-  {
-    field: "status",
-    headerName: "Status",
-    minWidth: 130,
-  },
-  {
-    field: "lastUpdated",
-    headerName: "Last Updated",
-    minWidth: 180,
-  },
-];
+type LeaderboardProps = typeof $props.leaderboard.ui;
+type LeaderboardRow = LeaderboardProps["rows"][number];
 
 const defaultColDef: ColDef<LeaderboardRow> = {
   sortable: true,
@@ -129,7 +26,29 @@ const theme = themeQuartz.withParams({
   wrapperBorder: false,
 });
 
-export function Leaderboard() {
+function formatCellValue(value: LeaderboardRow[keyof LeaderboardRow]) {
+  if (value == null) return "-";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+}
+
+export function Leaderboard(props: LeaderboardProps) {
+  const columnDefs = props.columns.map<ColDef<LeaderboardRow>>((column, index) => ({
+    field: column.key,
+    headerName: column.label,
+    minWidth: index === 0 ? 110 : 160,
+    flex: index === 1 ? 1 : undefined,
+    pinned: index < 2 ? "left" : undefined,
+    sort: index === 0 ? "asc" : undefined,
+    cellDataType:
+      column.kind === "number"
+        ? "number"
+        : column.kind === "boolean"
+          ? "boolean"
+          : "text",
+    valueFormatter: ({ value }) => formatCellValue(value),
+  }));
+
   return (
     <div
       style={{
@@ -141,10 +60,12 @@ export function Leaderboard() {
       }}
     >
       <div>
-        <h2 style={{ margin: 0, fontSize: 24 }}>AG Grid Leaderboard Sample</h2>
+        <h2 style={{ margin: 0, fontSize: 24 }}>
+          {props.title ?? "AG Grid Leaderboard Sample"}
+        </h2>
         <p style={{ margin: "8px 0 0", color: "#475569" }}>
-          Use this mock leaderboard to confirm sorting, filtering, resizing, and
-          pinned columns are all working.
+          {props.description ??
+            "Use this mock leaderboard to confirm sorting, filtering, resizing, and pinned columns are all working."}
         </p>
       </div>
 
@@ -161,13 +82,14 @@ export function Leaderboard() {
         <AgGridProvider modules={[AllCommunityModule]}>
           <AgGridReact<LeaderboardRow>
             theme={theme}
-            rowData={rowData}
+            rowData={[...props.rows]}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             animateRows
             pagination
-            paginationPageSize={5}
+            paginationPageSize={Math.min(Math.max(props.rows.length, 1), 10)}
             domLayout="normal"
+            overlayNoRowsTemplate={props.emptyMessage ?? "No leaderboard rows yet."}
           />
         </AgGridProvider>
       </div>
@@ -178,4 +100,4 @@ export function Leaderboard() {
 export default {
   component: Leaderboard,
   path: import.meta.path,
-} satisfies ComponentDef;
+} satisfies ComponentDef<LeaderboardProps>;

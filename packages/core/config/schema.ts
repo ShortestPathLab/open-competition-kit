@@ -39,6 +39,7 @@ export const Config = S.Struct({
   auth: S.Record({ key: S.String, value: S.Any }),
   competitions: S.Array(CompetitionConfig),
   db: S.Struct({}),
+  secrets: S.optional(S.Record({ key: S.String, value: S.String })),
   ...Extendable.fields,
 });
 
