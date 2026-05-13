@@ -21,16 +21,8 @@ const createAccessor = <T extends DbKey>(
     const schema = tables[collection];
     const d = yield* db(...a);
     return {
-      get: (id: string) =>
-        d.get({
-          collection: collection,
-          payload: id,
-        }),
-      list: (partial) =>
-        d.list({
-          collection: collection,
-          payload: partial,
-        }),
+      get: (id: string) => d.get({ collection: collection, payload: id }),
+      list: (partial) => d.list({ collection: collection, payload: partial }),
       create: (data) =>
         d.create({
           collection: collection,
@@ -41,11 +33,7 @@ const createAccessor = <T extends DbKey>(
           collection: collection,
           payload: schema.update.make(data as any),
         }),
-      delete: (id) =>
-        d.delete({
-          collection: collection,
-          payload: id,
-        }),
+      delete: (id) => d.delete({ collection: collection, payload: id }),
     } satisfies WithHooks<
       (typeof tables)[typeof collection]["create"]["Type"],
       (typeof tables)[typeof collection]["update"]["Type"],
@@ -68,7 +56,6 @@ export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitC
             enrolments: yield* createAccessor("enrolment", ...a),
             submissions: yield* createAccessor("submission", ...a),
             jobs: yield* createAccessor("job", ...a),
-            outputs: yield* createAccessor("output", ...a),
             context: yield* createAccessor("context", ...a),
           };
         });

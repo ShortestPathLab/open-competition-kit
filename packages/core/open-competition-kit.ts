@@ -1,15 +1,15 @@
 import { Path } from "@effect/platform";
 import { Config, Data as D, Effect as E, Match as M } from "effect";
-import { find, isNil, isUndefined, mapValues, noop } from "lodash-es";
+import { isNil, isUndefined, noop } from "lodash-es";
 import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
 import { OpenCompetitionKitConfig } from "./config";
-import { HookError, Hooks, OpenCompetitionKitHooks } from "./hook";
+import { access, type Accessor } from "./config/access";
+import { Hooks, OpenCompetitionKitHooks } from "./hook";
 import { type schemas, type WithHooks } from "./hook/db";
-import { flow } from "./utils/flow";
 import type { Namespace } from "./namespace";
 import type { SerialisablePrimitive } from "./serialisable";
-import { access, type Accessor } from "./config/access";
+import { flow } from "./utils/flow";
 
 export class CollectionOwnerError extends D.TaggedError(
   "CollectionOwnerError",
