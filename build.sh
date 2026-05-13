@@ -16,6 +16,5 @@ build_image() {
     "${ROOT_DIR}"
 }
 
-build_image "dockerfile.services.base" "${IMAGE_PREFIX}-services-base"
 build_image "dockerfile.services.runners.basic-runner" "${IMAGE_PREFIX}-services-runners-basic-runner"
 build_image "dockerfile.services.ui" "${IMAGE_PREFIX}-services-ui"

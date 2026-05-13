@@ -24,8 +24,6 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - name: base
-            dockerfile: dockerfile.services.base
           - name: ui
             dockerfile: dockerfile.services.ui
           - name: basic-runner

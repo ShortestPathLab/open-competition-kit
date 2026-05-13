@@ -1,5 +1,3 @@
-import type { OutKeyword } from "typescript";
-
 export type Result<Out, Error> =
   | { error: undefined; value: Out }
   | { value: undefined; error: Error };
