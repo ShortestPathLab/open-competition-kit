@@ -4,7 +4,7 @@ import { find, isNil, isUndefined, mapValues, noop } from "lodash-es";
 import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
 import { OpenCompetitionKitConfig } from "./config";
-import { Hooks, OpenCompetitionKitHooks } from "./hook";
+import { HookError, Hooks, OpenCompetitionKitHooks } from "./hook";
 import { type schemas, type WithHooks } from "./hook/db";
 import { flow } from "./utils/flow";
 import type { Namespace } from "./namespace";
@@ -20,7 +20,7 @@ export class MissingNamespaceError extends D.TaggedError(
   "MissingNamespaceError",
 ) {}
 
-export function collectionFrom<
+export function withCollectionUtilities<
   TCreate,
   TUpdate,
   TFull,
@@ -37,16 +37,48 @@ export function collectionFrom<
   owner: (item: TFull) => E.Effect<U1, E2, C3>,
   of: (owner: U2) => E.Effect<Readonly<TFull[]>, E3, C2>,
 ) {
-  return E.gen(function* () {
-    return {
-      on: noop,
-      of,
-      owner,
-      ...table,
-      find: (...a: Parameters<typeof table.list>) =>
-        table.list(...a).pipe(E.andThen((e) => e[0])),
-    };
-  });
+  return {
+    ...table,
+    on: noop,
+    of,
+    owner,
+    find: (...a: Parameters<typeof table.list>) =>
+      table.list(...a).pipe(E.andThen((e) => e[0])),
+  };
+}
+
+export function withMergeConfig<
+  TCreate,
+  TUpdate,
+  TFull extends { id: string },
+  TConfig,
+  E1,
+  C1,
+>(
+  table: WithHooks<TCreate, TUpdate, TFull, E1, C1>,
+  getConfig: (id: string) => TConfig,
+) {
+  return {
+    ...table,
+    list: (...a: Parameters<typeof table.list>) =>
+      E.gen(function* () {
+        const b = yield* table.list(...a);
+        const a2 = b.map((b1) => ({ ...b1, ...getConfig(b1.id) }));
+        return a2;
+      }),
+    get: (...a: Parameters<typeof table.get>) =>
+      E.gen(function* () {
+        const b = yield* table.get(...a);
+        const c = getConfig(b.id);
+        return { ...b, ...c };
+      }),
+    create: (...a: Parameters<typeof table.create>) =>
+      E.gen(function* () {
+        const b = yield* table.create(...a);
+        const c = getConfig(b.id);
+        return { ...b, ...c };
+      }),
+  };
 }
 
 export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
@@ -56,130 +88,23 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
       const path = yield* Path.Path;
       const configService = yield* OpenCompetitionKitConfig;
       const config = yield* configService.config;
-      const hooks = yield* OpenCompetitionKitHooks;
-      const doHook = <U>(
-        call: (h: Hooks) => Promise<U>,
-        ...w: Parameters<typeof hooks.get>
-      ) =>
-        E.provideService(
-          hooks.get(...w).pipe(E.andThen(call)),
-          Path.Path,
-          path,
-        );
-      const competitionConfig = (competitionId: string) =>
-        find(config.competitions, { id: competitionId });
-      const trackConfig = (trackId: string) =>
-        flow(
-          config.competitions,
-          (competitions) =>
-            competitions.flatMap((competition) => competition.tracks),
-          (tracks) => find(tracks, { id: trackId }),
-        );
-      const formConfig = (trackId: string) => trackConfig(trackId)?.form;
-      const leaderboardConfig = (leaderboardId: string) =>
-        flow(
-          config.competitions,
-          (competitions) =>
-            competitions.flatMap((competition) => competition.leaderboards),
-          (leaderboards) => find(leaderboards, { id: leaderboardId }),
-        );
-      const db = yield* OpenCompetitionKitCollections;
-      const instance = yield* db();
-      const competitions = yield* collectionFrom(
-        instance.competitions,
-        () => E.fail(new CollectionOwnerError()),
-        () => instance.competitions.list({}),
-      );
-      const competitionCollection = {
-        ...competitions,
-        config: { get: competitionConfig },
-      };
-      const users = {
-        ...(yield* collectionFrom(
-          instance.users,
-          () => E.fail(new CollectionOwnerError()),
-          () => instance.users.list({}),
-        )),
-      };
-      const tracks = yield* collectionFrom(
-        instance.tracks,
-        (track) => competitions.get(track.competition),
-        (competition) => instance.tracks.list({ competition: competition.id }),
-      );
-      const trackCollection = { ...tracks, config: { get: trackConfig } };
-      const forms = {
-        config: { get: formConfig },
-        load: (track: string, user: string) =>
-          E.gen(function* () {
-            const def = access(
-              { competitions: { tracks: track } },
-              config,
-            )?.form;
-            const loaded = yield* doHook((h) => h.form.loader({ def, user }), {
-              competitions: { tracks: track },
-            });
-            return loaded?.def ?? def;
-          }),
-      };
-      const leaderboards = {
-        config: { get: leaderboardConfig },
-        load: (leaderboard: string) =>
-          E.gen(function* () {
-            const loaded = yield* doHook(
-              (h) =>
-                h.leaderboard.loader({
-                  def: access(
-                    { competitions: { leaderboards: leaderboard } },
-                    config,
-                  ),
-                }),
-              { competitions: { leaderboards: leaderboard } },
-            );
-            return loaded?.def;
-          }),
+      const hooksService = yield* OpenCompetitionKitHooks;
+
+      const hooks = {
+        do: <U>(
+          call: (h: Hooks) => Promise<U>,
+          ...w: Parameters<typeof hooksService.get>
+        ) =>
+          E.provideService(
+            hooksService.get(...w).pipe(E.andThen(call)),
+            Path.Path,
+            path,
+          ),
       };
 
-      const enrolments = {
-        ...(yield* collectionFrom(
-          instance.enrolments,
-          (enrolment) => tracks.get(enrolment.track),
-          (owner: typeof schemas.user.Type | typeof schemas.track.Type) =>
-            M.value(owner).pipe(
-              M.tag("open-competition-kit/db/user", (user) =>
-                instance.enrolments.list({ user: user.id }),
-              ),
-              M.tag("open-competition-kit/db/track", (track) =>
-                instance.enrolments.list({ track: track.id }),
-              ),
-              M.exhaustive,
-            ),
-        )),
-        isEnrolled: (user: string, track: string) =>
-          E.gen(function* () {
-            const trackDetails = yield* tracks.get(track);
-            const es = yield* enrolments.list({
-              track,
-              competition: trackDetails.competition,
-              user,
-            });
-            return !!es.length;
-          }),
-        enrol: (user: string, track: string) =>
-          doHook((h) => h.enrolments.enrol({ user, track }), {
-            competitions: { tracks: track },
-          }),
-      };
-      const submissions = {
-        ...(yield* collectionFrom(
-          instance.submissions,
-          (submission) => tracks.get(submission.track),
-          (track) => instance.submissions.list({ track: track.id }),
-        )),
-        submit: (user: string, body: string, track: string) =>
-          doHook((h) => h.submissions.submit({ user, track, body }), {
-            competitions: { tracks: track },
-          }),
-      };
+      const db = yield* OpenCompetitionKitCollections;
+      const instance = yield* db();
+
       type OptionalNamespace<T, U extends Record<string, any>> =
         T extends undefined ? { namespace: Namespace } & U
         : { namespace?: never } & U;
@@ -252,12 +177,134 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             return existing?.value as SerialisablePrimitive | undefined;
           }),
       });
+
+      // ─── Competition ─────────────────────────────────────
+
+      const competitions = flow(
+        instance.competitions,
+        (c) => withMergeConfig(c, (id) => access({ competitions: id }, config)),
+        (c) =>
+          withCollectionUtilities(
+            c,
+            () => E.fail(new CollectionOwnerError()),
+            () => c.list({}),
+          ),
+      );
+
+      // ─── User ────────────────────────────────────────────
+
+      const users = withCollectionUtilities(
+        instance.users,
+        () => E.fail(new CollectionOwnerError()),
+        () => instance.users.list({}),
+      );
+
+      // ─── Track ───────────────────────────────────────────
+
+      const tracks = flow(
+        instance.tracks,
+        (c) =>
+          withMergeConfig(c, (id) =>
+            access({ competitions: { tracks: id } }, config),
+          ),
+        (c) =>
+          withCollectionUtilities(
+            c,
+            (track) => competitions.get(track.competition),
+            (competition) => c.list({ competition: competition.id }),
+          ),
+      );
+      // ─── Form ────────────────────────────────────────────
+
+      const forms = {
+        get: (id: string) =>
+          access({ competitions: { tracks: id } }, config).form,
+        load: (track: string, user: string) =>
+          E.gen(function* () {
+            const def = access(
+              { competitions: { tracks: track } },
+              config,
+            )?.form;
+            const loaded = yield* hooks.do(
+              (h) => h.form.loader({ def, user }),
+              { competitions: { tracks: track } },
+            );
+            return loaded?.def ?? def;
+          }),
+      };
+      // ─── Leaderboard ─────────────────────────────────────
+
+      const leaderboards = {
+        get: (id: string) =>
+          access({ competitions: { leaderboards: id } }, config),
+        load: (leaderboard: string) =>
+          E.gen(function* () {
+            const loaded = yield* hooks.do(
+              (h) =>
+                h.leaderboard.loader({
+                  def: access(
+                    { competitions: { leaderboards: leaderboard } },
+                    config,
+                  ),
+                }),
+              { competitions: { leaderboards: leaderboard } },
+            );
+            return loaded?.def;
+          }),
+      };
+      // ─── Enrolment ───────────────────────────────────────────────────────────────
+
+      const enrolments = {
+        ...withCollectionUtilities(
+          instance.enrolments,
+          (enrolment) => tracks.get(enrolment.track),
+          (owner: typeof schemas.user.Type | typeof schemas.track.Type) =>
+            M.value(owner).pipe(
+              M.tag("open-competition-kit/db/user", (user) =>
+                instance.enrolments.list({ user: user.id }),
+              ),
+              M.tag("open-competition-kit/db/track", (track) =>
+                instance.enrolments.list({ track: track.id }),
+              ),
+              M.exhaustive,
+            ),
+        ),
+        isEnrolled: (user: string, track: string) =>
+          E.gen(function* () {
+            const trackDetails = yield* tracks.get(track);
+            const es = yield* enrolments.list({
+              track,
+              competition: trackDetails.competition,
+              user,
+            });
+            return !!es.length;
+          }),
+        enrol: (user: string, track: string) =>
+          hooks.do((h) => h.enrolments.enrol({ user, track }), {
+            competitions: { tracks: track },
+          }),
+      };
+      // ─── Submission ──────────────────────────────────────
+
+      const submissions = {
+        ...withCollectionUtilities(
+          instance.submissions,
+          (submission) => tracks.get(submission.track),
+          (track) => instance.submissions.list({ track: track.id }),
+        ),
+        submit: (user: string, body: string, track: string) =>
+          hooks.do((h) => h.submissions.submit({ user, track, body }), {
+            competitions: { tracks: track },
+          }),
+      };
+      // ─── Job ─────────────────────────────────────────────────────────────────────
+
       const jobs = {
-        ...(yield* collectionFrom(
+        ...withCollectionUtilities(
           instance.jobs,
           (job) => submissions.get(job.submission),
           (submission) => instance.jobs.list({ submission: submission.id }),
-        )),
+        ),
         context: namespacedContext("open-competition-kit/namespace/job"),
         createFromSubmission: (submission: string) =>
           E.gen(function* () {
@@ -276,15 +323,17 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
                 E.andThen(submissions.owner),
                 E.andThen(tracks.owner),
               );
-            return yield* doHook((h) => h.runner.run({ job }), {
+            return yield* hooks.do((h) => h.runner.run({ job }), {
               competitions: c.id,
             });
           }),
       };
 
+      // ─── Context ─────────────────────────────────────────────────────────────────
+
       const context = {
         ...namespacedContext(),
-        ...(yield* collectionFrom(
+        ...withCollectionUtilities(
           instance.context,
           (ctx) =>
             M.value(ctx).pipe(
@@ -298,6 +347,10 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
               M.when(
                 { namespace: "open-competition-kit/namespace/user/secret" },
                 (c) => users.get(c.owner),
+              ),
+              M.when(
+                { namespace: "open-competition-kit/namespace/job/output" },
+                (c) => jobs.get(c.owner),
               ),
               M.exhaustive,
             ),
@@ -317,37 +370,17 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
               ),
               M.exhaustive,
             ),
-        )),
+        ),
       };
-      const outputs = {
-        ...(yield* collectionFrom(
-          instance.outputs,
-          (output) => jobs.get(output.job),
-          (job) => instance.outputs.list({ job: job.id }),
-        )),
-        set: (job: string, reference: string, body: string) =>
-          E.gen(function* () {
-            const existing = yield* outputs.list({ job, reference });
-            if (existing.length === 0) {
-              const created = yield* instance.outputs.create({
-                job,
-                reference,
-                value: body,
-              });
-              return { outputs: [created.id] };
-            }
 
-            yield* E.forEach(existing, (output) =>
-              instance.outputs.update({
-                id: output.id,
-                job: output.job,
-                reference: output.reference,
-                value: body,
-              }),
-            );
-            return { outputs: existing.map((output) => output.id) };
-          }),
-      };
+      // ─── Output ──────────────────────────────────────────
+
+      const outputs = namespacedContext(
+        "open-competition-kit/namespace/job/output",
+      );
+
+      // ─── Secret ──────────────────────────────────────────
+
       const secrets = {
         global: {
           get: (s: string) =>
@@ -366,15 +399,17 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         },
         user: namespacedContext("open-competition-kit/namespace/user/secret"),
       };
+
+      // ─────────────────────────────────────────────────────
+
       return {
         secrets,
         config: {
           get: () => config,
           access: <T extends Accessor>(accessor: T) => access(accessor, config),
         },
-        competitions: competitionCollection,
-        hooks: { do: doHook },
-        tracks: trackCollection,
+        competitions,
+        tracks,
         forms,
         leaderboards,
         users,
@@ -383,6 +418,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         jobs,
         context,
         outputs,
+        hooks,
       } satisfies OpenCompetitionKitApi;
     }),
   },

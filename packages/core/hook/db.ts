@@ -41,11 +41,6 @@ export const tables = {
     submission: S.String,
     status: S.String,
   }),
-  output: createSchemas("open-competition-kit/db/output", {
-    job: S.String,
-    value: S.String,
-    reference: S.String,
-  }),
   context: createSchemas("open-competition-kit/db/context", {
     namespace: S.Literal(...namespaces),
     owner: S.String,
@@ -53,26 +48,14 @@ export const tables = {
     value: typedJson<any>(),
     reference: S.String,
   }),
-  competition: createSchemas("open-competition-kit/db/competition", {
-    name: S.String,
-    organiser: S.String,
-    description: S.String,
-    overview: S.String,
-    rules: S.String,
-    index: S.Int,
-  }),
+  competition: createSchemas("open-competition-kit/db/competition", {}),
   submission: createSchemas("open-competition-kit/db/submission", {
     user: S.String,
     track: S.String,
     body: S.String,
   }),
   track: createSchemas("open-competition-kit/db/track", {
-    name: S.String,
     competition: S.String,
-    description: S.String,
-    overview: S.String,
-    rules: S.String,
-    index: S.Int,
   }),
   user: createSchemas("open-competition-kit/db/user", { name: S.String }),
 };
@@ -102,9 +85,6 @@ export type EnrolmentUpdate = DbUpdate<"enrolment">;
 export type Job = DbRecord<"job">;
 export type JobCreate = DbCreate<"job">;
 export type JobUpdate = DbUpdate<"job">;
-export type Output = DbRecord<"output">;
-export type OutputCreate = DbCreate<"output">;
-export type OutputUpdate = DbUpdate<"output">;
 export type Submission = DbRecord<"submission">;
 export type SubmissionCreate = DbCreate<"submission">;
 export type SubmissionUpdate = DbUpdate<"submission">;
@@ -116,9 +96,9 @@ export type UserCreate = DbCreate<"user">;
 export type UserUpdate = DbUpdate<"user">;
 
 export type TableHooks<TCreate, TUpdate, TFull> = {
-  list: (partial: Partial<TFull>) => Promise<Readonly<TFull[]>>;
   get: (id: string) => Promise<TFull>;
   create: (data: TCreate) => Promise<TFull>;
+  list: (partial: Partial<TFull>) => Promise<TFull[]>;
   update: (data: TUpdate) => Promise<void>;
   delete: (id: string) => Promise<void>;
 };
@@ -153,7 +133,6 @@ export const collections = S.Struct({
   submissions: tableHooks<typeof schemas.submission>(),
   jobs: tableHooks<typeof schemas.job>(),
   context: tableHooks<typeof schemas.context>(),
-  outputs: tableHooks<typeof schemas.output>(),
 });
 
 type Acc<T> = { collection: keyof typeof schemas; payload: T };

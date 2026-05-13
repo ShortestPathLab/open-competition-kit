@@ -66,9 +66,6 @@ export default {
       const competitionConfig = await unsafe(
         sdk.competitions.config.get(trackRecord.competition),
       );
-      const competitionConfig = appConfig.competitions.find(
-        (candidate) => candidate.id === trackRecord.competition,
-      );
       const track = competitionConfig?.tracks.find(
         (candidate) => candidate.id === trackRecord.id,
       );

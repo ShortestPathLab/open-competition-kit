@@ -64,6 +64,7 @@ type CollectionApi = {
 };
 
 export type OpenCompetitionKitApi = {
+  outputs: unknown;
   secrets: { global: { get: unknown }; user: unknown };
   /**
    * Hook package access.
@@ -143,16 +144,6 @@ export type OpenCompetitionKitApi = {
     require: unknown;
   };
 
-  outputs: CollectionApi & {
-    /**
-     * Upsert output bodies for a job/reference pair.
-     *
-     * All matching outputs for the given job and reference are updated; if none
-     * exist, a new output is created.
-     */
-    set: unknown;
-  };
-
   /**
    * Users participating in competitions.
    */
@@ -161,20 +152,20 @@ export type OpenCompetitionKitApi = {
   /**
    * Tracks belonging to competitions.
    */
-  tracks: CollectionApi & { config: { get: unknown } };
+  tracks: CollectionApi;
 
   /**
    * Competitions in this system.
    */
-  competitions: CollectionApi & { config: { get: unknown } };
+  competitions: CollectionApi;
 
   /**
    * Form definitions sourced from track configuration.
    */
-  forms: { config: { get: unknown }; load: unknown };
+  forms: { get: unknown; load: unknown };
 
   /**
    * Leaderboard definitions sourced from competition configuration.
    */
-  leaderboards: { config: { get: unknown }; load: unknown };
+  leaderboards: { get: unknown; load: unknown };
 };
