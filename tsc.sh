@@ -13,7 +13,7 @@ find ./packages \
 
   (
     cd "$dir"
-    bunx tsc
+    bunx tsgo
   ) || echo "Failed: $tsconfig"
 
 done
