@@ -1,12 +1,5 @@
 import { startCase } from "es-toolkit";
-import {
-  Competition,
-  competitions,
-  enrolments,
-  submissions,
-  tracks,
-  unsafe,
-} from "sdk";
+import { competitions, enrolments, submissions, tracks, unsafe } from "sdk";
 
 export type TrackSummary = {
   id: string;
@@ -17,7 +10,13 @@ export type TrackSummary = {
   competitionId: string;
 };
 
-export type CompetitionSummary = Competition & {
+export type CompetitionSummary = {
+  id: string;
+  name: string;
+  organiser: string;
+  description: string;
+  overview: string;
+  rules: string;
   tracks: TrackSummary[];
 };
 
@@ -56,7 +55,7 @@ export async function getCompetitionSummary(
   const competitionName = competition?.name ?? startCase(id);
   const trackSummaries: TrackSummary[] = competitionTracks.map((track) => ({
     id: track.id,
-    name: track.name,
+    name: track.name ?? startCase(track.id),
     description: track.description ?? "No description",
     overview: track.overview ?? "",
     rules: track.rules ?? "",
@@ -71,6 +70,8 @@ export async function getCompetitionSummary(
     description:
       competition.description ||
       makeCompetitionDescription(competitionName, trackSummaries.length),
+    overview: competition.overview ?? "",
+    rules: competition.rules ?? "",
     tracks: trackSummaries,
   };
 }

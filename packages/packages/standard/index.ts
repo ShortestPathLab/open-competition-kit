@@ -63,14 +63,14 @@ export default {
       const submission = await unsafe(submissions.get(jobRecord.submission));
       const source = await resolveSource(job);
       const trackRecord = await unsafe(tracks.get(submission.track));
-      const competitionConfig = await unsafe(
-        sdk.competitions.config.get(trackRecord.competition),
+      const competition = await unsafe(
+        sdk.competitions.get(trackRecord.competition),
       );
-      const track = competitionConfig?.tracks.find(
+      const track = competition.tracks.find(
         (candidate) => candidate.id === trackRecord.id,
       );
 
-      if (!competitionConfig || !track) {
+      if (!track) {
         throw new Error(
           `Runner configuration not found for track ${trackRecord.id}`,
         );
@@ -85,10 +85,13 @@ export default {
       );
 
       try {
-        const competition = competitionConfig;
         const result = eval(competition.runner.body ?? "");
         await unsafe(
-          outputs.set(jobRecord.id, "default", JSON.stringify(result ?? null)),
+          outputs.set({
+            owner: jobRecord.id,
+            reference: "default",
+            value: JSON.stringify(result ?? null),
+          }),
         );
         await unsafe(
           jobs.update({

@@ -14,16 +14,17 @@ export const storeSignupSecrets = createServerFn({ method: "POST" }).handler(
       await sdk.users.create({
         id: userId,
         name: userName,
-        secrets: "{}",
       });
     }
 
-    const result = await sdk.users.storeSecrets(userId, {
-      "signed-in": new Date().toISOString(),
+    const result = await sdk.secrets.user.set({
+      owner: userId,
+      reference: "signed-in",
+      value: new Date().toISOString(),
     });
 
     if (result.error) throw result.error;
 
-    return { success: true, secrets: result.value };
+    return { success: true, context: result.value.context };
   },
 );

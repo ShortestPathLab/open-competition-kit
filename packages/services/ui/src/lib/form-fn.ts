@@ -6,6 +6,6 @@ export const getLoadedForm = createServerFn({ method: "GET" })
   .inputValidator(z.string())
   .handler(async ({ data: trackId }) => {
     return (await unsafe(
-      sdk.forms.load(trackId),
+      sdk.forms.load(trackId, "anonymous"),
     )) as (typeof $props.form.ui)["def"];
   });

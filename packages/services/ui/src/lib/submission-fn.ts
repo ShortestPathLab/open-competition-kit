@@ -1,9 +1,9 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import sdk, {
+  context,
   competitions,
   jobs,
-  outputs,
   submissions,
   tracks,
   unsafe,
@@ -27,6 +27,22 @@ const submissionDetailInput = z.object({
   submissionId: z.string(),
 });
 
+export type SubmissionBrowserItem = UserSubmissionSummary;
+
+export type SubmissionDetail = SubmissionBrowserItem & {
+  jobs: Array<{
+    id: string;
+    status: string;
+    logs: string;
+    outputs: Array<{
+      id: string;
+      job: string;
+      value: string;
+      reference: string;
+    }>;
+  }>;
+};
+
 const getCompetitionSubmissions = createServerFn({ method: "GET" })
   .inputValidator(competitionSubmissionsInput)
   .handler(async ({ data }) => {
@@ -44,7 +60,7 @@ const getUserSubmissions = createServerFn({ method: "GET" })
 
 const getSubmissionDetail = createServerFn({ method: "GET" })
   .inputValidator(submissionDetailInput)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<SubmissionDetail> => {
     const submission = await unsafe(submissions.get(data.submissionId));
 
     if (submission.user !== data.userId) {
@@ -60,40 +76,37 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
     );
 
     const jobsWithOutputs = await Promise.all(
-      submissionJobs.map(async (job) => ({
-        id: job.id,
-        status: job.status,
-        outputs: await unsafe(outputs.list({ job: job.id })),
-        logs: "Logs are not available in the current runner implementation yet.",
-      })),
+      submissionJobs.map(async (job) => {
+        const outputContexts = await unsafe(
+          context.list({
+            owner: job.id,
+            namespace: "open-competition-kit/namespace/job/output",
+          }),
+        );
+        return {
+          id: job.id,
+          status: job.status,
+          outputs: outputContexts.map((output) => ({
+            id: output.id,
+            job: output.owner,
+            value: String(output.value ?? ""),
+            reference: output.reference,
+          })),
+          logs: "Logs are not available in the current runner implementation yet.",
+        };
+      }),
     );
 
     return {
       id: submission.id,
       body: submission.body,
       trackId: track.id,
-      trackName: track.name,
+      trackName: track.name ?? track.id,
       competitionId: submissionCompetition.id,
-      competitionName: submissionCompetition.name,
+      competitionName: submissionCompetition.name ?? submissionCompetition.id,
       jobs: jobsWithOutputs,
     };
   });
-
-export type SubmissionBrowserItem = UserSubmissionSummary;
-
-export type SubmissionDetail = SubmissionBrowserItem & {
-  jobs: Array<{
-    id: string;
-    status: string;
-    logs: string;
-    outputs: Array<{
-      id: string;
-      job: string;
-      value: string;
-      reference: string;
-    }>;
-  }>;
-};
 
 export function useCompetitionSubmissions(
   userId?: string,
@@ -130,7 +143,7 @@ export function useSubmissionDetail(userId?: string, submissionId?: string) {
         ? () =>
             getSubmissionDetailFn({
               data: { userId, submissionId },
-            })
+            }) as Promise<SubmissionDetail>
         : skipToken,
   });
 }

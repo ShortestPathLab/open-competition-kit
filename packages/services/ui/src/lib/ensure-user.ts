@@ -17,7 +17,6 @@ export const ensureUserExists = createServerFn({ method: "POST" })
         await sdk.users.update({
           id: data.id,
           name: data.name,
-          secrets: existing.value.secrets,
         });
         return { success: true, created: false };
       }
@@ -28,7 +27,6 @@ export const ensureUserExists = createServerFn({ method: "POST" })
     await sdk.users.create({
       id: data.id,
       name: data.name,
-      secrets: "{}",
     });
 
     return { success: true, created: true };
