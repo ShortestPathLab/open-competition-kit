@@ -3,7 +3,7 @@ import { Match as M, Schema as S } from "effect";
 import { capitalize, entries } from "lodash-es";
 import { hook } from "sdk";
 
-const { schemas, Id, Number, Boolean, Date, String, Int } = hook.db;
+const { schemas, Id, Number, Boolean, Date, String, Int, Json } = hook.db;
 
 const is =
   <T>(a: T) =>
@@ -20,6 +20,7 @@ function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
         M.when(is(Int), () => "Int @default(0)"),
         M.when(is(Boolean), () => "Boolean @default(false)"),
         M.when(is(Date), () => "DateTime"),
+        M.when(is(Json), () => "Json @default(null)"),
         M.orElse(() => ""),
       );
       return type ? `${k} ${type}` : "";

@@ -1,6 +1,8 @@
 import { Effect as E, Schema as S } from "effect";
 import { mapValues } from "lodash-es";
 import { hook } from "./hook";
+import { _ } from "../utils/flow";
+import { namespaces } from "../namespace";
 
 export const { Number, Boolean, Date, String, Int } = S;
 
@@ -8,26 +10,24 @@ export const Id = S.String.annotations({
   identifier: "open-competition-kit/db/Id",
 });
 
+export const Json = S.Any.annotations({
+  identifier: "open-competition-kit/db/Json",
+});
+
+export const typedJson = <T>() => Json as S.Schema<T>;
+
 const createSchemas = <
   K extends string,
-  T extends {
-    [x: Readonly<PropertyKey>]: S.Schema<any>;
-  },
+  T extends { [x: Readonly<PropertyKey>]: S.Schema<any> },
 >(
   key: K,
   fields: T,
 ) => ({
-  full: S.TaggedStruct(key, {
-    id: Id,
-    ...fields,
-  }),
-  create: S.Struct({
-    id: S.optional(Id),
-    ...fields,
-  }),
+  full: S.TaggedStruct(key, { id: Id, ...fields }),
+  create: S.Struct({ id: S.optional(Id), ...fields }),
   update: S.Struct({
     id: Id,
-    ...mapValues(fields, (f) => S.Union(f, S.Void, S.Undefined)),
+    ...mapValues(fields, (f) => S.optional(S.Union(f, S.Undefined))),
   }),
 });
 
@@ -47,8 +47,10 @@ export const tables = {
     reference: S.String,
   }),
   context: createSchemas("open-competition-kit/db/context", {
-    job: S.String,
-    value: S.String,
+    namespace: S.Literal(...namespaces),
+    owner: S.String,
+    // TODO: replace any with concrete JSON serialisable type
+    value: typedJson<any>(),
     reference: S.String,
   }),
   competition: createSchemas("open-competition-kit/db/competition", {
@@ -72,10 +74,7 @@ export const tables = {
     rules: S.String,
     index: S.Int,
   }),
-  user: createSchemas("open-competition-kit/db/user", {
-    name: S.String,
-    secrets: S.String,
-  }),
+  user: createSchemas("open-competition-kit/db/user", { name: S.String }),
 };
 
 export const schemas = mapValues(tables, (v) => v.full) as {
@@ -129,9 +128,9 @@ export type WithHooks<TCreate, TUpdate, TFull, E, C> = {
     TCreate,
     TUpdate,
     TFull
-  >[K] extends (...args: infer In) => Promise<infer Out>
-    ? (...args: In) => E.Effect<Out, E, C>
-    : never;
+  >[K] extends (...args: infer In) => Promise<infer Out> ?
+    (...args: In) => E.Effect<Out, E, C>
+  : never;
 };
 
 const tableHooks = <F>() =>
@@ -157,10 +156,7 @@ export const collections = S.Struct({
   outputs: tableHooks<typeof schemas.output>(),
 });
 
-type Acc<T> = {
-  collection: keyof typeof schemas;
-  payload: T;
-};
+type Acc<T> = { collection: keyof typeof schemas; payload: T };
 
 export const db = S.Struct({
   list: hook<Acc<any>, unknown>(),

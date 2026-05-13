@@ -64,10 +64,7 @@ type CollectionApi = {
 };
 
 export type OpenCompetitionKitApi = {
-  secrets: {
-    global: { get: unknown };
-    user: { get: unknown };
-  };
+  secrets: { global: { get: unknown }; user: unknown };
   /**
    * Hook package access.
    */
@@ -87,6 +84,7 @@ export type OpenCompetitionKitApi = {
      * Return the decoded `competition.config.yaml` configuration.
      */
     get: unknown;
+    access: unknown;
   };
 
   /**
@@ -163,10 +161,20 @@ export type OpenCompetitionKitApi = {
   /**
    * Tracks belonging to competitions.
    */
-  tracks: CollectionApi;
+  tracks: CollectionApi & { config: { get: unknown } };
 
   /**
    * Competitions in this system.
    */
-  competitions: CollectionApi;
+  competitions: CollectionApi & { config: { get: unknown } };
+
+  /**
+   * Form definitions sourced from track configuration.
+   */
+  forms: { config: { get: unknown }; load: unknown };
+
+  /**
+   * Leaderboard definitions sourced from competition configuration.
+   */
+  leaderboards: { config: { get: unknown }; load: unknown };
 };

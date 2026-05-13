@@ -7,6 +7,8 @@ export {
   OpenCompetitionKitConfig,
   Config,
   CompetitionConfig,
+  type Accessor as ConfigAccessor,
+  access as accessConfig,
   TrackConfig,
 } from "./config";
 export type { Package, Hooks } from "./hook";
@@ -39,5 +41,8 @@ export type {
 } from "./hook/db";
 
 export * as hook from "./hook";
+
+export * as reference from "./reference";
+export * as namespace from "./namespace";
 
 export class NoopError extends Data.TaggedError("NoopError") {}

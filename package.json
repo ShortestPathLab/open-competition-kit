@@ -2,6 +2,7 @@
   "name": "open-competition-kit",
   "private": true,
   "scripts": {
+    "tsc:all": "bash ./tsc.sh",
     "db:prisma:generate": "bun packages/packages/db/prisma/generate.ts",
     "db:prisma:studio": "DATABASE_URL=postgres://postgres:postgres@localhost:5433/postgres bunx prisma studio --config packages/packages/db/prisma/prisma.config.ts",
     "db:prisma:reset": "bunx prisma migrate reset --schema packages/packages/db/prisma/schemas/schema.prisma --config packages/packages/db/prisma/prisma.config.ts"

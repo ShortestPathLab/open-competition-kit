@@ -1,16 +1,29 @@
-import {
-  context,
+import sdk, {
+  cast,
   enrolments,
   jobs,
   outputs,
+  reference,
   submissions,
   tracks,
-  type Config,
-  type Package,
-  type Result,
   unsafe,
+  type Package,
 } from "sdk";
-import sdk from "sdk";
+
+async function resolveSource(job: string) {
+  const codeZipB64 = await cast<string>()(
+    jobs.context.require({
+      owner: job,
+      reference: reference.std.submissionSourceCodeZipB64,
+    }),
+  );
+  if (!codeZipB64.error) return codeZipB64.value;
+  throw new Error(
+    `Could not resolve source code for job. This package looks for sources from contexts with the following references: ${[
+      reference.std.submissionSourceCodeZipB64,
+    ].join(", ")}`,
+  );
+}
 
 export default {
   enrolments: {
@@ -35,16 +48,10 @@ export default {
         }),
       );
       const job = await unsafe(
-        jobs.create({
-          submission: submission.id,
-          status: "pending",
-        }),
+        jobs.create({ submission: submission.id, status: "pending" }),
       );
 
-      return {
-        submission: submission.id,
-        jobs: [job.id],
-      };
+      return { submission: submission.id, jobs: [job.id] };
     },
   },
   runner: {
@@ -53,11 +60,12 @@ export default {
       if (inherited) return inherited;
 
       const jobRecord = await unsafe(jobs.get(job));
-      const jobContext = await unsafe(context.list({ job: jobRecord.id }));
-      void jobContext;
       const submission = await unsafe(submissions.get(jobRecord.submission));
+      const source = await resolveSource(job);
       const trackRecord = await unsafe(tracks.get(submission.track));
-      const appConfig = await unsafe(sdk.config.get());
+      const competitionConfig = await unsafe(
+        sdk.competitions.config.get(trackRecord.competition),
+      );
       const competitionConfig = appConfig.competitions.find(
         (candidate) => candidate.id === trackRecord.competition,
       );
@@ -92,9 +100,7 @@ export default {
             status: "completed",
           }),
         );
-        return {
-          status: "completed",
-        };
+        return { status: "completed" };
       } catch (error) {
         await unsafe(
           jobs.update({

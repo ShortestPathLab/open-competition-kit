@@ -79,7 +79,11 @@ export const kit = new DeepProxy({} as OpenCompetitionKitApi & Kit, {
       const result = await get(kit, this.path)(...args);
       return {
         value: E.isEffect(result)
-          ? await E.runPromise(result as E.Effect<unknown, unknown, never>)
+          ? await E.runPromise(
+              (result as E.Effect<unknown, unknown, never>).pipe(
+                E.provide(Logger.pretty),
+              ),
+            )
           : result,
         error: undefined,
       } satisfies Result<unknown, unknown>;

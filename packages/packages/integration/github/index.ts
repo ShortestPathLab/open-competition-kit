@@ -1,6 +1,6 @@
 import { once } from "es-toolkit";
 import { Octokit } from "octokit";
-import { kit, unsafe, type Package } from "sdk";
+import { kit, unsafe, users, type Package, reference, cast } from "sdk";
 import { z } from "zod";
 
 const MAX_SUBMISSION_ARCHIVE_BYTES = 10 * 1024 * 1024;
@@ -8,14 +8,10 @@ const GITHUB_REF_SELECT_KIND = "github:ref-select";
 const GITHUB_REF_FIELD_KEY = "github:ref";
 
 const githubOrg = once(async () => {
-  return String(await unsafe(kit.secrets.global.get("GITHUB_ORG")));
+  return await unsafe(kit.secrets.global.require("GITHUB_ORG"));
 });
 
-type GithubRefOption = {
-  key: string;
-  label: string;
-  value: string;
-};
+type GithubRefOption = { key: string; label: string; value: string };
 
 const githubRefSelection = z.object({
   owner: z.string(),
@@ -27,26 +23,20 @@ type GithubRefSelection = z.infer<typeof githubRefSelection>;
 
 const selectedRefValue = z.union([
   z.string(),
-  z.object({
-    [GITHUB_REF_FIELD_KEY]: z.string(),
-  }),
+  z.object({ [GITHUB_REF_FIELD_KEY]: z.string() }),
 ]);
 
 const selectedRefBody = z
   .union([
     z.string(),
-    z.object({
-      [GITHUB_REF_FIELD_KEY]: z.string(),
-    }),
-    z.object({
-      value: selectedRefValue,
-    }),
+    z.object({ [GITHUB_REF_FIELD_KEY]: z.string() }),
+    z.object({ value: selectedRefValue }),
   ])
   .transform((body) => {
     if (typeof body === "string") return body;
     if (GITHUB_REF_FIELD_KEY in body) return body[GITHUB_REF_FIELD_KEY];
-    return typeof body.value === "string"
-      ? body.value
+    return typeof body.value === "string" ?
+        body.value
       : body.value[GITHUB_REF_FIELD_KEY];
   });
 
@@ -60,9 +50,11 @@ function participantRepositoryName(githubUsername: string) {
   return `participant-${githubUsername.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`;
 }
 
-async function listLatestRefsForUser(): Promise<GithubRefOption[]> {
+async function listLatestRefsForUser(user: string): Promise<GithubRefOption[]> {
   const githubUsername = String(
-    await unsafe(kit.secrets.user.get("GITHUB_USERNAME")),
+    await unsafe(
+      kit.secrets.user.get({ owner: user, reference: "GITHUB_USERNAME" }),
+    ),
   );
   const owner = await githubOrg();
   const repo = participantRepositoryName(githubUsername);
@@ -104,11 +96,7 @@ async function resolveSelectedRef(
     if (parsed.success) return parsed.data;
   } catch {}
 
-  return {
-    owner,
-    repo,
-    ref: selectedRef,
-  };
+  return { owner, repo, ref: selectedRef };
 }
 
 async function ensureParticipantRepository(githubUsername: string) {
@@ -147,8 +135,13 @@ export default {
         throw new Error("GitHub integration requires an enrolment hook.");
       }
 
-      const githubUsername = String(
-        await unsafe(kit.secrets.user.get("GITHUB_USERNAME")),
+      const githubUsername = await unsafe(
+        cast<string>()(
+          kit.secrets.user.require({
+            owner: args.user,
+            reference: "GITHUB_USERNAME",
+          }),
+        ),
       );
       await ensureParticipantRepository(githubUsername);
 
@@ -156,22 +149,19 @@ export default {
     },
   },
   form: {
-    loader: async ({ def }, next) => {
-      const options = await listLatestRefsForUser();
+    loader: async ({ def, user }, next) => {
+      // Temporarily return empty
+      const options = await listLatestRefsForUser(user);
       const nextDef = {
         ...def,
         shape: def.shape.map((shapeItem) =>
-          shapeItem.kind === GITHUB_REF_SELECT_KIND
-            ? {
-                ...shapeItem,
-                kind: "select",
-                options,
-              }
-            : shapeItem,
+          shapeItem.kind === GITHUB_REF_SELECT_KIND ?
+            { ...shapeItem, kind: "select", options }
+          : shapeItem,
         ),
       };
 
-      return (await next?.({ def: nextDef })) ?? { def: nextDef };
+      return (await next?.({ def: nextDef, user })) ?? { def: nextDef, user };
     },
   },
   runner: {
@@ -180,8 +170,13 @@ export default {
       const submission = await unsafe(
         kit.submissions.get(jobRecord.submission),
       );
-      const githubUsername = String(
-        await unsafe(kit.secrets.user.get("GITHUB_USERNAME")),
+      const githubUsername = await unsafe(
+        cast<string>()(
+          kit.secrets.user.require({
+            owner: submission.user,
+            reference: "GITHUB_USERNAME",
+          }),
+        ),
       );
       const owner = await githubOrg();
       const repo = participantRepositoryName(githubUsername);
@@ -204,11 +199,11 @@ export default {
       }
 
       await unsafe(
-        kit.context.set(
-          jobRecord.id,
-          "standard:submission/code",
-          archive.toString("base64"),
-        ),
+        kit.jobs.context.set({
+          owner: jobRecord.id,
+          reference: reference.std.submissionSourceCodeZipB64,
+          value: archive.toString("base64"),
+        }),
       );
 
       return (

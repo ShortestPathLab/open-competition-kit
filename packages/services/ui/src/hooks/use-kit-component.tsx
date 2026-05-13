@@ -14,16 +14,37 @@ import {
   isSource,
   Source,
   unsafe,
+  ConfigAccessor,
 } from "sdk";
 import z from "zod";
 import root from "react-shadow";
-type OmitNever<T> = {
-  [K in keyof T as T[K] extends never ? never : K]: T[K];
-};
+
+const literalSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+  z.undefined(),
+]);
+type Literal = z.infer<typeof literalSchema>;
+
+type Json = Literal | { [key: string]: Json } | Json[];
+
+export const jsonSchema: z.ZodType<Json> = z.lazy(() =>
+  z.union([
+    literalSchema,
+    z.array(jsonSchema),
+    z.record(z.string(), jsonSchema),
+  ]),
+);
+
+type OmitNever<T> = { [K in keyof T as T[K] extends never ? never : K]: T[K] };
 type ComponentHookMap = OmitNever<{
-  [K in Path<Hooks>]: PathValue<Hooks, K> extends () => Promise<Source<infer R>>
-    ? R
-    : never;
+  [K in Path<Hooks>]: PathValue<Hooks, K> extends (
+    () => Promise<Source<infer R>>
+  ) ?
+    R
+  : never;
 }>;
 
 type ComponentHookPath = keyof ComponentHookMap;
@@ -32,26 +53,19 @@ const getKitComponentModule = createServerFn()
   .inputValidator(
     z.object({
       hook: z.string().pipe(z.custom<ComponentHookPath>()),
-      accessor: z.string().pipe(z.custom<Path<Config>>()).optional(),
+      accessor: jsonSchema.pipe(z.custom<ConfigAccessor>()).optional(),
     }),
   )
   .handler(async ({ data: { hook, accessor } }) => {
     const result = await unsafe(
-      hooks.do(
-        (w) => getByPath(w, hook)(),
-        accessor ? (w) => getByPath(w, accessor) : undefined,
-      ),
+      hooks.do((w) => getByPath(w, hook)(), accessor),
     );
     assert(isSource(result), "Hook output is is not a component");
     return result;
   });
 
 function isComponent(module: unknown): module is ComponentOnly<any> {
-  return z
-    .object({
-      component: z.function(),
-    })
-    .safeParse(module).success;
+  return z.object({ component: z.function() }).safeParse(module).success;
 }
 
 const cache: Record<string, ComponentOnly<any>> = {};
@@ -98,16 +112,14 @@ export function useKitComponent<T extends ComponentHookPath>(
   });
   return useCallback(
     (props: ComponentHookMap[T]) => {
-      return KitComponent ? (
-        <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
-          <root.div>
-            <style>{"* { font-family: 'Geist' }"}</style>
-            <KitComponent {...props} />
-          </root.div>
-        </CatchBoundary>
-      ) : (
-        <Loader />
-      );
+      return KitComponent ?
+          <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
+            <root.div>
+              <style>{"* { font-family: 'Geist' }"}</style>
+              <KitComponent {...props} />
+            </root.div>
+          </CatchBoundary>
+        : <Loader />;
     },
     [KitComponent],
   );

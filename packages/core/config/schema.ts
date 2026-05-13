@@ -1,12 +1,17 @@
 import { Schema as S } from "effect";
+import { Meta, Shape } from "../hook";
+import { Item } from "../common/shape";
 
-export const Item = S.Struct({
-  id: S.String,
-  name: S.String,
+export const Extendable = S.Struct({ with: S.Array(S.String) });
+
+export const FormConfig = S.Struct({
+  ...Meta.fields,
+  shape: S.Array(S.Struct({ ...Shape.fields, ...Meta.fields })),
 });
 
-export const Extendable = S.Struct({
-  with: S.Array(S.String),
+export const LeaderboardConfig = S.Struct({
+  ...Meta.fields,
+  shape: S.Array(Shape),
 });
 
 export const TrackConfig = S.Struct({
@@ -15,7 +20,7 @@ export const TrackConfig = S.Struct({
   description: S.optional(S.String),
   overview: S.optional(S.String),
   rules: S.optional(S.String),
-  form: Extendable,
+  form: S.Struct({ ...Extendable.fields, ...FormConfig.fields }),
 });
 
 export const CompetitionConfig = S.Struct({
@@ -26,11 +31,14 @@ export const CompetitionConfig = S.Struct({
   overview: S.optional(S.String),
   rules: S.optional(S.String),
   tracks: S.Array(TrackConfig),
-  runner: S.Struct({
-    ...Extendable.fields,
-    body: S.optional(S.String),
-  }),
-  leaderboards: S.Array(Extendable),
+  runner: S.Struct({ ...Extendable.fields, body: S.optional(S.String) }),
+  leaderboards: S.Array(
+    S.Struct({
+      ...Item.fields,
+      ...Extendable.fields,
+      ...LeaderboardConfig.fields,
+    }),
+  ),
 });
 
 export const Config = S.Struct({
@@ -44,8 +52,10 @@ export const Config = S.Struct({
 });
 
 export type Config = S.Schema.Type<typeof Config>;
+export type Form = S.Schema.Type<typeof FormConfig>;
+export type Leaderboard = S.Schema.Type<typeof LeaderboardConfig>;
 export type CompetitionConfig = S.Schema.Type<typeof CompetitionConfig>;
 export type Extendable = S.Schema.Type<typeof Extendable>;
 export type TrackConfig = S.Schema.Type<typeof TrackConfig>;
 
-export const decode = S.decodeUnknown(Config);
+export const decode = S.decodeUnknown(Config, { onExcessProperty: "preserve" });

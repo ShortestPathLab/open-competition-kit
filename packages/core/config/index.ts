@@ -13,12 +13,10 @@ import { mapValues, uniq } from "lodash-es";
 import { decode, Extendable } from "./schema";
 
 export * from "./schema";
+export * from "./access";
 
 const load = (s: string) =>
-  E.try({
-    try: () => _load(s),
-    catch: (e) => e as YAMLException,
-  });
+  E.try({ try: () => _load(s), catch: (e) => e as YAMLException });
 
 export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
   const ctx = O.match(S.decodeUnknownOption(Extendable)(t), {
@@ -76,11 +74,7 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
         E.andThen(load),
         E.andThen(decode),
       );
-      return {
-        cwd,
-        path,
-        config: raw.pipe(E.map(propagateExtendable)),
-      };
+      return { cwd, path, config: raw.pipe(E.map(propagateExtendable)) };
     }),
   },
 ) {}

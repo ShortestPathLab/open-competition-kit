@@ -20,10 +20,7 @@ const jsonFormProps = z.object({
        * Options for multiple-choice fields.
        */
       options: z
-        .object({
-          ...point.shape,
-          ...meta.shape,
-        })
+        .object({ ...point.shape, ...meta.shape })
         .array()
         .optional(),
       /**
@@ -44,7 +41,7 @@ function buildSchema(props: FormDef): RJSFSchema {
   const properties = Object.fromEntries(
     props.shape.map((shapeItem) => {
       const property: Record<string, unknown> = {
-        title: shapeItem.label ?? shapeItem.key,
+        title: shapeItem.name ?? shapeItem.id,
       };
 
       if (shapeItem.description) {
@@ -65,8 +62,8 @@ function buildSchema(props: FormDef): RJSFSchema {
 
       if (shapeItem.kind === "select" && shapeItem.options?.length) {
         property.oneOf = shapeItem.options.map((option) => ({
-          const: option.value ?? option.key,
-          title: option.label ?? option.key,
+          const: option.value ?? option.id,
+          title: option.name ?? option.id,
         }));
       }
 
@@ -74,7 +71,7 @@ function buildSchema(props: FormDef): RJSFSchema {
         property.default = shapeItem.defaultValue;
       }
 
-      return [shapeItem.key, property];
+      return [shapeItem.id, property];
     }),
   );
 
@@ -86,7 +83,7 @@ function buildSchema(props: FormDef): RJSFSchema {
     type: "object",
     required: props.shape
       .filter((shapeItem) => shapeItem.required)
-      .map((shapeItem) => shapeItem.key),
+      .map((shapeItem) => shapeItem.id),
     properties,
   };
 }
@@ -102,20 +99,16 @@ function buildUiSchema(props: FormDef): UiSchema {
 
       if (shapeItem.kind === "textarea") {
         config["ui:widget"] = "textarea";
-        config["ui:options"] = {
-          rows: shapeItem.lines ?? 5,
-        };
+        config["ui:options"] = { rows: shapeItem.lines ?? 5 };
       }
 
-      return [shapeItem.key, config];
+      return [shapeItem.id, config];
     }),
   );
 
   return {
     ...shapeUiSchema,
-    "ui:submitButtonOptions": {
-      submitText: props.submitLabel ?? "Submit",
-    },
+    "ui:submitButtonOptions": { submitText: props.submitLabel ?? "Submit" },
   };
 }
 
@@ -124,7 +117,7 @@ function buildFormData(props: FormDef) {
     ...Object.fromEntries(
       props.shape
         .filter((shapeItem) => shapeItem.defaultValue !== undefined)
-        .map((shapeItem) => [shapeItem.key, shapeItem.defaultValue]),
+        .map((shapeItem) => [shapeItem.id, shapeItem.defaultValue]),
     ),
     ...props.initialData,
   };
@@ -132,7 +125,10 @@ function buildFormData(props: FormDef) {
 
 export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
   const result = z.safeParse(jsonFormProps as z.ZodType<FormDef>, def);
-  if (!result.success) throw new Error(z.prettifyError(result.error));
+  if (!result.success)
+    throw new Error(
+      `Error: ${z.prettifyError(result.error)}\nReceived: ${JSON.stringify(def, null, 2)}`,
+    );
   const schema = buildSchema(result.data);
   const uiSchema = buildUiSchema(result.data);
   const formData = buildFormData(result.data);

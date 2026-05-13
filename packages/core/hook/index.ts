@@ -1,15 +1,17 @@
 import { Path } from "@effect/platform";
 import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
 import { isFunction, mergeWith } from "lodash-es";
-import { OpenCompetitionKitConfig } from "../config";
-import type { Extendable } from "../config/schema";
+import type { Meta, Shape, Value } from "../common/shape";
+import {
+  OpenCompetitionKitConfig,
+  type Form,
+  type Leaderboard,
+} from "../config";
+import { access, type Accessor } from "../config/access";
 import { componentSource } from "./component";
 import { db } from "./db";
 import { hook } from "./hook";
-import type { Meta, Shape, Value } from "./shape";
-type FormDef = Meta & {
-  shape: (Shape & Meta)[];
-};
+
 export const Hooks = S.Struct({
   db,
   enrolments: S.Struct({
@@ -19,24 +21,19 @@ export const Hooks = S.Struct({
     enrol: hook<{ track: string; user: string }, string>(),
   }),
   user: S.Struct({}),
-  track: S.Struct({
-    enrol: S.Unknown,
-  }),
+  track: S.Struct({ enrol: S.Unknown }),
   form: S.Struct({
-    loader: hook<{ def: FormDef }, { def: FormDef }>(),
+    loader: hook<{ def: Form; user: string }, { def: Form }>(),
     ui: componentSource<{
-      def: FormDef;
+      def: Form;
       onSubmit?: (values: Record<string, Value>) => Promise<void>;
     }>(),
     submit: S.Unknown,
   }),
   leaderboard: S.Struct({
-    loader: hook(),
+    loader: hook<{ def: Leaderboard }, { def: Leaderboard }>(),
     ui: componentSource<
-      Meta & {
-        shape: Shape[];
-        items: Record<string, Value>[];
-      }
+      Meta & { shape: Shape[]; items: Record<string, Value>[] }
     >(),
   }),
   submissions: S.Struct({
@@ -53,21 +50,19 @@ export const Hooks = S.Struct({
 
 export type Hooks = S.Schema.Type<typeof Hooks>;
 
-type DeepPartial<T> = T extends { [key: string]: unknown }
-  ? {
-      [P in keyof T]?: DeepPartial<T[P]>;
-    }
+type DeepPartial<T> =
+  T extends { [key: string]: unknown } ? { [P in keyof T]?: DeepPartial<T[P]> }
   : T;
 
 export type Package = DeepPartial<Hooks>;
 
 // Produces dot-notation keys for a nested object T (arrays and functions are treated as leaves)
 type DotNotationKeys<T, Prev extends string = ""> = {
-  [K in keyof T & string]: T[K] extends object
-    ? // if value is an object, recurse deeper
-      `${Prev}${Prev extends "" ? "" : "."}${K}.${DotNotationKeys<T[K]>}`
-    : // if value is a leaf, emit this key
-      `${Prev}${Prev extends "" ? "" : "."}${K}`;
+  [K in keyof T & string]: T[K] extends object ?
+    // if value is an object, recurse deeper
+    `${Prev}${Prev extends "" ? "" : "."}${K}.${DotNotationKeys<T[K]>}`
+  : // if value is a leaf, emit this key
+    `${Prev}${Prev extends "" ? "" : "."}${K}`;
 }[keyof T & string];
 
 export type HookKey = DotNotationKeys<Hooks>;
@@ -76,11 +71,10 @@ const decode = S.decodeUnknown(Hooks);
 
 class NotImplementedError extends Data.TaggedError("NotImplementedError") {}
 
-class ImportError extends Data.TaggedError("ImportError") {
-  constructor(readonly params: { cause: unknown; path: string }) {
-    super();
-  }
-}
+class ImportError extends Data.TaggedError("ImportError")<{
+  cause: unknown;
+  path: string;
+}> {}
 
 export const createPackageResolver = (root: string) =>
   E.cachedFunction((p: string) =>
@@ -133,11 +127,9 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
               try: () => f(...t) as unknown as Promise<U1>,
               catch: (e) => e as HookError,
             }),
-        get: (
-          accessor: (c: typeof config) => Extendable | undefined = (c) => c,
-        ) =>
+        get: (accessor: Accessor = true) =>
           E.gen(function* () {
-            const a = accessor(config);
+            const a = access(accessor, config) as { with: string[] };
             if (!a)
               return yield* E.fail(
                 new AccessorError({ accessor: accessor.toString(), config }),
@@ -154,6 +146,6 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
   },
 ) {}
 
+export * from "../common/shape";
 export * from "./component";
 export * as db from "./db";
-export * from "./shape";
