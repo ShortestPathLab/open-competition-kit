@@ -1,5 +1,5 @@
 {
-  "name": "basic-runner",
+  "name": "runner-service",
   "module": "index.ts",
   "type": "module",
   "private": true,

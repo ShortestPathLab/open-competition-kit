@@ -39,7 +39,7 @@ export type {
 
 export * as hook from "./hook";
 
-export * as reference from "./reference";
+export * as reference from "./tag";
 export * as namespace from "./namespace";
 
 export class NoopError extends Data.TaggedError("NoopError") {}

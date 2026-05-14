@@ -6,7 +6,7 @@ COPY . .
 
 RUN bun install
 
-WORKDIR /packages/services/ui
+WORKDIR /packages/services/ui-service
 
 RUN bun run build
 

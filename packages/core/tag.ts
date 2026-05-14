@@ -1,4 +1,4 @@
-export const stem = "open-competition-kit/reference" as const;
+export const stem = "open-competition-kit/tag" as const;
 
 /**
  * A collection of standard reference codes recommended for

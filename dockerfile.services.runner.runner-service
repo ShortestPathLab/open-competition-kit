@@ -6,7 +6,7 @@ COPY . .
 
 RUN bun install
 
-WORKDIR /packages/services/runners/basic-runner
+WORKDIR /packages/services/runner/runner-service
 
 ENV CONFIG=/competition.config.yaml
 
