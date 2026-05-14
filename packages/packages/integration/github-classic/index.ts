@@ -1,6 +1,14 @@
-import { once } from "es-toolkit";
+import { assert, isNotNil, isNumber, memoize, once } from "es-toolkit";
 import { Octokit } from "octokit";
-import { kit, unsafe, users, type Package, reference, cast } from "sdk";
+import {
+  kit,
+  unsafe,
+  users,
+  type Package,
+  reference,
+  cast,
+  secrets,
+} from "sdk";
 import { z } from "zod";
 
 const MAX_SUBMISSION_ARCHIVE_BYTES = 10 * 1024 * 1024;
@@ -11,7 +19,7 @@ const githubOrg = once(async () => {
   return await unsafe(kit.secrets.global.require("GITHUB_ORG"));
 });
 
-type GithubRefOption = { key: string; label: string; value: string };
+type GithubRefOption = { id: string; label: string; value: string };
 
 const githubRefSelection = z.object({
   owner: z.string(),
@@ -46,18 +54,28 @@ const octokit = once(async () => {
   });
 });
 
-function participantRepositoryName(githubUsername: string) {
-  return `participant-${githubUsername.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`;
+async function participantRepositoryName(id: string) {
+  const u = await username(id);
+  return `participant-${u.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`;
 }
 
-async function listLatestRefsForUser(user: string): Promise<GithubRefOption[]> {
-  const githubUsername = String(
-    await unsafe(
-      kit.secrets.user.get({ owner: user, reference: "GITHUB_USERNAME" }),
-    ),
+const username = memoize(async (id: string) => {
+  const a = await unsafe(
+    secrets.user.get({ owner: id, reference: "auth/github/id" }),
   );
+  assert(
+    isNotNil(a) && isNumber(+a),
+    `GitHub ID is malformed: ${JSON.stringify(a)}`,
+  );
+  const { data } = await (
+    await octokit()
+  ).request("GET /user/{account_id}", { account_id: +a });
+  return data.login;
+});
+
+async function listLatestRefsForUser(user: string): Promise<GithubRefOption[]> {
   const owner = await githubOrg();
-  const repo = participantRepositoryName(githubUsername);
+  const repo = await participantRepositoryName(user);
   const client = await octokit();
 
   const { data } = await client.request("GET /repos/{owner}/{repo}/branches", {
@@ -65,9 +83,9 @@ async function listLatestRefsForUser(user: string): Promise<GithubRefOption[]> {
     repo,
     per_page: 100,
   });
-
+  console.log(data);
   return data.map(({ name }) => ({
-    key: name,
+    id: name,
     label: name,
     value: JSON.stringify({
       owner,
@@ -99,9 +117,10 @@ async function resolveSelectedRef(
   return { owner, repo, ref: selectedRef };
 }
 
-async function ensureParticipantRepository(githubUsername: string) {
+async function ensureParticipantRepository(id: string) {
+  const u = await username(id);
   const owner = await githubOrg();
-  const repo = participantRepositoryName(githubUsername);
+  const repo = await participantRepositoryName(id);
   const client = await octokit();
 
   try {
@@ -120,7 +139,7 @@ async function ensureParticipantRepository(githubUsername: string) {
   await client.request("PUT /repos/{owner}/{repo}/collaborators/{username}", {
     owner,
     repo,
-    username: githubUsername,
+    username: u,
     permission: "push",
   });
 
@@ -135,23 +154,17 @@ export default {
         throw new Error("GitHub integration requires an enrolment hook.");
       }
 
-      const githubUsername = await unsafe(
-        cast<string>()(
-          kit.secrets.user.require({
-            owner: args.user,
-            reference: "GITHUB_USERNAME",
-          }),
-        ),
-      );
-      await ensureParticipantRepository(githubUsername);
+      await ensureParticipantRepository(args.user);
 
       return enrolmentId;
     },
   },
   form: {
     loader: async ({ def, user }, next) => {
-      // Temporarily return empty
-      const options = await listLatestRefsForUser(user);
+      const options = await listLatestRefsForUser(user).catch((c) => {
+        console.error(c);
+        return [];
+      });
       const nextDef = {
         ...def,
         shape: def.shape.map((shapeItem) =>
@@ -170,16 +183,8 @@ export default {
       const submission = await unsafe(
         kit.submissions.get(jobRecord.submission),
       );
-      const githubUsername = await unsafe(
-        cast<string>()(
-          kit.secrets.user.require({
-            owner: submission.user,
-            reference: "GITHUB_USERNAME",
-          }),
-        ),
-      );
       const owner = await githubOrg();
-      const repo = participantRepositoryName(githubUsername);
+      const repo = await participantRepositoryName(submission.user);
       const selectedRef = await resolveSelectedRef(
         submission.body,
         owner,

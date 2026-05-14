@@ -100,7 +100,7 @@ export const createPackageResolver = (root: string) =>
 
 export class HookError extends Data.TaggedError("HookError") {}
 export class AccessorError extends Data.TaggedError("AccessorError")<{
-  accessor: string;
+  accessor: any;
   config: any;
 }> {}
 
@@ -129,11 +129,9 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
             }),
         get: (accessor: Accessor = true) =>
           E.gen(function* () {
-            const a = access(accessor, config) as { with: string[] };
+            const a = (yield* access(accessor, config)) as { with: string[] };
             if (!a)
-              return yield* E.fail(
-                new AccessorError({ accessor: accessor.toString(), config }),
-              );
+              return yield* E.fail(new AccessorError({ accessor, config }));
             const merged = yield* E.mergeAll(
               a.with.map(yield* resolve),
               {},

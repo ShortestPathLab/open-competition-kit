@@ -5,19 +5,19 @@ import { CatchBoundary } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { assert } from "es-toolkit";
 import hash from "object-hash";
-import { useCallback } from "react";
+import { useMemo } from "react";
+import root from "react-shadow";
 import {
   type ComponentOnly,
   Config,
+  ConfigAccessor,
   hooks,
   Hooks,
   isSource,
   Source,
   unsafe,
-  ConfigAccessor,
 } from "sdk";
 import z from "zod";
-import root from "react-shadow";
 
 const literalSchema = z.union([
   z.string(),
@@ -110,8 +110,8 @@ export function useKitComponent<T extends ComponentHookPath>(
       }
     },
   });
-  return useCallback(
-    (props: ComponentHookMap[T]) => {
+  return useMemo(
+    () => (props: ComponentHookMap[T]) => {
       return KitComponent ?
           <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
             <root.div>

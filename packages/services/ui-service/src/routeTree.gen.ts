@@ -25,6 +25,7 @@ import { Route as DashboardCompetitionIdRouteRouteImport } from './routes/dashbo
 import { Route as CompetitionsIdRouteRouteImport } from './routes/competitions/$id/route'
 import { Route as MeSubmissionsIndexRouteImport } from './routes/me/submissions/index'
 import { Route as CompetitionsIdIndexRouteImport } from './routes/competitions/$id/index'
+import { Route as SignInCompleteMethodRouteImport } from './routes/sign-in/complete/$method'
 import { Route as MeSubmissionsSubmissionIdRouteImport } from './routes/me/submissions/$submissionId'
 import { Route as CompetitionsIdRulesRouteImport } from './routes/competitions/$id/rules'
 import { Route as CompetitionsIdEnrolRouteImport } from './routes/competitions/$id/enrol'
@@ -117,6 +118,11 @@ const CompetitionsIdIndexRoute = CompetitionsIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CompetitionsIdRouteRoute,
 } as any)
+const SignInCompleteMethodRoute = SignInCompleteMethodRouteImport.update({
+  id: '/sign-in/complete/$method',
+  path: '/sign-in/complete/$method',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MeSubmissionsSubmissionIdRoute =
   MeSubmissionsSubmissionIdRouteImport.update({
     id: '/submissions/$submissionId',
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
   '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
   '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
+  '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
   '/me/submissions/': typeof MeSubmissionsIndexRoute
   '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
   '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
   '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
+  '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
   '/competitions/$id': typeof CompetitionsIdIndexRoute
   '/me/submissions': typeof MeSubmissionsIndexRoute
   '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
   '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
   '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
+  '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
   '/me/submissions/': typeof MeSubmissionsIndexRoute
   '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/competitions/$id/enrol'
     | '/competitions/$id/rules'
     | '/me/submissions/$submissionId'
+    | '/sign-in/complete/$method'
     | '/competitions/$id/'
     | '/me/submissions/'
     | '/competitions/$id/submissions/new'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/competitions/$id/enrol'
     | '/competitions/$id/rules'
     | '/me/submissions/$submissionId'
+    | '/sign-in/complete/$method'
     | '/competitions/$id'
     | '/me/submissions'
     | '/competitions/$id/submissions/new'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/competitions/$id/enrol'
     | '/competitions/$id/rules'
     | '/me/submissions/$submissionId'
+    | '/sign-in/complete/$method'
     | '/competitions/$id/'
     | '/me/submissions/'
     | '/competitions/$id/submissions/new'
@@ -352,6 +364,7 @@ export interface RootRouteChildren {
   RegisterIndexRoute: typeof RegisterIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  SignInCompleteMethodRoute: typeof SignInCompleteMethodRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -467,6 +480,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/competitions/$id/'
       preLoaderRoute: typeof CompetitionsIdIndexRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/sign-in/complete/$method': {
+      id: '/sign-in/complete/$method'
+      path: '/sign-in/complete/$method'
+      fullPath: '/sign-in/complete/$method'
+      preLoaderRoute: typeof SignInCompleteMethodRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/me/submissions/$submissionId': {
       id: '/me/submissions/$submissionId'
@@ -627,6 +647,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterIndexRoute: RegisterIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  SignInCompleteMethodRoute: SignInCompleteMethodRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

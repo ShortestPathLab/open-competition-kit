@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "*/components/ui/card";
-import { Input } from "*/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,17 +22,25 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { $props } from "sdk";
+import { useKitComponent } from "src/hooks/use-kit-component";
 import { authClient } from "src/lib/auth-client";
 import type { CompetitionSummary } from "src/lib/competition-data";
 import { queryClient } from "src/router";
 import { EnrolmentCard } from "./enrolment-card";
 import { getEnrollmentStatus } from "src/lib/enrolment-fn";
+import { getLoadedForm } from "src/lib/form-fn";
 import { createSubmission } from "src/lib/submission-fn";
+import { resolveId } from "src/lib/configure-user";
 
 interface SubmissionCreatorProps {
   competition: CompetitionSummary;
   initialTrackId?: string;
 }
+
+type SubmissionFormValues = Parameters<
+  NonNullable<(typeof $props.form.ui)["onSubmit"]>
+>[0];
 
 export function SubmissionCreator({
   competition,
@@ -42,7 +49,9 @@ export function SubmissionCreator({
   const { data: session } = authClient.useSession();
   const router = useRouter();
   const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
+  const getLoadedFormFn = useServerFn(getLoadedForm);
   const submitFn = useServerFn(createSubmission);
+  const SubmissionForm = useKitComponent("form.ui");
   const tracks = competition.tracks;
   const defaultTrackId = useMemo(() => {
     if (initialTrackId && tracks.some((track) => track.id === initialTrackId)) {
@@ -51,7 +60,6 @@ export function SubmissionCreator({
     return tracks[0]?.id ?? "";
   }, [initialTrackId, tracks]);
   const [trackId, setTrackId] = useState(defaultTrackId);
-  const [value, setValue] = useState("");
 
   useEffect(() => {
     setTrackId(defaultTrackId);
@@ -62,27 +70,31 @@ export function SubmissionCreator({
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
     queryFn:
-      session?.user?.id && trackId
-        ? () =>
-            fetchEnrollmentStatus({
-              data: {
-                userId: session.user.id,
-                trackId,
-              },
-            })
-        : skipToken,
+      session?.user?.id && trackId ?
+        () =>
+          fetchEnrollmentStatus({
+            data: { userId: resolveId(session.user), trackId },
+          })
+      : skipToken,
+  });
+
+  const {
+    data: formDef,
+    isLoading: formLoading,
+    isError: formIsError,
+    error: formError,
+  } = useQuery({
+    queryKey: ["submissionForm", session?.user?.id, trackId],
+    queryFn:
+      session?.user?.id && trackId && isEnrolled ?
+        () => getLoadedFormFn({ data: trackId })
+      : skipToken,
   });
 
   const mutation = useMutation({
-    mutationFn: () =>
-      submitFn({
-        data: {
-          trackId,
-          value,
-        },
-      }),
+    mutationFn: (values: SubmissionFormValues) =>
+      submitFn({ data: { trackId, value: values } }),
     onSuccess: async (result) => {
-      setValue("");
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: [
@@ -119,7 +131,7 @@ export function SubmissionCreator({
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">Create a submission</h2>
           <p className="text-sm text-muted-foreground">
-            Choose a track, review its rules, and send a placeholder submission.
+            Choose a track, review its rules, and complete the submission form.
           </p>
         </div>
 
@@ -136,7 +148,6 @@ export function SubmissionCreator({
               value={trackId}
               onValueChange={(nextValue) => {
                 setTrackId(nextValue ?? defaultTrackId);
-                setValue("");
                 mutation.reset();
               }}
             >
@@ -154,19 +165,18 @@ export function SubmissionCreator({
                 </SelectGroup>
               </SelectContent>
             </Select>
-            {selectedTrack ? (
+            {selectedTrack ?
               <p className="text-sm text-muted-foreground">
                 {selectedTrack.description}
               </p>
-            ) : null}
+            : null}
           </div>
 
-          {!selectedTrack ? (
+          {!selectedTrack ?
             <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
               Choose a track to continue.
             </div>
-          ) : (
-            <>
+          : <>
               <EnrolmentCard
                 isSignedIn={Boolean(session?.user)}
                 isLoading={enrollmentLoading}
@@ -207,55 +217,63 @@ export function SubmissionCreator({
                 }
               />
 
-              {session?.user && isEnrolled ? (
+              {session?.user && isEnrolled ?
                 <div className="space-y-4">
-                  <div className="grid gap-2">
-                    <label
-                      htmlFor="submission-value"
-                      className="text-sm font-medium"
-                    >
-                      Submission
-                    </label>
-                    <Input
-                      id="submission-value"
-                      value={value}
-                      onChange={(event) => setValue(event.target.value)}
-                      placeholder="Enter a placeholder submission"
+                  {formLoading ?
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading submission form.
+                    </div>
+                  : null}
+
+                  {formIsError ?
+                    <p className="text-sm font-medium text-destructive">
+                      {formError instanceof Error ?
+                        formError.message
+                      : "Submission form failed to load."}
+                    </p>
+                  : null}
+
+                  {formDef ?
+                    <SubmissionForm
+                      def={formDef}
+                      onSubmit={async (values) => {
+                        await mutation.mutateAsync(values);
+                      }}
                     />
-                  </div>
+                  : null}
 
                   <div className="flex flex-wrap items-center gap-3">
-                    <Button
-                      onClick={() => mutation.mutate()}
-                      disabled={mutation.isPending || value.trim().length === 0}
-                    >
-                      {mutation.isPending ? (
+                    {mutation.isPending ?
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : null}
-                      Submit
-                    </Button>
+                        Creating submission.
+                      </div>
+                    : null}
                     <p className="text-sm text-muted-foreground">
-                      Submission will be created for {selectedTrack.name}.
+                      {mutation.isPending ?
+                        "Submission will be created shortly."
+                      : `Submission will be created for ${selectedTrack.name}.`}
                     </p>
                   </div>
 
-                  {mutation.isError ? (
+                  {mutation.isError ?
                     <p className="text-sm font-medium text-destructive">
-                      {mutation.error instanceof Error
-                        ? mutation.error.message
-                        : "Submission failed."}
+                      {mutation.error instanceof Error ?
+                        mutation.error.message
+                      : "Submission failed."}
                     </p>
-                  ) : null}
+                  : null}
 
-                  {mutation.isSuccess ? (
+                  {mutation.isSuccess ?
                     <p className="text-sm text-muted-foreground">
                       Submission created for {selectedTrack.name}.
                     </p>
-                  ) : null}
+                  : null}
                 </div>
-              ) : null}
+              : null}
             </>
-          )}
+          }
         </div>
       </div>
 

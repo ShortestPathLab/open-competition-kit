@@ -21,6 +21,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { configureUser } from "src/lib/configure-user";
 
 export function LoginForm({
   className,
@@ -45,22 +46,26 @@ export function LoginForm({
     await authClient.signIn.email(
       { email, password },
       {
-        onSuccess: () => {
-          router.navigate({ to: "/competitions" });
-        },
         onError: (ctx) => {
           setError(ctx.error.message);
         },
       },
     );
+    router.navigate({
+      to: "/sign-in/complete/$method",
+      params: { method: "email" },
+    });
     setLoading(false);
   };
 
   const handleSocialSignIn = async (provider: string) => {
-    await authClient.signIn.social({
+    const result = await authClient.signIn.social({
       provider: provider as "github",
-      callbackURL: "/competitions",
+      callbackURL: `/sign-in/complete/${provider}`,
     });
+    if (result.data && "user" in result.data) {
+      console.log(result);
+    }
   };
 
   const emailEnabled = authConfig?.emailEnabled ?? false;
@@ -72,9 +77,9 @@ export function LoginForm({
         <CardHeader>
           <CardTitle>Sign in to your account</CardTitle>
           <CardDescription>
-            {emailEnabled
-              ? "Enter your email below to sign in"
-              : "Choose a sign-in method"}
+            {emailEnabled ?
+              "Enter your email below to sign in"
+            : "Choose a sign-in method"}
           </CardDescription>
         </CardHeader>
         <CardContent>

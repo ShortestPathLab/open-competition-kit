@@ -1,4 +1,4 @@
-import { type Package, hooks } from "sdk";
+import { type Package } from "sdk";
 import { db } from "./db";
 
 const getCollection = async (collection: string) => {
@@ -24,16 +24,11 @@ export default {
     },
     create: async ({ collection, payload }) => {
       const a = await getCollection(collection);
-      return await a.create({
-        data: payload,
-      });
+      return await a.create({ data: payload });
     },
     update: async ({ collection, payload }) => {
       const a = await getCollection(collection);
-      await a.update({
-        where: { id: payload.id },
-        data: payload,
-      });
+      await a.update({ where: { id: payload.id }, data: payload });
     },
     delete: async ({ collection, payload }) => {
       const a = await getCollection(collection);

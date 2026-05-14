@@ -8,7 +8,6 @@ export {
   Config,
   CompetitionConfig,
   type Accessor as ConfigAccessor,
-  access as accessConfig,
   TrackConfig,
 } from "./config";
 export type { Package, Hooks } from "./hook";

@@ -1,4 +1,4 @@
-import { assert, head } from "es-toolkit";
+import { assert, flattenDeep, head } from "es-toolkit";
 import {
   find,
   has,
@@ -8,6 +8,7 @@ import {
   keys,
 } from "es-toolkit/compat";
 import { Config } from "../config";
+import { Effect as E, Data as D } from "effect";
 
 declare const __value: unique symbol;
 
@@ -39,7 +40,11 @@ export type AccessorValue<T, TBase = Accessor> =
     : never
   : never;
 
-export const access = <T extends Accessor>(
+export class ConfigAccessorError extends D.TaggedError("ConfigAccessorError")<{
+  cause: unknown;
+}> {}
+
+export const accessRecursive = <T extends Accessor>(
   accessor: T,
   obj: unknown,
 ): AccessorValue<T> => {
@@ -48,28 +53,47 @@ export const access = <T extends Accessor>(
     return obj as AccessorValue<T>;
   }
   if (isString(accessor)) {
-    assert(isArray(obj), "Attempted to access non-array object with key.");
+    assert(
+      isArray(obj),
+      `Attempted to access non-array object with key: ${accessor}, on ${JSON.stringify(obj, null, 2)}`,
+    );
     return find(obj, { id: accessor }) as AccessorValue<T>;
   }
   if (isObject(accessor)) {
-    const key = head(keys(accessor)) as keyof typeof accessor | undefined;
+    const key = head(keys(accessor)) as
+      | (string & keyof typeof accessor)
+      | undefined;
     assert(key, "Accessor is empty.");
-    if (isObject(obj)) {
-      assert(has(obj, key), "Attempted to access non-existent property.");
-      return access(accessor[key] as Accessor<T>, obj[key]) as AccessorValue<T>;
-    }
     if (isArray(obj)) {
-      return access(
+      return accessRecursive(
         accessor[key] as Accessor<T>,
-        obj.map((c) => {
-          assert(
-            has(key, "c"),
-            "Attempted to access non-existent property (array).",
-          );
-          return c[key];
-        }),
+        flattenDeep(
+          obj.map((c) => {
+            assert(
+              has(c, key),
+              `Attempted to access non-existent property (array): ${key}, on ${JSON.stringify(c, null, 2)}`,
+            );
+            return c[key];
+          }),
+        ),
+      ) as AccessorValue<T>;
+    }
+    if (isObject(obj)) {
+      assert(
+        has(obj, key),
+        `Attempted to access non-existent property: ${key}, on ${JSON.stringify(obj, null, 2)}`,
+      );
+      return accessRecursive(
+        accessor[key] as Accessor<T>,
+        obj[key],
       ) as AccessorValue<T>;
     }
   }
   throw new Error("Malformed accessor.");
 };
+
+export const access = <T extends Accessor>(accessor: T, obj: unknown) =>
+  E.try({
+    try: () => accessRecursive(accessor, obj),
+    catch: (e) => new ConfigAccessorError({ cause: e }),
+  });

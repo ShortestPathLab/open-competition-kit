@@ -40,9 +40,7 @@ type FormDef = z.infer<typeof jsonFormProps> & (typeof $props.form.ui)["def"];
 function buildSchema(props: FormDef): RJSFSchema {
   const properties = Object.fromEntries(
     props.shape.map((shapeItem) => {
-      const property: Record<string, unknown> = {
-        title: shapeItem.name ?? shapeItem.id,
-      };
+      const property: RJSFSchema = { title: shapeItem.name ?? shapeItem.id };
 
       if (shapeItem.description) {
         property.description = shapeItem.description;
@@ -61,6 +59,7 @@ function buildSchema(props: FormDef): RJSFSchema {
       }
 
       if (shapeItem.kind === "select" && shapeItem.options?.length) {
+        property.type === "string";
         property.oneOf = shapeItem.options.map((option) => ({
           const: option.value ?? option.id,
           title: option.name ?? option.id,
@@ -76,10 +75,8 @@ function buildSchema(props: FormDef): RJSFSchema {
   );
 
   return {
-    title: props.label ?? "JSON Schema Form Sample",
-    description:
-      props.description ??
-      "This package renders a form UI from a generic shape definition.",
+    title: props.label ?? "Submission Options",
+    description: props.description ?? "",
     type: "object",
     required: props.shape
       .filter((shapeItem) => shapeItem.required)
@@ -140,7 +137,7 @@ export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
         href="https://cdn.jsdelivr.net/npm/@rjsf/shadcn@6.5.2/dist/default.css"
       />
       <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.min.js" />
-      <div className="grid gap-5 bg-linear-to-b from-orange-50 via-amber-50 to-white p-6">
+      <div>
         <div>
           <h2 className="m-0 text-2xl font-semibold tracking-tight text-stone-950">
             {result.data.label}
@@ -148,7 +145,7 @@ export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
           <p className="mt-2 text-stone-600">{jsonFormProps.description}</p>
         </div>
 
-        <div className="rounded-4xl border border-orange-200 bg-white p-6 shadow-[0_18px_40px_rgba(120,53,15,0.08)]">
+        <div>
           <Form
             schema={schema}
             uiSchema={uiSchema}

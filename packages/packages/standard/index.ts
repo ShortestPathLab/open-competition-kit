@@ -9,6 +9,7 @@ import sdk, {
   unsafe,
   type Package,
 } from "sdk";
+import Zip from "jszip";
 
 async function resolveSource(job: string) {
   const codeZipB64 = await cast<string>()(
@@ -62,6 +63,7 @@ export default {
       const jobRecord = await unsafe(jobs.get(job));
       const submission = await unsafe(submissions.get(jobRecord.submission));
       const source = await resolveSource(job);
+
       const trackRecord = await unsafe(tracks.get(submission.track));
       const competition = await unsafe(
         sdk.competitions.get(trackRecord.competition),
@@ -86,6 +88,18 @@ export default {
 
       try {
         const result = eval(competition.runner.body ?? "");
+        const unzipped = await Zip.loadAsync(source, { base64: true });
+        const output = Object.entries(unzipped.files).map(
+          ([k, v]) =>
+            `${v.dir ? `[directory]` : `[file]`} ${k} ${v.date.toISOString()}`,
+        );
+        await unsafe(
+          outputs.set({
+            owner: jobRecord.id,
+            reference: "contents",
+            value: output.join("\n"),
+          }),
+        );
         await unsafe(
           outputs.set({
             owner: jobRecord.id,

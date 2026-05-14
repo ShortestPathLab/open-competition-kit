@@ -2,7 +2,7 @@ import { Effect as E, Schema as S } from "effect";
 import { mapValues } from "lodash-es";
 import { hook } from "./hook";
 import { _ } from "../utils/flow";
-import { namespaces } from "../namespace";
+import { namespaces, type Namespace } from "../namespace";
 
 export const { Number, Boolean, Date, String, Int } = S;
 
@@ -42,7 +42,7 @@ export const tables = {
     status: S.String,
   }),
   context: createSchemas("open-competition-kit/db/context", {
-    namespace: S.Literal(...namespaces),
+    namespace: S.String as S.Literal<[Namespace]>,
     owner: S.String,
     // TODO: replace any with concrete JSON serialisable type
     value: typedJson<any>(),

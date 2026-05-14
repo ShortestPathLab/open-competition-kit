@@ -1,7 +1,14 @@
-import { Effect as E } from "effect";
+import { Effect as E, Either } from "effect";
 import type { OpenCompetitionKitHooks } from "../core/hook";
 import { OpenCompetitionKitDatabase } from "./db";
-import { tables, type DbKey, type WithHooks } from "./hook/db";
+import {
+  tables,
+  type DbKey,
+  type TrackCreate,
+  type WithHooks,
+} from "./hook/db";
+import { isFunction, mergeWith } from "es-toolkit";
+import { OpenCompetitionKitConfig } from "./config";
 
 export type Table<T> = {
   list: () => Promise<T[]>;
@@ -43,13 +50,25 @@ const createAccessor = <T extends DbKey>(
     >;
   });
 
+const upsert = <TCreate, TUpdate extends { id: string }, TFull, E, C>(
+  table: WithHooks<TCreate, TUpdate, TFull, E, C>,
+  payload: TCreate & TUpdate,
+) =>
+  E.gen(function* () {
+    const prev = yield* E.either(table.get(payload.id));
+    if (Either.isRight(prev)) yield* table.update(payload);
+    else yield* table.create(payload);
+  });
+
 export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitCollections>()(
   "open-competition-kit/OpenCompetitionKitCollections",
   {
     effect: E.gen(function* () {
       return (...a: Parameters<OpenCompetitionKitHooks["get"]>) =>
         E.gen(function* () {
-          return {
+          const configService = yield* OpenCompetitionKitConfig;
+          const config = yield* configService.config;
+          const db = {
             competitions: yield* createAccessor("competition", ...a),
             tracks: yield* createAccessor("track", ...a),
             users: yield* createAccessor("user", ...a),
@@ -58,6 +77,21 @@ export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitC
             jobs: yield* createAccessor("job", ...a),
             context: yield* createAccessor("context", ...a),
           };
+          const ensureDb = E.once(
+            E.all(
+              config.competitions.flatMap((c) => [
+                upsert(db.competitions, { id: c.id }),
+                ...c.tracks.map((t) =>
+                  upsert(db.tracks, { id: t.id, competition: c.id }),
+                ),
+              ]),
+              { concurrency: 4 },
+            ),
+          );
+          return mergeWith(db, ensureDb, (f, g) => {
+            if (isFunction(f))
+              return (...args: any[]) => E.zipRight(g, f(...args));
+          });
         });
     }),
   },

@@ -13,6 +13,8 @@ out
 dist
 *.tgz
 
+competition.config.yaml
+
 # code coverage
 coverage
 *.lcov

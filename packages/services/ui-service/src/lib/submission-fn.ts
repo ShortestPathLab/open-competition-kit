@@ -14,6 +14,7 @@ import {
 } from "./competition-data";
 import { z } from "zod";
 import { ensureAuthSession } from "./auth.server";
+import { resolveId } from "./configure-user";
 
 const competitionSubmissionsInput = z.object({
   userId: z.string(),
@@ -116,12 +117,9 @@ export function useCompetitionSubmissions(
   return useQuery({
     queryKey: ["competitionSubmissions", userId, competitionId],
     queryFn:
-      userId && competitionId
-        ? () =>
-            getCompetitionSubmissionsFn({
-              data: { userId, competitionId },
-            })
-        : skipToken,
+      userId && competitionId ?
+        () => getCompetitionSubmissionsFn({ data: { userId, competitionId } })
+      : skipToken,
   });
 }
 
@@ -139,18 +137,21 @@ export function useSubmissionDetail(userId?: string, submissionId?: string) {
     queryKey: ["submissionDetail", userId, submissionId],
     refetchInterval: 1000,
     queryFn:
-      userId && submissionId
-        ? () =>
-            getSubmissionDetailFn({
-              data: { userId, submissionId },
-            }) as Promise<SubmissionDetail>
-        : skipToken,
+      userId && submissionId ?
+        () =>
+          getSubmissionDetailFn({
+            data: { userId, submissionId },
+          }) as Promise<SubmissionDetail>
+      : skipToken,
   });
 }
 
 const submissionInput = z.object({
   trackId: z.string(),
-  value: z.string(),
+  value: z.record(
+    z.string(),
+    z.union([z.string(), z.number(), z.boolean(), z.null()]),
+  ),
 });
 
 export const createSubmission = createServerFn({ method: "POST" })
@@ -158,7 +159,7 @@ export const createSubmission = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await ensureAuthSession();
     const enrolmentStatus = await sdk.enrolments.isEnrolled(
-      session.user.id,
+      resolveId(session.user),
       data.trackId,
     );
     if (enrolmentStatus.error) throw enrolmentStatus.error;
@@ -167,8 +168,8 @@ export const createSubmission = createServerFn({ method: "POST" })
     }
 
     const result = await sdk.submissions.submit(
-      session.user.id,
-      JSON.stringify({ value: data.value }),
+      resolveId(session.user),
+      JSON.stringify(data.value),
       data.trackId,
     );
 

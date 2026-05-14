@@ -17,20 +17,16 @@ import remarkGfm from "remark-gfm";
 import sdk from "sdk";
 import { authClient } from "src/lib/auth-client";
 import { getTrackSummary } from "src/lib/competition-data";
+import { resolveId } from "src/lib/configure-user";
 import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
   component: TrackDetailsPage,
 });
 
-const enrolmentInput = z.object({
-  userId: z.string(),
-  trackId: z.string(),
-});
+const enrolmentInput = z.object({ userId: z.string(), trackId: z.string() });
 
-const trackInput = z.object({
-  trackId: z.string(),
-});
+const trackInput = z.object({ trackId: z.string() });
 
 const getTrack = createServerFn({ method: "GET" })
   .inputValidator(trackInput)
@@ -70,10 +66,11 @@ function TrackDetailsPage() {
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
-    queryFn: session?.user?.id
-      ? () =>
+    queryFn:
+      session?.user?.id ?
+        () =>
           fetchEnrollmentStatus({
-            data: { userId: session.user.id, trackId },
+            data: { userId: resolveId(session.user), trackId },
           })
       : skipToken,
   });

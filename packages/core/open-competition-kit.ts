@@ -1,5 +1,6 @@
 import { Path } from "@effect/platform";
-import { Config, Data as D, Effect as E, Match as M } from "effect";
+import { Config, Data as D, Effect as E, Either, Match as M } from "effect";
+import { isFunction, mergeWith } from "es-toolkit";
 import { isNil, isUndefined, noop } from "lodash-es";
 import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
@@ -22,8 +23,8 @@ export class MissingNamespaceError extends D.TaggedError(
 
 export function withCollectionUtilities<
   TCreate,
-  TUpdate,
-  TFull,
+  TUpdate extends { id: string },
+  TFull extends { id: string },
   U1,
   E1,
   E2,
@@ -44,39 +45,56 @@ export function withCollectionUtilities<
     owner,
     find: (...a: Parameters<typeof table.list>) =>
       table.list(...a).pipe(E.andThen((e) => e[0])),
+    upsert: (a: TUpdate & TCreate) =>
+      E.gen(function* () {
+        const prev = yield* E.either(table.get(a.id));
+        if (Either.isRight(prev)) {
+          yield* table.update(a);
+          return { created: false };
+        } else {
+          yield* table.create(a);
+          return { created: true };
+        }
+      }),
   };
 }
 
 export function withMergeConfig<
   TCreate,
-  TUpdate,
+  TUpdate extends { id: string },
   TFull extends { id: string },
   TConfig,
   E1,
   C1,
+  E2,
+  C2,
 >(
   table: WithHooks<TCreate, TUpdate, TFull, E1, C1>,
-  getConfig: (id: string) => TConfig,
+  getConfig: (id: string) => E.Effect<TConfig, E2, C2>,
 ) {
   return {
     ...table,
     list: (...a: Parameters<typeof table.list>) =>
       E.gen(function* () {
-        const b = yield* table.list(...a);
-        const a2 = b.map((b1) => ({ ...b1, ...getConfig(b1.id) }));
-        return a2;
+        const prev = yield* table.list(...a);
+        const next = prev.map((b1) =>
+          E.gen(function* () {
+            return { ...b1, ...(yield* getConfig(b1.id)) };
+          }),
+        );
+        return yield* E.all(next);
       }),
     get: (...a: Parameters<typeof table.get>) =>
       E.gen(function* () {
-        const b = yield* table.get(...a);
-        const c = getConfig(b.id);
-        return { ...b, ...c };
+        const prev = yield* table.get(...a);
+        const c = yield* getConfig(prev.id);
+        return { ...prev, ...c };
       }),
     create: (...a: Parameters<typeof table.create>) =>
       E.gen(function* () {
-        const b = yield* table.create(...a);
-        const c = getConfig(b.id);
-        return { ...b, ...c };
+        const prev = yield* table.create(...a);
+        const c = yield* getConfig(prev.id);
+        return { ...prev, ...c };
       }),
   };
 }
@@ -104,7 +122,6 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
 
       const db = yield* OpenCompetitionKitCollections;
       const instance = yield* db();
-
       type OptionalNamespace<T, U extends Record<string, any>> =
         T extends undefined ? { namespace: Namespace } & U
         : { namespace?: never } & U;
@@ -218,13 +235,15 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
 
       const forms = {
         get: (id: string) =>
-          access({ competitions: { tracks: id } }, config).form,
+          access({ competitions: { tracks: id } }, config).pipe(
+            E.andThen((c) => c.form),
+          ),
         load: (track: string, user: string) =>
           E.gen(function* () {
-            const def = access(
+            const def = (yield* access(
               { competitions: { tracks: track } },
               config,
-            )?.form;
+            )).form;
             const loaded = yield* hooks.do(
               (h) => h.form.loader({ def, user }),
               { competitions: { tracks: track } },
@@ -239,14 +258,12 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
           access({ competitions: { leaderboards: id } }, config),
         load: (leaderboard: string) =>
           E.gen(function* () {
+            const def = yield* access(
+              { competitions: { leaderboards: leaderboard } },
+              config,
+            );
             const loaded = yield* hooks.do(
-              (h) =>
-                h.leaderboard.loader({
-                  def: access(
-                    { competitions: { leaderboards: leaderboard } },
-                    config,
-                  ),
-                }),
+              (h) => h.leaderboard.loader({ def }),
               { competitions: { leaderboards: leaderboard } },
             );
             return loaded?.def;

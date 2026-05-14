@@ -28,9 +28,8 @@ const authConfig = once(_authConfig);
 const _options = createServerFn().handler(async () => {
   const { email, ...social } = await authConfig();
   return {
-    emailAndPassword: email
-      ? { enabled: true, ...email.providerOptions }
-      : undefined,
+    emailAndPassword:
+      email ? { enabled: true, ...email.providerOptions } : undefined,
     socialProviders: mapValues(social, (a) => a.providerOptions as any),
     ...Object.values(authConfig).reduce(
       (prev, next) => toMerged(prev, next.betterAuthOptions),
@@ -48,19 +47,13 @@ export const auth = once(async () => {
       const { migrate } = await import("./migrate.server");
       await migrate();
     })();
-  return betterAuth({
-    ...(await options()),
-    ...getAuthBaseConfig(),
-  });
+  return betterAuth({ ...(await options()), ...getAuthBaseConfig() });
 });
 
 export const getAuthConfig = createServerFn({ method: "GET" }).handler(
   async () => {
     const config = await authConfig();
     const { email, ...social } = config;
-    return {
-      emailEnabled: !!email,
-      socialProviders: Object.keys(social),
-    };
+    return { emailEnabled: !!email, socialProviders: Object.keys(social) };
   },
 );

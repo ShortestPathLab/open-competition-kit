@@ -20,7 +20,7 @@ function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
         M.when(is(Int), () => "Int @default(0)"),
         M.when(is(Boolean), () => "Boolean @default(false)"),
         M.when(is(Date), () => "DateTime"),
-        M.when(is(Json), () => "Json @default(null)"),
+        M.when(is(Json), () => 'Json @default("null")'),
         M.orElse(() => ""),
       );
       return type ? `${k} ${type}` : "";
@@ -29,11 +29,7 @@ function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
   return clause(`model ${capitalize(name)}`, lines);
 }
 
-type Config = {
-  datasource: {
-    provider: string;
-  };
-};
+type Config = { datasource: { provider: string } };
 
 function clause(s: string, b: string[]) {
   return `${s} {\n${b.join("\n")}\n}`;

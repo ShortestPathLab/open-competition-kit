@@ -12,10 +12,7 @@ export const Route = createFileRoute("/leaderboards/")({
       getLoadedLeaderboard({ data: "some-leaderboard" }),
     ]);
 
-    return {
-      formDef,
-      leaderboardProps,
-    };
+    return { formDef, leaderboardProps };
   },
 });
 
