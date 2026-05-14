@@ -21,6 +21,7 @@ import { Route as CompetitionsIndexRouteImport } from './routes/competitions/ind
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as MeSettingsRouteImport } from './routes/me/settings'
 import { Route as MeEnrolmentsRouteImport } from './routes/me/enrolments'
+import { Route as LeaderboardsLeaderboardIdRouteImport } from './routes/leaderboards/$leaderboardId'
 import { Route as DashboardCompetitionIdRouteRouteImport } from './routes/dashboard/$competitionId/route'
 import { Route as CompetitionsIdRouteRouteImport } from './routes/competitions/$id/route'
 import { Route as MeSubmissionsIndexRouteImport } from './routes/me/submissions/index'
@@ -97,6 +98,12 @@ const MeEnrolmentsRoute = MeEnrolmentsRouteImport.update({
   path: '/enrolments',
   getParentRoute: () => MeRouteRoute,
 } as any)
+const LeaderboardsLeaderboardIdRoute =
+  LeaderboardsLeaderboardIdRouteImport.update({
+    id: '/leaderboards/$leaderboardId',
+    path: '/leaderboards/$leaderboardId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardCompetitionIdRouteRoute =
   DashboardCompetitionIdRouteRouteImport.update({
     id: '/$competitionId',
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/leaderboards/$leaderboardId': typeof LeaderboardsLeaderboardIdRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about/': typeof AboutIndexRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/leaderboards/$leaderboardId': typeof LeaderboardsLeaderboardIdRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about': typeof AboutIndexRoute
@@ -243,6 +252,7 @@ export interface FileRoutesById {
   '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/leaderboards/$leaderboardId': typeof LeaderboardsLeaderboardIdRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about/': typeof AboutIndexRoute
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
+    | '/leaderboards/$leaderboardId'
     | '/me/enrolments'
     | '/me/settings'
     | '/about/'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dashboard/$competitionId'
+    | '/leaderboards/$leaderboardId'
     | '/me/enrolments'
     | '/me/settings'
     | '/about'
@@ -329,6 +341,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
+    | '/leaderboards/$leaderboardId'
     | '/me/enrolments'
     | '/me/settings'
     | '/about/'
@@ -358,6 +371,7 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   MeRouteRoute: typeof MeRouteRouteWithChildren
   CompetitionsIdRouteRoute: typeof CompetitionsIdRouteRouteWithChildren
+  LeaderboardsLeaderboardIdRoute: typeof LeaderboardsLeaderboardIdRoute
   AboutIndexRoute: typeof AboutIndexRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   LeaderboardsIndexRoute: typeof LeaderboardsIndexRoute
@@ -452,6 +466,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/me/enrolments'
       preLoaderRoute: typeof MeEnrolmentsRouteImport
       parentRoute: typeof MeRouteRoute
+    }
+    '/leaderboards/$leaderboardId': {
+      id: '/leaderboards/$leaderboardId'
+      path: '/leaderboards/$leaderboardId'
+      fullPath: '/leaderboards/$leaderboardId'
+      preLoaderRoute: typeof LeaderboardsLeaderboardIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/$competitionId': {
       id: '/dashboard/$competitionId'
@@ -641,6 +662,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   MeRouteRoute: MeRouteRouteWithChildren,
   CompetitionsIdRouteRoute: CompetitionsIdRouteRouteWithChildren,
+  LeaderboardsLeaderboardIdRoute: LeaderboardsLeaderboardIdRoute,
   AboutIndexRoute: AboutIndexRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
   LeaderboardsIndexRoute: LeaderboardsIndexRoute,

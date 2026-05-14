@@ -12,6 +12,11 @@ import { componentSource } from "./component";
 import { db } from "./db";
 import { hook } from "./hook";
 
+type LeaderboardUiDef = Meta & {
+  shape: Shape[];
+  items: Record<string, Value>[];
+};
+
 export const Hooks = S.Struct({
   db,
   enrolments: S.Struct({
@@ -31,10 +36,8 @@ export const Hooks = S.Struct({
     submit: S.Unknown,
   }),
   leaderboard: S.Struct({
-    loader: hook<{ def: Leaderboard }, { def: Leaderboard }>(),
-    ui: componentSource<
-      Meta & { shape: Shape[]; items: Record<string, Value>[] }
-    >(),
+    loader: hook<{ def: Leaderboard }, { def: LeaderboardUiDef }>(),
+    ui: componentSource<{ def: LeaderboardUiDef }>(),
   }),
   submissions: S.Struct({
     submit: hook<

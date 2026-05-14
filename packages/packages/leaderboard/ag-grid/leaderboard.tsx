@@ -3,9 +3,20 @@ import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule, themeQuartz } from "ag-grid-community";
 import { AgGridProvider, AgGridReact } from "ag-grid-react";
 import React from "react";
+import { meta, shape, value } from "sdk/z";
+import { z } from "zod";
 
 type LeaderboardProps = typeof $props.leaderboard.ui;
-type LeaderboardItem = LeaderboardProps["items"][number];
+type LeaderboardDef = LeaderboardProps["def"];
+type LeaderboardItem = LeaderboardDef["items"][number];
+
+const propsSchema = z.object({
+  ...meta.shape,
+  shape: z.object({ ...shape.shape, ...meta.shape }).array(),
+  items: z.record(z.string(), value).array(),
+}) satisfies z.ZodType<LeaderboardDef>;
+
+type ParsedLeaderboardDef = z.infer<typeof propsSchema> & LeaderboardDef;
 
 const defaultColDef: ColDef<LeaderboardItem> = {
   sortable: true,
@@ -32,8 +43,18 @@ function formatCellValue(value: LeaderboardItem[keyof LeaderboardItem]) {
   return String(value);
 }
 
-export function Leaderboard(props: LeaderboardProps) {
-  const columnDefs = props.shape.map<ColDef<LeaderboardItem>>(
+export function Leaderboard({ def }: LeaderboardProps) {
+  const result = z.safeParse(
+    propsSchema as z.ZodType<ParsedLeaderboardDef>,
+    def,
+  );
+  if (!result.success)
+    throw new Error(
+      `Error: ${z.prettifyError(result.error)}\nReceived: ${JSON.stringify(def, null, 2)}`,
+    );
+
+  const leaderboard = result.data;
+  const columnDefs = leaderboard.shape.map<ColDef<LeaderboardItem>>(
     (shapeItem, index) => ({
       field: shapeItem.id,
       headerName: shapeItem.name,
@@ -42,9 +63,11 @@ export function Leaderboard(props: LeaderboardProps) {
       pinned: index < 2 ? "left" : undefined,
       sort: index === 0 ? "asc" : undefined,
       cellDataType:
-        shapeItem.kind === "number" ? "number"
-        : shapeItem.kind === "boolean" ? "boolean"
-        : "text",
+        shapeItem.kind === "number"
+          ? "number"
+          : shapeItem.kind === "boolean"
+            ? "boolean"
+            : "text",
       valueFormatter: ({ value }) => formatCellValue(value),
     }),
   );
@@ -61,10 +84,10 @@ export function Leaderboard(props: LeaderboardProps) {
     >
       <div>
         <h2 style={{ margin: 0, fontSize: 24 }}>
-          {props.label ?? "AG Grid Leaderboard Sample"}
+          {leaderboard.label ?? "AG Grid Leaderboard Sample"}
         </h2>
         <p style={{ margin: "8px 0 0", color: "#475569" }}>
-          {props.description ??
+          {leaderboard.description ??
             "Use this mock leaderboard to confirm sorting, filtering, resizing, and pinned shape items are all working."}
         </p>
       </div>
@@ -82,12 +105,15 @@ export function Leaderboard(props: LeaderboardProps) {
         <AgGridProvider modules={[AllCommunityModule]}>
           <AgGridReact<LeaderboardItem>
             theme={theme}
-            rowData={[...props.items]}
+            rowData={[...leaderboard.items]}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
             animateRows
             pagination
-            paginationPageSize={Math.min(Math.max(props.items.length, 1), 10)}
+            paginationPageSize={Math.min(
+              Math.max(leaderboard.items.length, 1),
+              10,
+            )}
             domLayout="normal"
             overlayNoRowsTemplate="No leaderboard items yet."
           />

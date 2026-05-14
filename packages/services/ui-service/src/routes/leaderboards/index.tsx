@@ -1,30 +1,34 @@
-import { PageHeader } from "*/components/page-header";
-import { createFileRoute } from "@tanstack/react-router";
-import { useKitComponent } from "src/hooks/use-kit-component";
-import { getLoadedForm } from "src/lib/form-fn";
-import { getLoadedLeaderboard } from "src/lib/leaderboard-fn";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { getLeaderboards } from "src/lib/leaderboard-fn";
 
 export const Route = createFileRoute("/leaderboards/")({
-  component: LeaderboardsPage,
+  component: LeaderboardsIndexPage,
   loader: async () => {
-   getLoadedLeaderboard({ data: "some-leaderboard" }),
-    return { formDef, leaderboardProps };
+    const leaderboards = await getLeaderboards();
+    const firstLeaderboard = leaderboards[0];
+
+    if (firstLeaderboard) {
+      throw redirect({
+        to: "/leaderboards/$leaderboardId",
+        params: { leaderboardId: firstLeaderboard.id },
+      });
+    }
+
+    return { leaderboards };
   },
 });
 
-function LeaderboardsPage() {
-  const Leaderboard = useKitComponent("leaderboard.ui");
-  const Test2 = useKitComponent("form.ui");
-  const { formDef, leaderboardProps } = Route.useLoaderData();
+function LeaderboardsIndexPage() {
+  const { leaderboards } = Route.useLoaderData();
 
   return (
     <div className="min-h-screen">
       <main className="mx-auto max-w-5xl px-6 py-8">
-        <PageHeader
-          title="Leaderboards"
-          description="Track the top performing agents across all active competitions."
-        />
-        <Leaderboard {...leaderboardProps} />
+        {leaderboards.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+            No leaderboards have been configured yet.
+          </div>
+        ) : null}
       </main>
     </div>
   );

@@ -266,7 +266,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
               (h) => h.leaderboard.loader({ def }),
               { competitions: { leaderboards: leaderboard } },
             );
-            return loaded?.def;
+            return loaded?.def ?? { ...def, items: [] };
           }),
       };
       // ─── Enrolment ───────────────────────────────────────────────────────────────
