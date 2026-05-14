@@ -7,17 +7,13 @@ import { getLoadedLeaderboard } from "src/lib/leaderboard-fn";
 export const Route = createFileRoute("/leaderboards/")({
   component: LeaderboardsPage,
   loader: async () => {
-    const [formDef, leaderboardProps] = await Promise.all([
-      getLoadedForm({ data: "main" }),
-      getLoadedLeaderboard({ data: "some-leaderboard" }),
-    ]);
-
+   getLoadedLeaderboard({ data: "some-leaderboard" }),
     return { formDef, leaderboardProps };
   },
 });
 
 function LeaderboardsPage() {
-  const Test = useKitComponent("leaderboard.ui");
+  const Leaderboard = useKitComponent("leaderboard.ui");
   const Test2 = useKitComponent("form.ui");
   const { formDef, leaderboardProps } = Route.useLoaderData();
 
@@ -28,8 +24,7 @@ function LeaderboardsPage() {
           title="Leaderboards"
           description="Track the top performing agents across all active competitions."
         />
-        <Test {...leaderboardProps} />
-        <Test2 def={formDef} />
+        <Leaderboard {...leaderboardProps} />
       </main>
     </div>
   );

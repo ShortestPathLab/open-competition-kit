@@ -6,7 +6,7 @@ import type { $props, ComponentDef } from "sdk";
 import { meta, point, shape, value } from "sdk/z";
 import { z } from "zod";
 
-const jsonFormProps = z.object({
+const propsSchema = z.object({
   ...meta.shape,
   shape: z
     .object({
@@ -35,7 +35,7 @@ const jsonFormProps = z.object({
   submitLabel: z.string().optional(),
 }) satisfies z.ZodType<(typeof $props.form.ui)["def"]>;
 
-type FormDef = z.infer<typeof jsonFormProps> & (typeof $props.form.ui)["def"];
+type FormDef = z.infer<typeof propsSchema> & (typeof $props.form.ui)["def"];
 
 function buildSchema(props: FormDef): RJSFSchema {
   const properties = Object.fromEntries(
@@ -121,7 +121,7 @@ function buildFormData(props: FormDef) {
 }
 
 export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
-  const result = z.safeParse(jsonFormProps as z.ZodType<FormDef>, def);
+  const result = z.safeParse(propsSchema as z.ZodType<FormDef>, def);
   if (!result.success)
     throw new Error(
       `Error: ${z.prettifyError(result.error)}\nReceived: ${JSON.stringify(def, null, 2)}`,
@@ -142,7 +142,7 @@ export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
           <h2 className="m-0 text-2xl font-semibold tracking-tight text-stone-950">
             {result.data.label}
           </h2>
-          <p className="mt-2 text-stone-600">{jsonFormProps.description}</p>
+          <p className="mt-2 text-stone-600">{propsSchema.description}</p>
         </div>
 
         <div>

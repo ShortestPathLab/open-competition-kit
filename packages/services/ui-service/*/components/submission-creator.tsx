@@ -51,7 +51,6 @@ export function SubmissionCreator({
   const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
   const getLoadedFormFn = useServerFn(getLoadedForm);
   const submitFn = useServerFn(createSubmission);
-  const SubmissionForm = useKitComponent("form.ui");
   const tracks = competition.tracks;
   const defaultTrackId = useMemo(() => {
     if (initialTrackId && tracks.some((track) => track.id === initialTrackId)) {
@@ -64,6 +63,12 @@ export function SubmissionCreator({
   useEffect(() => {
     setTrackId(defaultTrackId);
   }, [defaultTrackId]);
+
+  const SubmissionForm = useKitComponent(
+    "form.ui",
+    { competitions: { tracks: trackId } },
+    { enabled: !!trackId },
+  );
 
   const selectedTrack = tracks.find((track) => track.id === trackId);
 

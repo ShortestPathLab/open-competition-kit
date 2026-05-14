@@ -1,6 +1,6 @@
 import { Loader } from "*/components/loader";
 import { getByPath, Path, PathValue } from "@clickbar/dot-diver";
-import { useQuery } from "@tanstack/react-query";
+import { QueryOptions, useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { CatchBoundary } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { assert } from "es-toolkit";
@@ -9,7 +9,6 @@ import { useMemo } from "react";
 import root from "react-shadow";
 import {
   type ComponentOnly,
-  Config,
   ConfigAccessor,
   hooks,
   Hooks,
@@ -72,10 +71,12 @@ const cache: Record<string, ComponentOnly<any>> = {};
 
 export function useKitComponent<T extends ComponentHookPath>(
   hook: T,
-  accessor?: Path<Config>,
+  accessor?: ConfigAccessor,
+  queryOptions?: Partial<UseQueryOptions>,
 ) {
   const getKitComponentModuleFn = useServerFn(getKitComponentModule);
   const { data: KitComponent } = useQuery({
+    ...(queryOptions as unknown as Record<string, never>),
     queryKey: ["kit-component", hook, accessor],
     staleTime: Infinity,
     queryFn: async () => {
