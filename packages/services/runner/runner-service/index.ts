@@ -26,7 +26,7 @@ export async function startBasicRunner() {
     intervalMs: 2000,
     poll: pollAndProcessSubmissions,
     onError(error) {
-      console.error("basic-runner poll failed", error);
+      console.error("runner-service poll failed", error);
     },
   });
 
@@ -35,7 +35,7 @@ export async function startBasicRunner() {
   process.on("SIGINT", () => worker.stop());
   process.on("SIGTERM", () => worker.stop());
 
-  console.log("basic-runner started");
+  console.log("runner-service started");
 }
 
 await startBasicRunner();

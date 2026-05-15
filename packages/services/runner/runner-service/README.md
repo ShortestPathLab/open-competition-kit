@@ -1,4 +1,4 @@
-# basic-runner
+# runner-service
 
 Basic polling runner service for Open Competition Kit.
 

@@ -21,8 +21,8 @@ services:
       BASE_URL: http://localhost:3007
     volumes:
       - ./competition.local-docker.config.yaml:/competition.config.yaml
-  basic-runner:
-    build: { context: ., dockerfile: dockerfile.services.runners.basic-runner }
+  runner-service:
+    build: { context: ., dockerfile: dockerfile.services.runner.runner-service }
     depends_on:
       - db
     volumes:

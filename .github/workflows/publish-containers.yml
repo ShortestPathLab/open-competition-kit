@@ -25,9 +25,9 @@ jobs:
       matrix:
         image:
           - name: ui
-            dockerfile: dockerfile.services.ui
-          - name: basic-runner
-            dockerfile: dockerfile.services.runners.basic-runner
+            dockerfile: dockerfile.services.ui-service
+          - name: runner-service
+            dockerfile: dockerfile.services.runner.runner-service
 
     steps:
       - name: Check out repository
