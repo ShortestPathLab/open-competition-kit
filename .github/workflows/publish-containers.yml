@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - name: ui
+          - name: ui-service
             dockerfile: dockerfile.services.ui-service
           - name: runner-service
             dockerfile: dockerfile.services.runner.runner-service
