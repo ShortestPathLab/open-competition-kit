@@ -48,6 +48,8 @@ export const Hooks = S.Struct({
   runner: S.Struct({
     ui: S.Unknown,
     run: hook<{ job: string }, { status: string }>(),
+    setup: hook<{ job: string }, { status: string }>(),
+    teardown: hook<{ job: string }, { status: string }>(),
   }),
 });
 

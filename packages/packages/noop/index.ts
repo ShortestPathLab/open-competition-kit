@@ -13,7 +13,7 @@ export default {
   user: {},
   form: { loader: noop, ui: noop, submit: {} },
   submissions: { submit: noop },
-  runner: { ui: {}, run: noop },
+  runner: { ui: {}, run: noop, setup: noop, teardown: noop },
   track: { enrol: {} },
   leaderboard: { ui: noop, loader: noop },
   enrolments: { enrol: noop },

@@ -17,7 +17,7 @@ for dir in $directories; do
   echo "Publishing $dir..."
 
   cd "$dir"
-
+  bun pm version patch
   bun publish --access public
 
   cd - >/dev/null

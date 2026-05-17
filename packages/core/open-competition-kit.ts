@@ -340,7 +340,13 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
                 E.andThen(submissions.owner),
                 E.andThen(tracks.owner),
               );
-            return yield* hooks.do((h) => h.runner.run({ job }), {
+            yield* hooks.do((h) => h.runner.setup({ job }), {
+              competitions: c.id,
+            });
+            yield* hooks.do((h) => h.runner.run({ job }), {
+              competitions: c.id,
+            });
+            yield* hooks.do((h) => h.runner.teardown({ job }), {
               competitions: c.id,
             });
           }),
