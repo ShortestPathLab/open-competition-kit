@@ -17,4 +17,4 @@ build_image() {
 }
 
 build_image "dockerfile.services.runner.runner-service" "${IMAGE_PREFIX}-services-runners-runner-service"
-build_image "dockerfile.services.ui" "${IMAGE_PREFIX}-services-ui-service"
+build_image "dockerfile.services.ui-service" "${IMAGE_PREFIX}-services-ui-service"

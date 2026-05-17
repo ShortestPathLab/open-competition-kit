@@ -11,9 +11,11 @@ import {
 import { load as _load, YAMLException } from "js-yaml";
 import { mapValues, uniq } from "lodash-es";
 import { decode, Extendable } from "./schema";
+import { transform } from "./transform";
 
 export * from "./schema";
 export * from "./access";
+export * from "./transform";
 
 const load = (s: string) =>
   E.try({ try: () => _load(s), catch: (e) => e as YAMLException });
@@ -73,6 +75,7 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
         fs.readFileString(path),
         E.andThen(load),
         E.andThen(decode),
+        E.andThen((config) => transform(cwd, config)),
       );
       return { cwd, path, config: raw.pipe(E.map(propagateExtendable)) };
     }),
