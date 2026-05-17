@@ -2,6 +2,8 @@
 
 set -eu
 
+versionType="${1:-patch}"
+
 directories="
 packages/core
 packages/packages/db/prisma
@@ -17,7 +19,8 @@ for dir in $directories; do
   echo "Publishing $dir..."
 
   cd "$dir"
-  bun pm version patch
+
+  bun pm version "$versionType"
   bun publish --access public
 
   cd - >/dev/null
