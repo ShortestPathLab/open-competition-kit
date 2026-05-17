@@ -1,5 +1,8 @@
 {
-  "name": "prisma",
+  "name": "@open-competition-kit/db-prisma",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -11,7 +14,7 @@
     "effect": "^3.18.4",
     "lodash-es": "^4.17.21",
     "prisma": "7.4.0",
-    "sdk": "workspace:*"
+    "@open-competition-kit/sdk": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -5,7 +5,7 @@
   "private": true,
   "dependencies": {
     "es-toolkit": "^1.44.0",
-    "sdk": "workspace:*"
+    "@open-competition-kit/sdk": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest"

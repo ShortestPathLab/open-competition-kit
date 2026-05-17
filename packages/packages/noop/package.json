@@ -1,5 +1,8 @@
 {
-  "name": "noop",
+  "name": "@open-competition-kit/noop",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -7,7 +10,7 @@
     "@types/bun": "latest"
   },
   "dependencies": {
-    "sdk": "workspace:*"
+    "@open-competition-kit/sdk": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5"

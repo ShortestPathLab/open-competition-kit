@@ -1,5 +1,8 @@
 {
-  "name": "core",
+  "name": "@open-competition-kit/core",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "module": "index.ts",
   "type": "module",
   "devDependencies": {

@@ -1,5 +1,8 @@
 {
-  "name": "json",
+  "name": "@open-competition-kit/form-json",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "module": "index.ts",
   "type": "module",
   "dependencies": {
@@ -12,7 +15,7 @@
     "es-toolkit": "^1.46.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "sdk": "workspace:*",
+    "@open-competition-kit/sdk": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -41,7 +41,7 @@
     "react-markdown": "^10.1.0",
     "react-shadow": "^20.6.0",
     "remark-gfm": "^4.0.1",
-    "sdk": "workspace:*",
+    "@open-competition-kit/sdk": "workspace:*",
     "shadcn": "^3.8.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",

@@ -1,5 +1,8 @@
 {
-  "name": "github-classic",
+  "name": "@open-competition-kit/integration-github-classic",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
@@ -8,7 +11,7 @@
   "dependencies": {
     "es-toolkit": "^1.46.1",
     "octokit": "^5.0.5",
-    "sdk": "workspace:*",
+    "@open-competition-kit/sdk": "workspace:*",
     "zod": "^4.4.3"
   },
   "peerDependencies": {

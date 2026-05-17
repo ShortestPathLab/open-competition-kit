@@ -1,12 +1,15 @@
 {
-  "name": "sdk",
+  "name": "@open-competition-kit/sdk",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "module": "index.ts",
   "type": "module",
   "private": true,
   "dependencies": {
     "@effect/platform": "^0.92.1",
     "@effect/platform-bun": "^0.81.1",
-    "core": "workspace:*",
+    "@open-competition-kit/core": "workspace:*",
     "effect": "^3.18.4",
     "es-toolkit": "^1.44.0",
     "p-memoize": "^8.0.0",
