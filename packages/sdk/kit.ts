@@ -6,7 +6,7 @@ import {
   OpenCompetitionKitHooks,
   type OpenCompetitionKitApi,
 } from "@open-competition-kit/core";
-import { OpenCompetitionKitCollections } from "core/collections";
+import { OpenCompetitionKitCollections } from "@open-competition-kit/core/collections";
 import { Effect as E, Layer as L, Logger } from "effect";
 import { once } from "es-toolkit";
 import { get } from "es-toolkit/compat";

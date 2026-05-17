@@ -1,4 +1,4 @@
-import type { Meta, Point, Shape } from "core/hook";
+import type { Meta, Point, Shape } from "@open-competition-kit/core/hook";
 import { z } from "zod";
 
 export const meta = z.object({

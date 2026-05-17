@@ -1,6 +1,6 @@
 import { $ } from "bun";
 import type { Hooks } from "@open-competition-kit/core";
-import type { Source } from "core/hook/component";
+import type { Source } from "@open-competition-kit/core/hook/component";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
@@ -14,7 +14,7 @@ export type PropTypes<T = Hooks> = {
 
 export const $props: PropTypes = null as unknown as any;
 
-export { type Source } from "core/hook/component";
+export { type Source } from "@open-competition-kit/core/hook/component";
 export type ComponentOnly<TProps = ClientProps> = {
   component: (props: TProps) => ReactNode;
 };
