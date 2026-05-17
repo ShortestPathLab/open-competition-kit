@@ -95,7 +95,10 @@ export const createPackageResolver = (root: string) =>
             E.tryPromise({
               try: async () =>
                 (await import(path.resolve(path.dirname(root), p)))?.default,
-              catch: (e) => new ImportError({ cause: e, path: p }),
+              catch: (e) => {
+                E.logError(p, e);
+                return new ImportError({ cause: e, path: p });
+              },
             }),
           ),
         ),
