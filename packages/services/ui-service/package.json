@@ -1,6 +1,6 @@
 {
   "name": "ui-service",
-  "private": true,
+  "private": false,
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite dev --port 3000",

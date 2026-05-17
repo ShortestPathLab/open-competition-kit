@@ -23,5 +23,5 @@
   "peerDependencies": {
     "typescript": "^5"
   },
-  "private": true
+  "private": false
 }

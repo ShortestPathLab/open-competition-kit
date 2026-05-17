@@ -6,7 +6,7 @@
   },
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
   "dependencies": {
     "@effect/platform": "^0.92.1",
     "@effect/platform-bun": "^0.81.1",

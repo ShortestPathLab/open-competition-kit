@@ -6,7 +6,7 @@
   },
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "7.4.0",

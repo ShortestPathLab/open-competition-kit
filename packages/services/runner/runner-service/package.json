@@ -2,7 +2,7 @@
   "name": "runner-service",
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
   "dependencies": {
     "es-toolkit": "^1.44.0",
     "@open-competition-kit/sdk": "workspace:*"

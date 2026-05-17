@@ -1,6 +1,6 @@
 {
   "name": "open-competition-kit",
-  "private": true,
+  "private": false,
   "scripts": {
     "tsc:all": "bash ./tsc.sh",
     "db:prisma:generate": "bun packages/packages/db/prisma/generate.ts",
