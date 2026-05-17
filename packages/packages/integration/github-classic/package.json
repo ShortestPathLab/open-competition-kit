@@ -1,5 +1,5 @@
 {
-  "version": "0.0.3",
+  "version": "0.0.6",
   "name": "@open-competition-kit/integration-github-classic",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

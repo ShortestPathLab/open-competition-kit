@@ -1,5 +1,5 @@
 {
-  "version": "0.0.3",
+  "version": "0.0.6",
   "name": "@open-competition-kit/noop",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
