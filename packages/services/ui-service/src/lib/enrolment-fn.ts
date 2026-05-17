@@ -2,7 +2,7 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { listUserEnrolments } from "./competition-data";
 import { z } from "zod";
-import sdk, { unsafe } from "sdk";
+import sdk, { unsafe } from "@open-competition-kit/sdk";
 
 const userEnrolmentsInput = z.string();
 
@@ -19,10 +19,7 @@ export function useUserEnrolments(userId?: string) {
     queryFn: userId ? () => getUserEnrolmentsFn({ data: userId }) : skipToken,
   });
 }
-const enrolmentInput = z.object({
-  userId: z.string(),
-  trackId: z.string(),
-});
+const enrolmentInput = z.object({ userId: z.string(), trackId: z.string() });
 
 export const getEnrollmentStatus = createServerFn({ method: "GET" })
   .inputValidator(enrolmentInput)

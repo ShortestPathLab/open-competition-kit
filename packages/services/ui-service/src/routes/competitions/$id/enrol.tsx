@@ -20,7 +20,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
-import sdk, { unsafe } from "sdk";
+import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
 import { ensureAuthSession } from "src/lib/auth.server";
 import { useCompetition } from "src/lib/competition-fn";

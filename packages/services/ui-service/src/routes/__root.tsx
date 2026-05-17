@@ -5,7 +5,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Navbar } from "*/components/navbar";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk from "sdk";
+import sdk from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
 import { queryClient } from "src/router";
 import appCss from "../styles.css?url";

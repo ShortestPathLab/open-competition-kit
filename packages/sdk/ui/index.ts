@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import type { Hooks } from "core";
+import type { Hooks } from "@open-competition-kit/core";
 import type { Source } from "core/hook/component";
 import type { ReactNode } from "react";
 import { z } from "zod";
@@ -7,11 +7,9 @@ import { z } from "zod";
 export type ClientProps = {};
 
 export type PropTypes<T = Hooks> = {
-  [K in keyof T]: T[K] extends () => Promise<Source<infer R>>
-    ? R
-    : T[K] extends Record<string, any>
-      ? PropTypes<T[K]>
-      : never;
+  [K in keyof T]: T[K] extends () => Promise<Source<infer R>> ? R
+  : T[K] extends Record<string, any> ? PropTypes<T[K]>
+  : never;
 };
 
 export const $props: PropTypes = null as unknown as any;

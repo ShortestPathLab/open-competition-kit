@@ -15,7 +15,7 @@ import {
   isSource,
   Source,
   unsafe,
-} from "sdk";
+} from "@open-competition-kit/sdk";
 import z from "zod";
 
 const literalSchema = z.union([

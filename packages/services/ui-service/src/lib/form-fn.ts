@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import sdk, { unsafe, type $props } from "sdk";
+import sdk, { unsafe, type $props } from "@open-competition-kit/sdk";
 import { z } from "zod";
 import { ensureAuthSession } from "./auth.server";
 import { resolveId } from "./configure-user";

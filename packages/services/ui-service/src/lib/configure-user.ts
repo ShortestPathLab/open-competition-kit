@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { Account, User } from "better-auth";
-import { secrets, unsafe, users } from "sdk";
+import { secrets, unsafe, users } from "@open-competition-kit/sdk";
 import { auth } from "./get-auth";
 export const resolveId = (u: User) => u.email;
 

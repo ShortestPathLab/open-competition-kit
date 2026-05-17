@@ -1,4 +1,4 @@
-import { type Package } from "sdk";
+import { type Package } from "@open-competition-kit/sdk";
 
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
@@ -9,22 +9,12 @@ const noop = async () => {
 };
 
 export default {
-  db: {
-    list: noop,
-    get: noop,
-    create: noop,
-    update: noop,
-    delete: noop,
-  },
+  db: { list: noop, get: noop, create: noop, update: noop, delete: noop },
   user: {},
   form: { loader: noop, ui: noop, submit: {} },
   submissions: { submit: noop },
   runner: { ui: {}, run: noop },
-  track: {
-    enrol: {},
-  },
+  track: { enrol: {} },
   leaderboard: { ui: noop, loader: noop },
-  enrolments: {
-    enrol: noop,
-  },
+  enrolments: { enrol: noop },
 } satisfies DeepRequired<Package>;

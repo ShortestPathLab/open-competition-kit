@@ -1,6 +1,6 @@
 import { $, randomUUIDv7 } from "bun";
 import { once } from "lodash-es";
-import { config } from "sdk";
+import { config } from "@open-competition-kit/sdk";
 import { client } from "./client";
 import { toPrisma } from "./toPrisma";
 import { PrismaPg } from "@prisma/adapter-pg";

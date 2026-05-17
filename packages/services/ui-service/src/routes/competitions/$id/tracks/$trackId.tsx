@@ -14,7 +14,7 @@ import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ArrowLeft } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import sdk from "sdk";
+import sdk from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
 import { getTrackSummary } from "src/lib/competition-data";
 import { resolveId } from "src/lib/configure-user";

@@ -22,7 +22,7 @@ import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { assert, last, startCase } from "es-toolkit";
 import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
-import sdk, { unsafe } from "sdk";
+import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
 import { ensureAuthSession } from "src/lib/auth.server";
 import { resolveId } from "src/lib/configure-user";

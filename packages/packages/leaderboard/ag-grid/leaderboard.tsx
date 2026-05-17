@@ -1,4 +1,4 @@
-import type { ComponentDef, $props } from "sdk";
+import type { ComponentDef, $props } from "@open-competition-kit/sdk";
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule, themeQuartz } from "ag-grid-community";
 import { AgGridProvider, AgGridReact } from "ag-grid-react";

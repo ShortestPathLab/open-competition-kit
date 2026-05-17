@@ -8,7 +8,7 @@ import sdk, {
   tracks,
   unsafe,
   type Package,
-} from "sdk";
+} from "@open-competition-kit/sdk";
 import Zip from "jszip";
 
 async function resolveSource(job: string) {

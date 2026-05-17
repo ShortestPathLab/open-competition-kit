@@ -1,4 +1,4 @@
-import { jobs, type Job, unsafe } from "sdk";
+import { jobs, type Job, unsafe } from "@open-competition-kit/sdk";
 import { createPollingWorker } from "./polling";
 
 const DEFAULT_PENDING_STATUS = "pending";

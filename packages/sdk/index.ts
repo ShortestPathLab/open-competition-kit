@@ -16,7 +16,7 @@ export const {
   submissions,
 } = kit;
 
-export * from "core";
+export * from "@open-competition-kit/core";
 
 export default kit;
 

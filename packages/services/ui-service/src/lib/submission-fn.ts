@@ -7,7 +7,7 @@ import sdk, {
   submissions,
   tracks,
   unsafe,
-} from "sdk";
+} from "@open-competition-kit/sdk";
 import {
   listUserSubmissions,
   type UserSubmissionSummary,

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { Loader } from "*/components/loader";
-import sdk from "sdk";
+import sdk from "@open-competition-kit/sdk";
 import { SectionHeader } from "*/components/section-header";
 import { FormField } from "*/components/form-field";
 import { IconUpload } from "*/components/icon-upload";
@@ -29,10 +29,7 @@ const getCompetitionConfig = createServerFn({ method: "GET" })
       name: "GPPC 2025",
       contactEmail: "olivia@untitledui.com",
       description: "Lorem ipsum sit amet.",
-      database: {
-        type: "MongoDB",
-        url: "mongodb://smsthsmth",
-      },
+      database: { type: "MongoDB", url: "mongodb://smsthsmth" },
     };
   });
 

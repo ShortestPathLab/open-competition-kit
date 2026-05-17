@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk from "sdk";
+import sdk from "@open-competition-kit/sdk";
 import { PageHeader } from "*/components/page-header";
 import { StatCard } from "*/components/stat-card";
 import { ToggleTabs } from "*/components/toggle-tabs";

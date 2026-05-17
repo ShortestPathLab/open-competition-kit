@@ -1,4 +1,4 @@
-import { type Package } from "sdk";
+import { type Package } from "@open-competition-kit/sdk";
 import { db } from "./db";
 
 const getCollection = async (collection: string) => {

@@ -1,7 +1,7 @@
 import { createIsomorphicFn, createServerFn } from "@tanstack/react-start";
 import { betterAuth, BetterAuthOptions } from "better-auth";
 import { mapValues, omit, once, toMerged } from "es-toolkit";
-import { config, unsafe } from "sdk";
+import { config, unsafe } from "@open-competition-kit/sdk";
 import { z } from "zod";
 
 import { getAuthBaseConfig } from "./auth-base-config";

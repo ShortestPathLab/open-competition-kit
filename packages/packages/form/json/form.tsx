@@ -2,7 +2,7 @@ import Form from "@rjsf/shadcn";
 import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import React from "react";
-import type { $props, ComponentDef } from "sdk";
+import type { $props, ComponentDef } from "@open-competition-kit/sdk";
 import { meta, point, shape, value } from "sdk/z";
 import { z } from "zod";
 

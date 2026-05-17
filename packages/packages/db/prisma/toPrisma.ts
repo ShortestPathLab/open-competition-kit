@@ -1,7 +1,7 @@
 import { write } from "bun";
 import { Match as M, Schema as S } from "effect";
 import { capitalize, entries } from "lodash-es";
-import { hook } from "sdk";
+import { hook } from "@open-competition-kit/sdk";
 
 const { schemas, Id, Number, Boolean, Date, String, Int, Json } = hook.db;
 

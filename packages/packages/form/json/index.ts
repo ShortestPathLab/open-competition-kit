@@ -1,5 +1,9 @@
 import { once } from "es-toolkit";
-import { makeComponent, type Package, type PropTypes } from "sdk";
+import {
+  makeComponent,
+  type Package,
+  type PropTypes,
+} from "@open-competition-kit/sdk";
 import form from "./form";
 
 export default {

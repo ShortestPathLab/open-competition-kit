@@ -8,7 +8,7 @@ import {
   reference,
   cast,
   secrets,
-} from "sdk";
+} from "@open-competition-kit/sdk";
 import { z } from "zod";
 
 const MAX_SUBMISSION_ARCHIVE_BYTES = 10 * 1024 * 1024;

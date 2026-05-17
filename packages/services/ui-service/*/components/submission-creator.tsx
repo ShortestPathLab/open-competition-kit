@@ -22,7 +22,7 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { $props } from "sdk";
+import type { $props } from "@open-competition-kit/sdk";
 import { useKitComponent } from "src/hooks/use-kit-component";
 import { authClient } from "src/lib/auth-client";
 import type { CompetitionSummary } from "src/lib/competition-data";

@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import sdk, { unsafe } from "sdk";
+import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { z } from "zod";
 
 const ensureUserInput = z.object({

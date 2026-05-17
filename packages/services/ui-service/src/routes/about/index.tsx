@@ -2,18 +2,13 @@ import { PageHeader } from "*/components/page-header";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk from "sdk";
+import sdk from "@open-competition-kit/sdk";
 
-export const Route = createFileRoute("/about/")({
-  component: AboutPage,
-});
+export const Route = createFileRoute("/about/")({ component: AboutPage });
 
 const getAppConfig = createServerFn({ method: "GET" }).handler(async () => {
   const config = (await sdk.config.get()).value;
-  return {
-    name: config?.appName,
-    description: config?.appDescription,
-  };
+  return { name: config?.appName, description: config?.appDescription };
 });
 
 function AboutPage() {

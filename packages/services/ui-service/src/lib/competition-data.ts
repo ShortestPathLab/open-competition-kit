@@ -1,5 +1,11 @@
 import { startCase } from "es-toolkit";
-import { competitions, enrolments, submissions, tracks, unsafe } from "sdk";
+import {
+  competitions,
+  enrolments,
+  submissions,
+  tracks,
+  unsafe,
+} from "@open-competition-kit/sdk";
 
 export type TrackSummary = {
   id: string;
@@ -20,10 +26,7 @@ export type CompetitionSummary = {
   tracks: TrackSummary[];
 };
 
-export type SubmissionSummary = {
-  id: string;
-  body: string;
-};
+export type SubmissionSummary = { id: string; body: string };
 
 export type UserSubmissionSummary = SubmissionSummary & {
   trackId: string;
@@ -120,10 +123,7 @@ export async function listUserEnrolments(
       },
       submissions: userSubmissions
         .filter((submission) => submission.track === enrolment.track)
-        .map((submission) => ({
-          id: submission.id,
-          body: submission.body,
-        })),
+        .map((submission) => ({ id: submission.id, body: submission.body })),
     };
   });
 }

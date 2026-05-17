@@ -1,4 +1,4 @@
-import { makeComponent, type Package } from "sdk";
+import { makeComponent, type Package } from "@open-competition-kit/sdk";
 import leaderboard from "./leaderboard";
 import { once } from "es-toolkit";
 

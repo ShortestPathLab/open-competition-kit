@@ -10,6 +10,7 @@
     },
     "packages/core": {
       "name": "@open-competition-kit/core",
+      "version": "0.0.1",
       "dependencies": {
         "@effect/platform": "^0.92.1",
         "@effect/platform-bun": "^0.81.1",
@@ -29,6 +30,7 @@
     },
     "packages/packages/db/prisma": {
       "name": "@open-competition-kit/db-prisma",
+      "version": "0.0.1",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@prisma/adapter-pg": "^7.0.0",
@@ -48,6 +50,7 @@
     },
     "packages/packages/form/json": {
       "name": "@open-competition-kit/form-json",
+      "version": "0.0.1",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@rjsf/core": "^6.5.2",
@@ -70,6 +73,7 @@
     },
     "packages/packages/integration/github-classic": {
       "name": "@open-competition-kit/integration-github-classic",
+      "version": "0.0.1",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "es-toolkit": "^1.46.1",
@@ -85,6 +89,7 @@
     },
     "packages/packages/leaderboard/ag-grid": {
       "name": "@open-competition-kit/leaderboard-ag-grid",
+      "version": "0.0.1",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@types/react": "^19.2.14",
@@ -105,6 +110,7 @@
     },
     "packages/packages/noop": {
       "name": "@open-competition-kit/noop",
+      "version": "0.0.1",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
       },
@@ -117,6 +123,7 @@
     },
     "packages/packages/standard": {
       "name": "@open-competition-kit/standard",
+      "version": "0.0.1",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "jszip": "^3.10.1",
@@ -130,6 +137,7 @@
     },
     "packages/sdk": {
       "name": "@open-competition-kit/sdk",
+      "version": "0.0.1",
       "dependencies": {
         "@effect/platform": "^0.92.1",
         "@effect/platform-bun": "^0.81.1",
