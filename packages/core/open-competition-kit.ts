@@ -9,7 +9,7 @@ import { access, type Accessor } from "./config/access";
 import { Hooks, OpenCompetitionKitHooks } from "./hook";
 import { type schemas, type WithHooks } from "./hook/db";
 import type { Namespace } from "./namespace";
-import type { SerialisablePrimitive } from "./serialisable";
+import type { SerialisableObject, SerialisablePrimitive } from "./serialisable";
 import { flow } from "./utils/flow";
 
 export class CollectionOwnerError extends D.TaggedError(
@@ -135,7 +135,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
           value,
         }: OptionalNamespace<
           T,
-          { owner: string; reference: string; value: string }
+          { owner: string; reference: string; value: SerialisableObject }
         >) =>
           E.gen(function* () {
             if (!namespace) return yield* E.fail(new MissingNamespaceError());

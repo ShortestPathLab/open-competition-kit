@@ -1,10 +1,11 @@
 {
-  "version": "0.0.2",
+  "version": "0.0.3",
   "name": "@open-competition-kit/db-prisma",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
   "module": "index.ts",
+  "types": "index.ts",
   "type": "module",
   "private": false,
   "dependencies": {

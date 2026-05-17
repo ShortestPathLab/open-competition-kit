@@ -3,7 +3,7 @@ import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule, themeQuartz } from "ag-grid-community";
 import { AgGridProvider, AgGridReact } from "ag-grid-react";
 import React from "react";
-import { meta, shape, value } from "sdk/z";
+import { meta, shape, value } from "@open-competition-kit/sdk/z";
 import { z } from "zod";
 
 type LeaderboardProps = typeof $props.leaderboard.ui;
