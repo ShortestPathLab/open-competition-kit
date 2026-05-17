@@ -39,6 +39,8 @@ jobs:
         working-directory: ${{ matrix.package.path }}
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
       - name: Configure GitHub Packages auth
         run: |
           cat <<EOF > ~/.npmrc
@@ -47,8 +49,6 @@ jobs:
           EOF
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check out repository
-        uses: actions/checkout@v4
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
