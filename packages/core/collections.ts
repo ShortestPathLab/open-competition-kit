@@ -9,6 +9,7 @@ import {
 } from "./hook/db";
 import { isFunction, mergeWith } from "es-toolkit";
 import { OpenCompetitionKitConfig } from "./config";
+import { traverse } from "./utils/traverse";
 
 export type Table<T> = {
   list: () => Promise<T[]>;
@@ -54,11 +55,14 @@ const upsert = <TCreate, TUpdate extends { id: string }, TFull, E, C>(
   table: WithHooks<TCreate, TUpdate, TFull, E, C>,
   payload: TCreate & TUpdate,
 ) =>
-  E.gen(function* () {
-    const prev = yield* E.either(table.get(payload.id));
-    if (Either.isRight(prev)) yield* table.update(payload);
-    else yield* table.create(payload);
-  });
+  E.either(table.get(payload.id)).pipe(
+    E.andThen((e) =>
+      Either.match(e, {
+        onLeft: () => table.create(payload),
+        onRight: () => table.update(payload),
+      }),
+    ),
+  );
 
 export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitCollections>()(
   "open-competition-kit/OpenCompetitionKitCollections",
@@ -77,7 +81,7 @@ export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitC
             jobs: yield* createAccessor("job", ...a),
             context: yield* createAccessor("context", ...a),
           };
-          const ensureDb = E.once(
+          const ensureDb = yield* E.once(
             E.all(
               config.competitions.flatMap((c) => [
                 upsert(db.competitions, { id: c.id }),
@@ -85,12 +89,12 @@ export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitC
                   upsert(db.tracks, { id: t.id, competition: c.id }),
                 ),
               ]),
-              { concurrency: 4 },
             ),
           );
-          return mergeWith(db, ensureDb, (f, g) => {
+          return traverse(db, (f) => {
             if (isFunction(f))
-              return (...args: any[]) => E.zipRight(g, f(...args));
+              return (...args: any[]) => E.zipRight(ensureDb, f(...args));
+            return f;
           });
         });
     }),
