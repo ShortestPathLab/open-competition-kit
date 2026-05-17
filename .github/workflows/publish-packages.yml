@@ -39,6 +39,14 @@ jobs:
         working-directory: ${{ matrix.package.path }}
 
     steps:
+      - name: Configure GitHub Packages auth
+        run: |
+          cat <<EOF > ~/.npmrc
+          @${{ github.repository_owner }}:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+          EOF
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Check out repository
         uses: actions/checkout@v4
 
