@@ -1,4 +1,5 @@
 {
+  "version": "0.0.1",
   "name": "@open-competition-kit/leaderboard-ag-grid",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

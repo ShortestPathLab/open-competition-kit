@@ -26,8 +26,13 @@ jobs:
       matrix:
         package:
           - path: packages/core
-          - path: packages/client
-          - path: packages/utils
+          - path: packages/packages/db/prisma
+          - path: packages/packages/form/json
+          - path: packages/packages/integration/github-classic
+          - path: packages/packages/leaderboard/ag-grid
+          - path: packages/packages/noop
+          - path: packages/packages/standard
+          - path: packages/sdk
 
     defaults:
       run:
@@ -53,9 +58,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-
-      - name: Build package
-        run: bun run build
 
       - name: Publish package
         run: bun publish
