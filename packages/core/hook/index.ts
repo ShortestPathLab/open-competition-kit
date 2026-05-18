@@ -59,7 +59,11 @@ type DeepPartial<T> =
   T extends { [key: string]: unknown } ? { [P in keyof T]?: DeepPartial<T[P]> }
   : T;
 
-export type Package = DeepPartial<Hooks>;
+export type Package = {
+  name?: string;
+  description?: string;
+  version?: string;
+} & DeepPartial<Hooks>;
 
 // Produces dot-notation keys for a nested object T (arrays and functions are treated as leaves)
 type DotNotationKeys<T, Prev extends string = ""> = {

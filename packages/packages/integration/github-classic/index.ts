@@ -178,7 +178,7 @@ export default {
     },
   },
   runner: {
-    run: async ({ job }, next) => {
+    setup: async ({ job }, next) => {
       const jobRecord = await unsafe(kit.jobs.get(job));
       const submission = await unsafe(
         kit.submissions.get(jobRecord.submission),

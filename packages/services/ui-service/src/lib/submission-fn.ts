@@ -13,7 +13,7 @@ import {
   type UserSubmissionSummary,
 } from "./competition-data";
 import { z } from "zod";
-import { ensureAuthSession } from "./auth.server";
+import { authMiddleware } from "./auth.server";
 import { resolveId } from "./configure-user";
 
 const competitionSubmissionsInput = z.object({
@@ -117,9 +117,9 @@ export function useCompetitionSubmissions(
   return useQuery({
     queryKey: ["competitionSubmissions", userId, competitionId],
     queryFn:
-      userId && competitionId ?
-        () => getCompetitionSubmissionsFn({ data: { userId, competitionId } })
-      : skipToken,
+      userId && competitionId
+        ? () => getCompetitionSubmissionsFn({ data: { userId, competitionId } })
+        : skipToken,
   });
 }
 
@@ -137,12 +137,12 @@ export function useSubmissionDetail(userId?: string, submissionId?: string) {
     queryKey: ["submissionDetail", userId, submissionId],
     refetchInterval: 1000,
     queryFn:
-      userId && submissionId ?
-        () =>
-          getSubmissionDetailFn({
-            data: { userId, submissionId },
-          }) as Promise<SubmissionDetail>
-      : skipToken,
+      userId && submissionId
+        ? () =>
+            getSubmissionDetailFn({
+              data: { userId, submissionId },
+            }) as Promise<SubmissionDetail>
+        : skipToken,
   });
 }
 
@@ -156,8 +156,8 @@ const submissionInput = z.object({
 
 export const createSubmission = createServerFn({ method: "POST" })
   .inputValidator(submissionInput)
-  .handler(async ({ data }) => {
-    const session = await ensureAuthSession();
+  .middleware([authMiddleware])
+  .handler(async ({ data, context: { session } }) => {
     const enrolmentStatus = await sdk.enrolments.isEnrolled(
       resolveId(session.user),
       data.trackId,

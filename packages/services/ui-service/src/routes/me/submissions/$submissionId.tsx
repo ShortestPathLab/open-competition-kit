@@ -24,7 +24,7 @@ import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
-import { ensureAuthSession } from "src/lib/auth.server";
+import { authMiddleware } from "src/lib/auth.server";
 import { resolveId } from "src/lib/configure-user";
 import { useSubmissionDetail } from "src/lib/submission-fn";
 import { queryClient } from "src/router";
@@ -36,8 +36,8 @@ export const Route = createFileRoute("/me/submissions/$submissionId")({
 
 const rerunSubmission = createServerFn({ method: "POST" })
   .inputValidator(z.object({ submissionId: z.string() }))
-  .handler(async ({ data }) => {
-    const session = await ensureAuthSession();
+  .middleware([authMiddleware])
+  .handler(async ({ data, context: { session } }) => {
     const submission = await unsafe(sdk.submissions.get(data.submissionId));
 
     if (submission.user !== resolveId(session.user)) {
@@ -207,20 +207,23 @@ function SubmissionDetailPage() {
                   onClick={() => mutation.mutate()}
                   disabled={mutation.isPending}
                 >
-                  {mutation.isPending ?
+                  {mutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
-                  : <RotateCcw className="h-4 w-4" />}
+                  ) : (
+                    <RotateCcw className="h-4 w-4" />
+                  )}
                   Re-run
                 </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent className="">
-            {detail.jobs.length === 0 ?
+            {detail.jobs.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
                 No jobs exist yet for this submission. Use rerun to create one.
               </div>
-            : <ItemGroup className="gap-2">
+            ) : (
+              <ItemGroup className="gap-2">
                 {detail.jobs
                   .map((job, index) => (
                     <button
@@ -234,9 +237,9 @@ function SubmissionDetailPage() {
                           selectedJob?.id === job.id ? "muted" : "outline"
                         }
                         className={
-                          selectedJob?.id === job.id ?
-                            "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
-                          : ""
+                          selectedJob?.id === job.id
+                            ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                            : ""
                         }
                       >
                         <ItemContent>
@@ -252,9 +255,9 @@ function SubmissionDetailPage() {
                           </ItemHeader>
                           <div className="mt-2 flex items-center justify-between gap-3">
                             <ItemDescription>
-                              {job.outputs.length > 0 ?
-                                `${job.outputs.length} output record${job.outputs.length === 1 ? "" : "s"}`
-                              : "No outputs yet"}
+                              {job.outputs.length > 0
+                                ? `${job.outputs.length} output record${job.outputs.length === 1 ? "" : "s"}`
+                                : "No outputs yet"}
                             </ItemDescription>
                             <p className="font-mono text-[11px] text-muted-foreground">
                               {job.id}
@@ -266,7 +269,7 @@ function SubmissionDetailPage() {
                   ))
                   .reverse()}
               </ItemGroup>
-            }
+            )}
           </CardContent>
         </Card>
 
@@ -296,23 +299,22 @@ function SubmissionDetailPage() {
                     {selectedJob ? "Selected run" : "Run details"}
                   </CardTitle>
                   <CardDescription>
-                    {selectedJob ?
-                      "This panel shows the outputs and logs for the run selected on the left."
-                    : "Choose a run from the left-hand list to inspect it here."
-                    }
+                    {selectedJob
+                      ? "This panel shows the outputs and logs for the run selected on the left."
+                      : "Choose a run from the left-hand list to inspect it here."}
                   </CardDescription>
                 </div>
-                {selectedJob ?
+                {selectedJob ? (
                   <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">
                       {startCase(statusLabel(selectedJob.status))}
                     </span>
                   </div>
-                : null}
+                ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-4 ">
-              {selectedJob ?
+              {selectedJob ? (
                 <>
                   <div className="grid gap-3 md:grid-cols-3">
                     <div className="rounded-lg border border-border p-3">
@@ -339,11 +341,12 @@ function SubmissionDetailPage() {
                     <p className="text-sm font-medium text-foreground">
                       Outputs
                     </p>
-                    {selectedJob.outputs.length === 0 ?
+                    {selectedJob.outputs.length === 0 ? (
                       <div className="mt-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
                         No outputs have been produced for this job yet.
                       </div>
-                    : <div className="mt-3 space-y-3">
+                    ) : (
+                      <div className="mt-3 space-y-3">
                         {selectedJob.outputs.map((output) => (
                           <div
                             key={output.id}
@@ -363,7 +366,7 @@ function SubmissionDetailPage() {
                           </div>
                         ))}
                       </div>
-                    }
+                    )}
                   </div>
 
                   <Separator />
@@ -375,10 +378,11 @@ function SubmissionDetailPage() {
                     </div>
                   </div>
                 </>
-              : <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+              ) : (
+                <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
                   Select a job from the sidebar to inspect its details.
                 </div>
-              }
+              )}
             </CardContent>
           </Card>
         </div>

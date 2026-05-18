@@ -9,6 +9,9 @@ const noop = async () => {
 };
 
 export default {
+  name: "",
+  description: "",
+  version: "0.0.6",
   db: { list: noop, get: noop, create: noop, update: noop, delete: noop },
   user: {},
   form: { loader: noop, ui: noop, submit: {} },

@@ -1,6 +1,5 @@
 import { Path } from "@effect/platform";
 import { Config, Data as D, Effect as E, Either, Match as M } from "effect";
-import { isFunction, mergeWith } from "es-toolkit";
 import { isNil, isUndefined, noop } from "lodash-es";
 import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
@@ -9,7 +8,7 @@ import { access, type Accessor } from "./config/access";
 import { Hooks, OpenCompetitionKitHooks } from "./hook";
 import { type schemas, type WithHooks } from "./hook/db";
 import type { Namespace } from "./namespace";
-import type { SerialisableObject, SerialisablePrimitive } from "./serialisable";
+import type { SerialisableValue } from "./serialisable";
 import { flow } from "./utils/flow";
 
 export class CollectionOwnerError extends D.TaggedError(
@@ -135,7 +134,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
           value,
         }: OptionalNamespace<
           T,
-          { owner: string; reference: string; value: SerialisableObject }
+          { owner: string; reference: string; value: SerialisableValue }
         >) =>
           E.gen(function* () {
             if (!namespace) return yield* E.fail(new MissingNamespaceError());
@@ -177,7 +176,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             if (!existing || isNil(existing.value)) {
               return yield* E.fail(new MissingContextError());
             }
-            return existing.value as NonNullable<SerialisablePrimitive>;
+            return existing.value as NonNullable<SerialisableValue>;
           }),
         get: ({
           namespace = ns,
@@ -191,7 +190,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
               namespace,
               reference,
             });
-            return existing?.value as SerialisablePrimitive | undefined;
+            return existing?.value as SerialisableValue | undefined;
           }),
       });
 
