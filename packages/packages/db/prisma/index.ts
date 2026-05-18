@@ -13,6 +13,10 @@ const getCollection = async (collection: string) => {
 };
 
 export default {
+  name: "@open-competition-kit/db-prisma",
+  description:
+    "Provides the Open Competition Kit database hooks backed by Prisma and the generated Prisma client.",
+  version: "0.0.6",
   db: {
     get: async ({ collection, payload }) => {
       const a = await getCollection(collection);

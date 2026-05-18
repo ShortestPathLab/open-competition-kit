@@ -43,8 +43,8 @@ const selectedRefBody = z
   .transform((body) => {
     if (typeof body === "string") return body;
     if (GITHUB_REF_FIELD_KEY in body) return body[GITHUB_REF_FIELD_KEY];
-    return typeof body.value === "string" ?
-        body.value
+    return typeof body.value === "string"
+      ? body.value
       : body.value[GITHUB_REF_FIELD_KEY];
   });
 
@@ -147,6 +147,10 @@ async function ensureParticipantRepository(id: string) {
 }
 
 export default {
+  name: "@open-competition-kit/integration-github-classic",
+  description:
+    "Integrates Open Competition Kit with GitHub repositories for enrolment, branch selection, and source archive preparation.",
+  version: "0.0.6",
   enrolments: {
     enrol: async (args, next) => {
       const enrolmentId = await next?.(args);
@@ -168,9 +172,9 @@ export default {
       const nextDef = {
         ...def,
         shape: def.shape.map((shapeItem) =>
-          shapeItem.kind === GITHUB_REF_SELECT_KIND ?
-            { ...shapeItem, kind: "select", options }
-          : shapeItem,
+          shapeItem.kind === GITHUB_REF_SELECT_KIND
+            ? { ...shapeItem, kind: "select", options }
+            : shapeItem,
         ),
       };
 

@@ -7,5 +7,9 @@ import {
 import form from "./form";
 
 export default {
+  name: "@open-competition-kit/form-json",
+  description:
+    "Renders configured Open Competition Kit form definitions as JSON Schema forms with React and shadcn components.",
+  version: "0.0.6",
   form: { ui: once(async () => makeComponent(form)) },
 } satisfies Package;

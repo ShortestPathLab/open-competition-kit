@@ -27,6 +27,10 @@ async function resolveSource(job: string) {
 }
 
 export default {
+  name: "@open-competition-kit/standard",
+  description:
+    "Implements the standard enrolment, submission, job creation, and runner workflow for Open Competition Kit.",
+  version: "0.0.6",
   enrolments: {
     enrol: async (args, next) => {
       await next?.(args);
