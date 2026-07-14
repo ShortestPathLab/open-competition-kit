@@ -1,22 +1,55 @@
-# @open-competition-kit/form-json
+# `@open-competition-kit/form-json`
 
-`@open-competition-kit/form-json` provides a JSON-driven submission form UI for Open Competition Kit. It turns a configured form shape into a React JSON Schema Form using the shadcn renderer and AJV validation, supporting common field kinds such as text, email, number, textarea, select, and checkbox.
+Renders a track's submission form from its `shape:` config, using React JSON
+Schema Form with shadcn components.
 
-Open Competition Kit is a modular toolkit for running programming competitions. A competition is described in `competition.config.yaml`, then extended with packages that provide storage, submission forms, enrolment behavior, runners, integrations, and leaderboards.
+Implements `form.ui`.
 
-To use the JSON form package, add it to the relevant `with` section in your `competition.config.yaml`. You can enable it globally, or attach it to a competition, track, or form where the form UI should be supplied:
+## Field kinds
 
 ```yaml
-with:
-  - "@open-competition-kit/form-json"
+form:
+  shape:
+    - id: notes
+      name: Notes
+      kind: textarea
+      lines: 5
+    - id: agent
+      name: Agent archive
+      kind: file          # ← uploads, and stores a FileRef
+      required: true
 ```
 
-The package reads the configured form `shape` and renders a submit-ready form component for the UI service.
+| `kind` | Value |
+|---|---|
+| `text` (default), `email`, `textarea` | string |
+| `number` | number |
+| `checkbox` | boolean |
+| `select` (with `options:`) | string |
+| `file` | a `FileRef` object |
 
-For contributors, set up the repository from the monorepo root:
+## `kind: file`
 
-```bash
-git clone https://github.com/open-competition-kit/open-competition-kit.git
-cd open-competition-kit
-bun install
-```
+The bytes never travel through the form's submit. The file is uploaded as soon as
+it is picked, and the form value is a **`FileRef`** — the small JSON pointer that
+goes in the database in place of the bytes.
+
+The upload runs in three steps:
+
+1. **claim a key** — `POST /api/files/request-upload`. The server derives the key;
+   the client never chooses it.
+2. **send the bytes** — straight to the bucket via a presigned `PUT` if the
+   large-file backend can presign one, otherwise proxied through
+   `PUT /api/files/upload`. This is why an S3 deployment can accept a
+   multi-gigabyte submission without it touching the app server.
+3. **seal it** — `POST /api/files/complete-upload`. The server asks storage what
+   actually arrived, rather than believing the client.
+
+Progress is reported during (2), which needs `XMLHttpRequest` — `fetch` cannot
+report upload progress, and a participant pushing a large archive over a slow
+connection needs to see that it is moving.
+
+This requires a package implementing the `files` hooks — see
+`@open-competition-kit/large-files-local` or `-s3`.
+
+A runner reads the file with `files.read(ref)`.

@@ -30,6 +30,10 @@ import { Route as SignInCompleteMethodRouteImport } from './routes/sign-in/compl
 import { Route as MeSubmissionsSubmissionIdRouteImport } from './routes/me/submissions/$submissionId'
 import { Route as CompetitionsIdRulesRouteImport } from './routes/competitions/$id/rules'
 import { Route as CompetitionsIdEnrolRouteImport } from './routes/competitions/$id/enrol'
+import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
+import { Route as ApiFilesRequestUploadRouteImport } from './routes/api/files/request-upload'
+import { Route as ApiFilesCompleteUploadRouteImport } from './routes/api/files/complete-upload'
+import { Route as ApiFilesSplatRouteImport } from './routes/api/files/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from './routes/dashboard/$competitionId/overview/index'
 import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from './routes/dashboard/$competitionId/configure/index'
@@ -146,6 +150,26 @@ const CompetitionsIdEnrolRoute = CompetitionsIdEnrolRouteImport.update({
   path: '/enrol',
   getParentRoute: () => CompetitionsIdRouteRoute,
 } as any)
+const ApiFilesUploadRoute = ApiFilesUploadRouteImport.update({
+  id: '/api/files/upload',
+  path: '/api/files/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFilesRequestUploadRoute = ApiFilesRequestUploadRouteImport.update({
+  id: '/api/files/request-upload',
+  path: '/api/files/request-upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFilesCompleteUploadRoute = ApiFilesCompleteUploadRouteImport.update({
+  id: '/api/files/complete-upload',
+  path: '/api/files/complete-upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFilesSplatRoute = ApiFilesSplatRouteImport.update({
+  id: '/api/files/$',
+  path: '/api/files/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -205,6 +229,10 @@ export interface FileRoutesByFullPath {
   '/register/': typeof RegisterIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$': typeof ApiFilesSplatRoute
+  '/api/files/complete-upload': typeof ApiFilesCompleteUploadRoute
+  '/api/files/request-upload': typeof ApiFilesRequestUploadRoute
+  '/api/files/upload': typeof ApiFilesUploadRoute
   '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
   '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
   '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
@@ -232,6 +260,10 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$': typeof ApiFilesSplatRoute
+  '/api/files/complete-upload': typeof ApiFilesCompleteUploadRoute
+  '/api/files/request-upload': typeof ApiFilesRequestUploadRoute
+  '/api/files/upload': typeof ApiFilesUploadRoute
   '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
   '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
   '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
@@ -263,6 +295,10 @@ export interface FileRoutesById {
   '/register/': typeof RegisterIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$': typeof ApiFilesSplatRoute
+  '/api/files/complete-upload': typeof ApiFilesCompleteUploadRoute
+  '/api/files/request-upload': typeof ApiFilesRequestUploadRoute
+  '/api/files/upload': typeof ApiFilesUploadRoute
   '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
   '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
   '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
@@ -295,6 +331,10 @@ export interface FileRouteTypes {
     | '/register/'
     | '/sign-in/'
     | '/api/auth/$'
+    | '/api/files/$'
+    | '/api/files/complete-upload'
+    | '/api/files/request-upload'
+    | '/api/files/upload'
     | '/competitions/$id/enrol'
     | '/competitions/$id/rules'
     | '/me/submissions/$submissionId'
@@ -322,6 +362,10 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/api/auth/$'
+    | '/api/files/$'
+    | '/api/files/complete-upload'
+    | '/api/files/request-upload'
+    | '/api/files/upload'
     | '/competitions/$id/enrol'
     | '/competitions/$id/rules'
     | '/me/submissions/$submissionId'
@@ -352,6 +396,10 @@ export interface FileRouteTypes {
     | '/register/'
     | '/sign-in/'
     | '/api/auth/$'
+    | '/api/files/$'
+    | '/api/files/complete-upload'
+    | '/api/files/request-upload'
+    | '/api/files/upload'
     | '/competitions/$id/enrol'
     | '/competitions/$id/rules'
     | '/me/submissions/$submissionId'
@@ -378,6 +426,10 @@ export interface RootRouteChildren {
   RegisterIndexRoute: typeof RegisterIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiFilesSplatRoute: typeof ApiFilesSplatRoute
+  ApiFilesCompleteUploadRoute: typeof ApiFilesCompleteUploadRoute
+  ApiFilesRequestUploadRoute: typeof ApiFilesRequestUploadRoute
+  ApiFilesUploadRoute: typeof ApiFilesUploadRoute
   SignInCompleteMethodRoute: typeof SignInCompleteMethodRoute
 }
 
@@ -530,6 +582,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionsIdEnrolRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
     }
+    '/api/files/upload': {
+      id: '/api/files/upload'
+      path: '/api/files/upload'
+      fullPath: '/api/files/upload'
+      preLoaderRoute: typeof ApiFilesUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/files/request-upload': {
+      id: '/api/files/request-upload'
+      path: '/api/files/request-upload'
+      fullPath: '/api/files/request-upload'
+      preLoaderRoute: typeof ApiFilesRequestUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/files/complete-upload': {
+      id: '/api/files/complete-upload'
+      path: '/api/files/complete-upload'
+      fullPath: '/api/files/complete-upload'
+      preLoaderRoute: typeof ApiFilesCompleteUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/files/$': {
+      id: '/api/files/$'
+      path: '/api/files/$'
+      fullPath: '/api/files/$'
+      preLoaderRoute: typeof ApiFilesSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -669,6 +749,10 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterIndexRoute: RegisterIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiFilesSplatRoute: ApiFilesSplatRoute,
+  ApiFilesCompleteUploadRoute: ApiFilesCompleteUploadRoute,
+  ApiFilesRequestUploadRoute: ApiFilesRequestUploadRoute,
+  ApiFilesUploadRoute: ApiFilesUploadRoute,
   SignInCompleteMethodRoute: SignInCompleteMethodRoute,
 }
 export const routeTree = rootRouteImport

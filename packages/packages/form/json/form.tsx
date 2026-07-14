@@ -1,10 +1,25 @@
 import Form from "@rjsf/shadcn";
-import type { RJSFSchema, UiSchema } from "@rjsf/utils";
+import type { RegistryFieldsType, RJSFSchema, UiSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import React from "react";
 import type { $props, ComponentDef } from "@open-competition-kit/sdk";
-import { meta, point, shape, value } from "@open-competition-kit/sdk/z";
+import { meta, point, shape } from "@open-competition-kit/sdk/z";
 import { z } from "zod";
+import { FileField } from "./file-field";
+
+// Form values are serialisable, not merely scalar: a file field's value is a
+// `FileRef` object, and the submission body is JSON regardless.
+const json: z.ZodType<any> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(json),
+    z.record(z.string(), json),
+  ]),
+);
+const value = json;
 
 const propsSchema = z.object({
   ...meta.shape,
@@ -13,7 +28,15 @@ const propsSchema = z.object({
       ...shape.shape,
       ...meta.shape,
       kind: z
-        .enum(["text", "email", "number", "textarea", "select", "checkbox"])
+        .enum([
+          "text",
+          "email",
+          "number",
+          "textarea",
+          "select",
+          "checkbox",
+          "file",
+        ])
         .optional(),
       placeholder: z.string().optional(),
       /**
@@ -50,6 +73,11 @@ function buildSchema(props: FormDef): RJSFSchema {
         property.type = "boolean";
       } else if (shapeItem.kind === "number") {
         property.type = "number";
+      } else if (shapeItem.kind === "file") {
+        // The value is a FileRef, so the property is an object. RJSF renders
+        // objects with a Field rather than a Widget — hence `ui:field` below.
+        property.type = "object";
+        property.additionalProperties = true;
       } else {
         property.type = "string";
       }
@@ -99,6 +127,10 @@ function buildUiSchema(props: FormDef): UiSchema {
         config["ui:options"] = { rows: shapeItem.lines ?? 5 };
       }
 
+      if (shapeItem.kind === "file") {
+        config["ui:field"] = "file";
+      }
+
       return [shapeItem.id, config];
     }),
   );
@@ -129,6 +161,7 @@ export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
   const schema = buildSchema(result.data);
   const uiSchema = buildUiSchema(result.data);
   const formData = buildFormData(result.data);
+  const fields: RegistryFieldsType = { file: FileField };
 
   return (
     <>
@@ -150,6 +183,7 @@ export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
             schema={schema}
             uiSchema={uiSchema}
             formData={formData}
+            fields={fields}
             validator={validator}
             onSubmit={({ formData }) => {
               onSubmit?.(formData);

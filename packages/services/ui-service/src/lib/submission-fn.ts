@@ -146,12 +146,22 @@ export function useSubmissionDetail(userId?: string, submissionId?: string) {
   });
 }
 
+// A form value is any JSON value, not just a scalar: a `kind: file` field's value
+// is a `FileRef` object.
+const jsonValue: z.ZodType<unknown> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(jsonValue),
+    z.record(z.string(), jsonValue),
+  ]),
+);
+
 const submissionInput = z.object({
   trackId: z.string(),
-  value: z.record(
-    z.string(),
-    z.union([z.string(), z.number(), z.boolean(), z.null()]),
-  ),
+  value: z.record(z.string(), jsonValue),
 });
 
 export const createSubmission = createServerFn({ method: "POST" })
