@@ -1,92 +1,140 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk from "@open-competition-kit/sdk";
+import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { PageHeader } from "*/components/page-header";
 import { StatCard } from "*/components/stat-card";
 import { ToggleTabs } from "*/components/toggle-tabs";
-import { FilterBar } from "*/components/filter-bar";
+import { SearchInput } from "*/components/search-input";
 import { DataTable } from "*/components/data-table";
 import type { Column } from "*/components/data-table";
-import { Copy, ExternalLink } from "lucide-react";
+import { Loader } from "*/components/loader";
 import { authClient } from "src/lib/auth-client";
+import { ensureAdmin } from "src/lib/admin";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 
-interface Submission {
+type SubmissionRow = {
   id: string;
-  checked: boolean;
-  result: number;
-}
+  user: string;
+  track: string;
+  trackId: string;
+  status: string;
+  submittedAt: string | null;
+};
+
+const UNFINISHED = new Set(["pending", "running", "queued", "prepared"]);
+const FAILED = new Set(["failed", "error", "cancelled", "timeout"]);
+
+const ALL_TRACKS = "All tracks";
 
 const getDashboardData = createServerFn({ method: "GET" })
   .inputValidator(z.string())
   .handler(async ({ data: id }) => {
-    // TODO: Implement SDK functions
-    // @ts-ignore
-    const _stats = await sdk.competitions.getStats(id);
-    // @ts-ignore
-    const _submissions = await sdk.competitions.getSubmissions(id);
+    // A server function is a public endpoint — the route guard does not protect it.
+    await ensureAdmin();
+
+    const config = await unsafe(sdk.config.get());
+    const competition = config.competitions.find((c) => c.id === id);
+    if (!competition) {
+      return { stats: [], submissions: [], tracks: [] as string[] };
+    }
+
+    const enrolments = await unsafe(sdk.enrolments.list({ competition: id }));
+    const participants = new Set(enrolments.map((e) => e.user)).size;
+
+    const names = new Map<string, string>();
+    const submissions: SubmissionRow[] = [];
+    let evaluated = 0;
+    let failed = 0;
+    let inFlight = 0;
+
+    for (const track of competition.tracks) {
+      const forTrack = await unsafe(sdk.submissions.list({ track: track.id }));
+
+      for (const submission of forTrack) {
+        const jobs = await unsafe(sdk.jobs.list({ submission: submission.id }));
+        const latest = jobs.at(-1);
+        const status = latest?.status ?? "no job";
+
+        if (FAILED.has(status)) failed++;
+        else if (UNFINISHED.has(status)) inFlight++;
+        else if (latest) evaluated++;
+
+        if (!names.has(submission.user)) {
+          const user = await unsafe(sdk.users.get(submission.user)).catch(
+            () => undefined,
+          );
+          names.set(submission.user, user?.name || submission.user);
+        }
+
+        submissions.push({
+          id: submission.id,
+          user: names.get(submission.user) ?? submission.user,
+          track: track.name ?? track.id,
+          trackId: track.id,
+          status,
+          submittedAt:
+            submission.createdAt ?
+              new Date(submission.createdAt).toISOString()
+            : null,
+        });
+      }
+    }
+
+    submissions.sort((a, b) =>
+      (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""),
+    );
 
     return {
+      tracks: competition.tracks.map((t) => t.name ?? t.id),
       stats: [
-        { title: "Participants", value: 2420, change: 40 },
-        { title: "Best sum-of-costs", value: 1210, change: -10 },
-        { title: "Something else", value: 316, change: 20 },
+        { title: "Participants", value: participants, hint: "Enrolled across all tracks" },
+        { title: "Submissions", value: submissions.length, hint: "All time" },
+        { title: "Evaluated", value: evaluated, hint: `${inFlight} still running` },
+        { title: "Failed", value: failed, hint: "Jobs that errored out" },
       ],
-      submissions: Array.from({ length: 7 }, (_, i) => ({
-        id: `sub-${i}`,
-        checked: i < 3 || i > 4,
-        result: Math.random() * 100,
-      })),
+      submissions,
     };
   });
 
-const columns: Column<Submission>[] = [
+function StatusPill({ status }: { status: string }) {
+  const tone =
+    FAILED.has(status) ? "bg-red-500/10 text-red-600"
+    : UNFINISHED.has(status) ? "bg-amber-500/10 text-amber-600"
+    : status === "no job" ? "bg-muted text-muted-foreground"
+    : "bg-green-500/10 text-green-600";
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tone}`}
+    >
+      {status}
+    </span>
+  );
+}
+
+const columns: Column<SubmissionRow>[] = [
   {
-    key: "submission",
-    header: "Submission",
-    render: (row) => (
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          defaultChecked={row.checked}
-          className="rounded border-border"
-        />
-        <div className="h-7 w-7 rounded-full bg-muted" />
-      </div>
-    ),
+    key: "user",
+    header: "Competitor",
+    render: (row) => <span className="font-medium">{row.user}</span>,
   },
-  {
-    key: "result",
-    header: "Result",
-    render: (row) => (
-      <div className="h-2 w-full max-w-xs rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-primary"
-          style={{ width: `${row.result}%` }}
-        />
-      </div>
-    ),
-  },
+  { key: "track", header: "Track", render: (row) => row.track },
   {
     key: "status",
     header: "Status",
-    render: () => (
-      <div className="h-4 w-4 rounded-full border-2 border-border" />
-    ),
+    render: (row) => <StatusPill status={row.status} />,
   },
   {
-    key: "smth",
-    header: "Smth",
-    render: () => (
-      <div className="h-4 w-4 rounded-full border-2 border-border" />
+    key: "submittedAt",
+    header: "Submitted",
+    render: (row) => (
+      <span className="text-muted-foreground">
+        {row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "-"}
+      </span>
     ),
   },
-];
-
-const filters = [
-  { id: "time", label: "All time" },
-  { id: "regions", label: "US, AU, +4" },
 ];
 
 export const Route = createFileRoute("/dashboard/$competitionId/overview/")({
@@ -97,50 +145,67 @@ function AdminOverviewPage() {
   const { data: session } = authClient.useSession();
   const { competitionId } = Route.useParams();
   const fetchDashboardData = useServerFn(getDashboardData);
+  const [track, setTrack] = useState(ALL_TRACKS);
+  const [query, setQuery] = useState("");
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["dashboard", competitionId],
-    queryFn: () => (fetchDashboardData as any)({ data: competitionId }),
+    queryFn: () => fetchDashboardData({ data: competitionId }),
   });
 
+  const submissions = useMemo(() => {
+    const all = data?.submissions ?? [];
+    const needle = query.trim().toLowerCase();
+
+    return all.filter(
+      (row) =>
+        (track === ALL_TRACKS || row.track === track) &&
+        (!needle ||
+          row.user.toLowerCase().includes(needle) ||
+          row.track.toLowerCase().includes(needle)),
+    );
+  }, [data?.submissions, track, query]);
+
+  if (isLoading) return <Loader className="p-6" />;
+
   const stats = data?.stats ?? [];
-  const submissions = data?.submissions ?? [];
+  const tracks = [ALL_TRACKS, ...(data?.tracks ?? [])];
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={`Welcome back, ${session?.user?.name}`}
+        title={`Welcome back, ${session?.user?.name ?? "organiser"}`}
         description="Here's how your competition is going."
-        actions={
-          <>
-            <button className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm">
-              <Copy className="h-4 w-4" />
-              Make a copy
-            </button>
-            <button className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground">
-              <ExternalLink className="h-4 w-4" />
-              Export
-            </button>
-          </>
-        }
       />
 
-      <ToggleTabs tabs={["All tracks", "Single-agent", "Multi-agent"]} />
+      {tracks.length > 1 ?
+        <ToggleTabs tabs={tracks} onChange={setTrack} />
+      : null}
 
-      <div className="grid grid-cols-3 gap-4">
-        {stats.map((stat: any) => (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {stats.map((stat) => (
           <StatCard key={stat.title} {...stat} />
         ))}
       </div>
 
-      <FilterBar filters={filters} searchPlaceholder="Search" />
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          {submissions.length} submission{submissions.length === 1 ? "" : "s"}
+        </p>
+        <SearchInput
+          placeholder="Search competitors"
+          className="w-64"
+          value={query}
+          onChange={(e) => setQuery(e.currentTarget.value)}
+        />
+      </div>
 
-      <DataTable
-        columns={columns}
-        data={submissions}
-        page={1}
-        totalPages={10}
-      />
+      {submissions.length ?
+        <DataTable columns={columns} data={submissions} />
+      : <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          No submissions yet.
+        </div>
+      }
     </div>
   );
 }

@@ -42,9 +42,18 @@ export const Route = createFileRoute("/leaderboards/$leaderboardId")({
 
 function LeaderboardPage() {
   const router = useRouter();
-  const Leaderboard = useKitComponent("leaderboard.ui");
   const { leaderboards, selectedLeaderboard, leaderboardDef } =
     Route.useLoaderData();
+
+  // Resolve the renderer against *this* leaderboard, not the root config: a
+  // board's own `with:` is applied last and so overrides the inherited default,
+  // which is what lets one competition mix a table, cards, and a chart.
+  const Leaderboard = useKitComponent(
+    "leaderboard.ui",
+    selectedLeaderboard ?
+      { competitions: { leaderboards: selectedLeaderboard.id } }
+    : undefined,
+  );
 
   return (
     <div className="min-h-screen">

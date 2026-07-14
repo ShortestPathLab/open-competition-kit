@@ -19,6 +19,7 @@ import {
   type TrackSummary,
 } from "src/lib/competition-data";
 import { useCompetition } from "src/lib/competition-fn";
+import { useCompetitionLeaderboards } from "src/lib/leaderboard-fn";
 import {
   type SubmissionBrowserItem as CompetitionSubmission,
   useCompetitionSubmissions,
@@ -183,6 +184,7 @@ function CompetitionOverviewPage() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const { data: mySubmissions = [], isLoading: submissionsLoading } =
     useCompetitionSubmissions(session?.user?.id, id);
+  const { data: leaderboards } = useCompetitionLeaderboards(id);
 
   if (!competition) return <Loader />;
 
@@ -272,31 +274,62 @@ function CompetitionOverviewPage() {
         <Card className="shadow-sm">
           <SectionHeader
             title="Leaderboards"
-            description="Results and rankings will surface here once scoring is live."
+            description="Standings for this competition, built from evaluated submissions."
             action={
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link to="/leaderboards" />}
-              >
-                See leaderboards
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              leaderboards?.length ?
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link to="/leaderboards" />}
+                >
+                  See leaderboards
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              : null
             }
           />
           <CardContent className="">
-            <DashedPanel className="border-border/80 bg-muted/20 px-6 py-10 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <Trophy className="h-6 w-6 text-primary" />
+            {leaderboards?.length ?
+              <div className="grid gap-2">
+                {leaderboards.map((leaderboard) => (
+                  <Link
+                    key={leaderboard.id}
+                    to="/leaderboards/$leaderboardId"
+                    params={{ leaderboardId: leaderboard.id }}
+                    className="flex items-center justify-between gap-4 rounded-lg border border-border/80 px-4 py-3 transition-colors hover:bg-muted/40"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                        <Trophy className="h-4 w-4 text-primary" />
+                      </span>
+                      <span className="grid">
+                        <span className="text-sm font-medium text-foreground">
+                          {leaderboard.name}
+                        </span>
+                        {leaderboard.description ?
+                          <span className="text-xs text-muted-foreground">
+                            {leaderboard.description}
+                          </span>
+                        : null}
+                      </span>
+                    </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                ))}
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">
-                Leaderboards coming soon
-              </h3>
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-                Once evaluation starts, this area will highlight top
-                submissions, movement in the rankings, and standout tracks.
-              </p>
-            </DashedPanel>
+            : <DashedPanel className="border-border/80 bg-muted/20 px-6 py-10 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Trophy className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-foreground">
+                  No leaderboards yet
+                </h3>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+                  Add a <code className="font-mono text-xs">leaderboards</code>{" "}
+                  entry to this competition's config to publish standings.
+                </p>
+              </DashedPanel>
+            }
           </CardContent>
         </Card>
       </div>
