@@ -8,6 +8,7 @@ export const {
   tracks,
   users,
   context,
+  files,
   forms,
   jobs,
   leaderboards,

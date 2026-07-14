@@ -65,6 +65,27 @@ type CollectionApi = {
 
 export type OpenCompetitionKitApi = {
   outputs: unknown;
+  /**
+   * Large file storage.
+   *
+   * Bytes go to the package implementing the `files` hooks; this layer derives
+   * the storage key and records ownership, so files can be listed and reclaimed.
+   */
+  files: {
+    /** Store bytes and return a `FileRef` to persist in the database. */
+    write: unknown;
+    /** Size / existence / checksum, without fetching the body. */
+    peek: unknown;
+    /** Stream the bytes back out. */
+    read: unknown;
+    /** A presigned URL, when the backend supports one. */
+    link: unknown;
+    delete: unknown;
+    /** Every file belonging to an owner. */
+    of: unknown;
+    /** Reclaim an owner's files. */
+    purge: unknown;
+  };
   secrets: { global: { get: unknown }; user: unknown };
   /**
    * Hook package access.

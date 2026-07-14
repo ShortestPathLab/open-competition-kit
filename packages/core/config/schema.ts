@@ -90,6 +90,12 @@ export const Config = S.Struct({
    * surface is worse than an unreachable one.
    */
   admins: S.optional(S.Array(S.String)),
+  /**
+   * Settings for whichever package implements the `files` hooks. Backend-specific,
+   * so it is passed through unvalidated — `root` for the local backend, bucket and
+   * credentials for S3.
+   */
+  largeFiles: S.optional(S.Record({ key: S.String, value: S.Any })),
   ...Extendable.fields,
 });
 

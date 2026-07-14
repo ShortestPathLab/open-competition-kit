@@ -62,6 +62,21 @@ export const tables = {
     reference: S.String,
   }),
   competition: createSchemas("open-competition-kit/db/competition", {}),
+  /**
+   * The ownership record for a stored file. The bytes live in whichever backend
+   * implements the `files` hooks; this row is what makes them a *owned* object
+   * rather than an orphan — so they can be listed, counted, and garbage
+   * collected when their owner goes away.
+   */
+  file: createSchemas("open-competition-kit/db/file", {
+    key: S.String,
+    namespace: S.String as S.Literal<[Namespace]>,
+    owner: S.String,
+    name: S.String,
+    size: Int,
+    contentType: S.String,
+    checksum: S.String,
+  }),
   submission: createSchemas("open-competition-kit/db/submission", {
     user: S.String,
     track: S.String,

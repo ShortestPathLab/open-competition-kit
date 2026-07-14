@@ -8,6 +8,7 @@ import {
   type Leaderboard,
 } from "../config";
 import { access, type Accessor } from "../config/access";
+import type { FileBody, FileMeta } from "../file";
 import type { SerialisableObject } from "../serialisable";
 import { componentSource } from "./component";
 import { db } from "./db";
@@ -24,6 +25,36 @@ type LeaderboardUiDef = Meta & {
 
 export const Hooks = S.Struct({
   db,
+  /**
+   * Large file storage.
+   *
+   * Like `db`, this is an *infrastructure* implementation point: it moves bytes,
+   * so it deals in streams and cannot cross a language boundary. The extension
+   * points packages actually reach for — forms, runners, leaderboards — stay
+   * serialisable.
+   */
+  files: S.Struct({
+    /** Store bytes. Returns what the caller should persist in the database. */
+    write: hook<
+      { key: string; body: FileBody; contentType?: string },
+      FileMeta
+    >(),
+    /** Stream the bytes back out. */
+    read: hook<{ key: string }, ReadableStream<Uint8Array>>(),
+    /** Size, existence, checksum — without fetching the body. */
+    peek: hook<{ key: string }, FileMeta | undefined>(),
+    delete: hook<{ key: string }, void>(),
+    /**
+     * A URL the browser can use directly, so a large upload or download never
+     * passes through the app server. Backends that cannot presign return
+     * undefined, and the caller proxies instead — every backend stays usable,
+     * good ones get to be fast.
+     */
+    link: hook<
+      { key: string; mode: "read" | "write"; expiresIn?: number },
+      string | undefined
+    >(),
+  }),
   enrolments: S.Struct({
     /**
      * The enrol handler.
@@ -108,7 +139,14 @@ export const createPackageResolver = (root: string) =>
               try: async () =>
                 (await import(path.resolve(path.dirname(root), p)))?.default,
               catch: (e) => {
-                E.logError(p, e);
+                // `E.logError` builds an effect; it was never yielded, so a
+                // package that failed to import said nothing at all and surfaced
+                // as a bare ImportError with no cause. Log it for real.
+                console.error(
+                  `[open-competition-kit] Failed to load package "${p}" ` +
+                    `(resolved from ${path.dirname(root)}):`,
+                  e,
+                );
                 return new ImportError({ cause: e, path: p });
               },
             }),

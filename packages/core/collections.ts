@@ -79,6 +79,7 @@ export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitC
             submissions: yield* createAccessor("submission", ...a),
             jobs: yield* createAccessor("job", ...a),
             context: yield* createAccessor("context", ...a),
+            files: yield* createAccessor("file", ...a),
           };
           const ensureDb = yield* E.once(
             E.all(

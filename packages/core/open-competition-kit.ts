@@ -7,6 +7,13 @@ import { OpenCompetitionKitConfig } from "./config";
 import { access, type Accessor } from "./config/access";
 import { Hooks, OpenCompetitionKitHooks } from "./hook";
 import { type schemas, type WithHooks } from "./hook/db";
+import {
+  keyOf,
+  makeKey,
+  toFileRef,
+  type FileBody,
+  type FileRef,
+} from "./file";
 import type { Namespace } from "./namespace";
 import type { SerialisableValue } from "./serialisable";
 import { flow } from "./utils/flow";
@@ -388,6 +395,10 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
                 { namespace: "open-competition-kit/namespace/job/output" },
                 (c) => jobs.get(c.owner),
               ),
+              M.when(
+                { namespace: "open-competition-kit/namespace/submission" },
+                (c) => submissions.get(c.owner),
+              ),
               M.exhaustive,
             ),
           (owner: typeof schemas.user.Type | typeof schemas.job.Type) =>
@@ -414,6 +425,114 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
       const outputs = namespacedContext(
         "open-competition-kit/namespace/job/output",
       );
+
+      // ─── File ────────────────────────────────────────────
+
+      /**
+       * Large files.
+       *
+       * The bytes go to whichever package implements the `files` hooks; this
+       * layer owns the parts a backend must not be trusted with — deriving the
+       * key, and recording who the file belongs to so it can be found and
+       * reclaimed later.
+       */
+      const files = {
+        /**
+         * Store bytes and return the reference to persist in the database.
+         *
+         * The key is derived here, never accepted from a caller: a
+         * caller-supplied key is a path traversal, or an overwrite of somebody
+         * else's submission.
+         */
+        write: ({
+          owner,
+          namespace,
+          body,
+          name,
+          contentType,
+        }: {
+          owner: string;
+          namespace: Namespace;
+          body: FileBody;
+          name?: string;
+          contentType?: string;
+        }) =>
+          E.gen(function* () {
+            const row = yield* instance.files.create({
+              key: "",
+              namespace,
+              owner,
+              name: name ?? "",
+              size: 0,
+              contentType: contentType ?? "",
+              checksum: "",
+            });
+
+            const key = makeKey({ namespace, owner, id: row.id, name });
+
+            const meta = yield* hooks.do((h) =>
+              h.files.write({ key, body, contentType }),
+            );
+
+            // The row exists before the bytes do, so a write that dies midway
+            // leaves a reclaimable record rather than an untracked object in the
+            // bucket. Fill it in once the backend confirms what it stored.
+            yield* instance.files.update({
+              id: row.id,
+              key,
+              size: meta.size,
+              contentType: meta.contentType ?? contentType ?? "",
+              checksum: meta.checksum ?? "",
+            });
+
+            return toFileRef({ ...meta, key }, name);
+          }),
+
+        /** Size / existence / checksum, without pulling the body. */
+        peek: (file: FileRef | string) =>
+          hooks.do((h) => h.files.peek({ key: keyOf(file) })),
+
+        read: (file: FileRef | string) =>
+          hooks.do((h) => h.files.read({ key: keyOf(file) })),
+
+        /** A direct URL, when the backend can presign one. */
+        link: (
+          file: FileRef | string,
+          mode: "read" | "write" = "read",
+          expiresIn?: number,
+        ) => hooks.do((h) => h.files.link({ key: keyOf(file), mode, expiresIn })),
+
+        delete: (file: FileRef | string) =>
+          E.gen(function* () {
+            const key = keyOf(file);
+            yield* hooks.do((h) => h.files.delete({ key }));
+            const rows = yield* instance.files.list({ key });
+            yield* E.forEach(rows, (row) => instance.files.delete(row.id));
+          }),
+
+        /** Every file belonging to an owner. */
+        of: (owner: string) => instance.files.list({ owner }),
+
+        /**
+         * Reclaim an owner's files. Without this, deleting a submission leaks its
+         * bytes into the backend permanently.
+         */
+        purge: (owner: string) =>
+          E.gen(function* () {
+            const rows = yield* instance.files.list({ owner });
+            yield* E.forEach(rows, (row) =>
+              E.gen(function* () {
+                if (row.key) {
+                  yield* hooks
+                    .do((h) => h.files.delete({ key: row.key }))
+                    .pipe(E.catchAll(() => E.void));
+                }
+                yield* instance.files.delete(row.id);
+              }),
+            );
+            return rows.length;
+          }),
+      };
 
       // ─── Secret ──────────────────────────────────────────
 
@@ -454,6 +573,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         jobs,
         context,
         outputs,
+        files,
         hooks,
       } satisfies OpenCompetitionKitApi;
     }),

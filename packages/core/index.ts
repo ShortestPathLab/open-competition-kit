@@ -39,6 +39,16 @@ export type {
   UserUpdate,
 } from "./hook/db";
 
+export {
+  FileRef,
+  isFile,
+  keyOf,
+  makeKey,
+  toFileRef,
+  type FileBody,
+  type FileMeta,
+} from "./file";
+
 export * as hook from "./hook";
 
 export * as reference from "./tag";
