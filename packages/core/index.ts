@@ -9,6 +9,9 @@ export {
   CompetitionConfig,
   type Accessor as ConfigAccessor,
   TrackConfig,
+  type Form,
+  type Leaderboard,
+  type LeaderboardSource,
 } from "./config";
 export type { Package, Hooks } from "./hook";
 export { OpenCompetitionKit } from "./open-competition-kit";

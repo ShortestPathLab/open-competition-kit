@@ -2,7 +2,7 @@ import { Effect as E, Schema as S } from "effect";
 import { mapValues } from "lodash-es";
 import { hook } from "./hook";
 import { _ } from "../utils/flow";
-import { namespaces, type Namespace } from "../namespace";
+import { type Namespace } from "../namespace";
 
 export const { Number, Boolean, Date, String, Int } = S;
 
@@ -14,6 +14,15 @@ export const Json = S.Any.annotations({
   identifier: "open-competition-kit/db/Json",
 });
 
+/**
+ * A row creation timestamp. Distinct from `Date` so that the schema-to-Prisma
+ * translation can give it a `@default(now())`, which in turn lets it be omitted
+ * from create payloads.
+ */
+export const CreatedAt = S.DateFromSelf.annotations({
+  identifier: "open-competition-kit/db/CreatedAt",
+});
+
 export const typedJson = <T>() => Json as S.Schema<T>;
 
 const createSchemas = <
@@ -23,8 +32,12 @@ const createSchemas = <
   key: K,
   fields: T,
 ) => ({
-  full: S.TaggedStruct(key, { id: Id, ...fields }),
-  create: S.Struct({ id: S.optional(Id), ...fields }),
+  full: S.TaggedStruct(key, { id: Id, createdAt: CreatedAt, ...fields }),
+  create: S.Struct({
+    id: S.optional(Id),
+    createdAt: S.optional(CreatedAt),
+    ...fields,
+  }),
   update: S.Struct({
     id: Id,
     ...mapValues(fields, (f) => S.optional(S.Union(f, S.Undefined))),

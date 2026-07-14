@@ -1,6 +1,6 @@
 import { Path } from "@effect/platform";
 import { Config, Data as D, Effect as E, Either, Match as M } from "effect";
-import { isNil, isUndefined, noop } from "lodash-es";
+import { isNil, isUndefined, noop, omit } from "lodash-es";
 import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
 import { OpenCompetitionKitConfig } from "./config";
@@ -257,15 +257,29 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
           access({ competitions: { leaderboards: id } }, config),
         load: (leaderboard: string) =>
           E.gen(function* () {
-            const def = yield* access(
+            const raw = yield* access(
               { competitions: { leaderboards: leaderboard } },
               config,
             );
+            // `propagateExtendable` stamps `with` onto every object it walks, so
+            // it lands inside `options` too — where it means nothing and would
+            // show up to renderers as a phantom setting. Drop it.
+            const def =
+              raw?.options ?
+                { ...raw, options: omit(raw.options, ["with"]) }
+              : raw;
+            const owner = config.competitions.find((c) =>
+              c.leaderboards.some((l) => l.id === leaderboard),
+            );
             const loaded = yield* hooks.do(
-              (h) => h.leaderboard.loader({ def }),
+              (h) =>
+                h.leaderboard.loader({ def, competition: owner?.id ?? "" }),
               { competitions: { leaderboards: leaderboard } },
             );
-            return loaded?.def ?? { ...def, items: [] };
+            // Fall back to whatever the config declared rather than blanking the
+            // board: a leaderboard with no loader should still render its
+            // literal `items`.
+            return loaded?.def ?? { ...def, items: def.items ?? [] };
           }),
       };
       // ─── Enrolment ───────────────────────────────────────────────────────────────

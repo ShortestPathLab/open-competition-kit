@@ -8,13 +8,18 @@ import {
   type Leaderboard,
 } from "../config";
 import { access, type Accessor } from "../config/access";
+import type { SerialisableObject } from "../serialisable";
 import { componentSource } from "./component";
 import { db } from "./db";
 import { hook } from "./hook";
 
 type LeaderboardUiDef = Meta & {
-  shape: Shape[];
-  items: Record<string, Value>[];
+  name?: string;
+  shape: readonly Shape[];
+  items: readonly Record<string, Value>[];
+  // Serialisable, not `unknown`: this def crosses the server/client boundary, so
+  // the type has to prove it can survive the trip.
+  options?: SerialisableObject;
 };
 
 export const Hooks = S.Struct({
@@ -36,7 +41,10 @@ export const Hooks = S.Struct({
     submit: S.Unknown,
   }),
   leaderboard: S.Struct({
-    loader: hook<{ def: Leaderboard }, { def: LeaderboardUiDef }>(),
+    loader: hook<
+      { def: Leaderboard; competition: string },
+      { def: LeaderboardUiDef }
+    >(),
     ui: componentSource<{ def: LeaderboardUiDef }>(),
   }),
   submissions: S.Struct({

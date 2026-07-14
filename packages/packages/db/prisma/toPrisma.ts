@@ -3,7 +3,8 @@ import { Match as M, Schema as S } from "effect";
 import { capitalize, entries } from "lodash-es";
 import { hook } from "@open-competition-kit/sdk";
 
-const { schemas, Id, Number, Boolean, Date, String, Int, Json } = hook.db;
+const { schemas, Id, Number, Boolean, Date, String, Int, Json, CreatedAt } =
+  hook.db;
 
 const is =
   <T>(a: T) =>
@@ -15,6 +16,7 @@ function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
     .map(([k, v]) => {
       const type = M.value(v as S.SchemaClass<string, string, never>).pipe(
         M.when(is(Id), () => "String @id @default(cuid())"),
+        M.when(is(CreatedAt), () => "DateTime @default(now())"),
         M.when(is(String), () => 'String @default("")'),
         M.when(is(Number), () => "Float @default(0.0)"),
         M.when(is(Int), () => "Int @default(0)"),
