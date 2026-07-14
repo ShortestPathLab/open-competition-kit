@@ -1,6 +1,24 @@
-# Large file storage — design proposal
+# Large file storage — design
 
-**Status:** proposal, not implemented.
+**Status: the storage layer and both backends are implemented.** What is built:
+
+- `FileRef` and the `files` implementation point (`packages/core/file.ts`,
+  `packages/core/hook/index.ts`)
+- the `file` ownership table, key derivation, and `purge`-based garbage
+  collection (`packages/core/open-competition-kit.ts`)
+- `@open-competition-kit/large-files-local`
+- `@open-competition-kit/large-files-s3` (Bun's native S3 client)
+
+**What is not yet built — the adoption step.** Nothing writes through this layer
+yet; submissions still base64 their source into Postgres. Still to do:
+
+1. an upload endpoint and a `kind: file` form field (the "upload path" below), and
+2. migrating `integration/github-classic` to `files.write()` a `FileRef` instead
+   of a base64 string.
+
+(2) is a **breaking change for existing runners**, including FIT5047's, which
+reads `reference.std.submissionSourceCodeZipB64` from job context directly. See
+"Migrating what exists".
 
 ## The problem
 
