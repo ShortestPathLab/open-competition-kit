@@ -1,4 +1,10 @@
-import { config, unsafe, type FileMeta, type Package } from "@open-competition-kit/sdk";
+import {
+  config,
+  unsafe,
+  type FileBody,
+  type FileMeta,
+  type Package,
+} from "@open-competition-kit/sdk";
 import { once } from "es-toolkit";
 import { createHash } from "node:crypto";
 import { mkdir, rm, stat } from "node:fs/promises";
@@ -62,6 +68,24 @@ const metaFor = async (key: string, path: string): Promise<FileMeta> => {
   return { key, size, checksum: hash.digest("hex") };
 };
 
+/**
+ * `Bun.write` takes bytes, blobs and strings — but not a `ReadableStream`, which
+ * it coerces with `String(...)`, writing the 23 bytes of "[object ReadableStream]"
+ * and reporting success. Wrapping the stream in a `Response` is what makes it
+ * stream to disk instead.
+ */
+/** Realm-safe: the request body's stream comes from the server runtime's realm,
+ * so `instanceof ReadableStream` is false even when it plainly is one. */
+const isStream = (b: unknown): b is ReadableStream =>
+  !!b &&
+  typeof b === "object" &&
+  typeof (b as ReadableStream).getReader === "function";
+
+const store = (path: string, body: FileBody) =>
+  isStream(body) ?
+    Bun.write(path, new Response(body))
+  : Bun.write(path, body as Blob);
+
 export default {
   name: "@open-competition-kit/large-files-local",
   description:
@@ -72,7 +96,7 @@ export default {
       const path = await pathFor(key);
       await mkdir(dirname(path), { recursive: true });
 
-      await Bun.write(path, body as Blob);
+      await store(path, body);
 
       return { ...(await metaFor(key, path)), contentType };
     },
