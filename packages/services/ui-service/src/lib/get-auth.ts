@@ -26,13 +26,17 @@ const _authConfig = createServerFn().handler(async () =>
 const authConfig = once(_authConfig);
 
 const _options = createServerFn().handler(async () => {
-  const { email, ...social } = await authConfig();
+  const providers = await authConfig();
+  const { email, ...social } = providers;
   return {
     emailAndPassword:
       email ? { enabled: true, ...email.providerOptions } : undefined,
     socialProviders: mapValues(social, (a) => a.providerOptions as any),
-    ...Object.values(authConfig).reduce(
-      (prev, next) => toMerged(prev, next.betterAuthOptions),
+    // `authConfig` is the memoised function, not the config it returns — taking
+    // Object.values of it yielded [] and silently discarded every
+    // `betterAuthOptions` block in the config.
+    ...Object.values(providers).reduce(
+      (prev, next) => toMerged(prev, next.betterAuthOptions ?? {}),
       {},
     ),
   } satisfies Partial<BetterAuthOptions>;
@@ -47,7 +51,10 @@ export const auth = once(async () => {
       const { migrate } = await import("./migrate.server");
       await migrate();
     })();
-  return betterAuth({ ...(await options()), ...getAuthBaseConfig() });
+  // `getAuthBaseConfig()` returns a promise; spreading it un-awaited produced an
+  // empty object, so `database` and `plugins` never reached betterAuth and it
+  // fell back to its in-memory adapter — auth.sqlite was migrated but never used.
+  return betterAuth({ ...(await options()), ...(await getAuthBaseConfig()) });
 });
 
 export const getAuthConfig = createServerFn({ method: "GET" }).handler(
