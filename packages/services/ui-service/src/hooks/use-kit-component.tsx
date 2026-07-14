@@ -1,6 +1,6 @@
 import { Loader } from "*/components/loader";
 import { getByPath, Path, PathValue } from "@clickbar/dot-diver";
-import { QueryOptions, useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { CatchBoundary } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { assert } from "es-toolkit";

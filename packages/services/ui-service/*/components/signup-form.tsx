@@ -16,7 +16,6 @@ import {
 import { Input } from "*/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { Link, useRouter } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 export function SignupForm({

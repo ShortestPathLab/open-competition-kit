@@ -1,7 +1,6 @@
 import { createIsomorphicFn } from "@tanstack/react-start";
 
 import { sharedConfig } from "./auth.shared-config";
-import { configureUser } from "./configure-user";
 import { BetterAuthOptions } from "better-auth";
 
 const db = createIsomorphicFn()

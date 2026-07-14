@@ -4,10 +4,9 @@ import { OpenCompetitionKitDatabase } from "./db";
 import {
   tables,
   type DbKey,
-  type TrackCreate,
   type WithHooks,
 } from "./hook/db";
-import { isFunction, mergeWith } from "es-toolkit";
+import { isFunction } from "es-toolkit";
 import { OpenCompetitionKitConfig } from "./config";
 import { traverse } from "./utils/traverse";
 

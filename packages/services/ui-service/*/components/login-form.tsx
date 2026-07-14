@@ -21,7 +21,6 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { configureUser } from "src/lib/configure-user";
 
 export function LoginForm({
   className,
