@@ -72,6 +72,12 @@ export type OpenCompetitionKitApi = {
    * the storage key and records ownership, so files can be listed and reclaimed.
    */
   files: {
+    /** Claim a key for a file that does not exist yet; may return a presigned URL. */
+    reserve: unknown;
+    /** Write bytes to an already-reserved key. */
+    put: unknown;
+    /** Seal a reserved key and produce the `FileRef` to persist. */
+    commit: unknown;
     /** Store bytes and return a `FileRef` to persist in the database. */
     write: unknown;
     /** Size / existence / checksum, without fetching the body. */
@@ -81,6 +87,8 @@ export type OpenCompetitionKitApi = {
     /** A presigned URL, when the backend supports one. */
     link: unknown;
     delete: unknown;
+    /** Find ownership rows by key, owner, or namespace. */
+    list: unknown;
     /** Every file belonging to an owner. */
     of: unknown;
     /** Reclaim an owner's files. */

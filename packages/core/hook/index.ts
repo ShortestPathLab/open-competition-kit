@@ -9,7 +9,10 @@ import {
 } from "../config";
 import { access, type Accessor } from "../config/access";
 import type { FileBody, FileMeta } from "../file";
-import type { SerialisableObject } from "../serialisable";
+import type {
+  SerialisableObject,
+  SerialisableValue,
+} from "../serialisable";
 import { componentSource } from "./component";
 import { db } from "./db";
 import { hook } from "./hook";
@@ -67,7 +70,9 @@ export const Hooks = S.Struct({
     loader: hook<{ def: Form; user: string }, { def: Form }>(),
     ui: componentSource<{
       def: Form;
-      onSubmit?: (values: Record<string, Value>) => Promise<void>;
+      // Serialisable, not scalar: a file field's value is a `FileRef` object, and
+      // the submission body is JSON regardless.
+      onSubmit?: (values: Record<string, SerialisableValue>) => Promise<void>;
     }>(),
     submit: S.Unknown,
   }),

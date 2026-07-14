@@ -26,6 +26,14 @@ export class MissingContextError extends D.TaggedError("MissingContextError") {}
 export class MissingNamespaceError extends D.TaggedError(
   "MissingNamespaceError",
 ) {}
+export class MissingFileError extends D.TaggedError("MissingFileError")<{
+  key: string;
+}> {}
+export class FileTooLargeError extends D.TaggedError("FileTooLargeError")<{
+  key: string;
+  size: number;
+  limit: number;
+}> {}
 
 export function withCollectionUtilities<
   TCreate,
@@ -436,14 +444,111 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
        * key, and recording who the file belongs to so it can be found and
        * reclaimed later.
        */
+      const maxBytes = () => {
+        const limit = (config.largeFiles as { maxBytes?: number } | undefined)
+          ?.maxBytes;
+        return typeof limit === "number" && limit > 0 ? limit : undefined;
+      };
+
       const files = {
         /**
-         * Store bytes and return the reference to persist in the database.
+         * Claim a key for a file that does not exist yet.
          *
          * The key is derived here, never accepted from a caller: a
          * caller-supplied key is a path traversal, or an overwrite of somebody
-         * else's submission.
+         * else's submission. The ownership row is written before the bytes are,
+         * so an upload that dies midway leaves a reclaimable record rather than
+         * an untracked object in the bucket.
+         *
+         * `url` is a presigned target the browser can PUT to directly. When the
+         * backend cannot presign it is undefined, and the caller must proxy the
+         * bytes through `put` instead.
          */
+        reserve: ({
+          owner,
+          namespace,
+          name,
+          contentType,
+          expiresIn,
+        }: {
+          owner: string;
+          namespace: Namespace;
+          name?: string;
+          contentType?: string;
+          expiresIn?: number;
+        }) =>
+          E.gen(function* () {
+            const row = yield* instance.files.create({
+              key: "",
+              namespace,
+              owner,
+              name: name ?? "",
+              size: 0,
+              contentType: contentType ?? "",
+              checksum: "",
+            });
+
+            const key = makeKey({ namespace, owner, id: row.id, name });
+            yield* instance.files.update({ id: row.id, key });
+
+            const url = yield* hooks.do((h) =>
+              h.files.link({ key, mode: "write", expiresIn }),
+            );
+
+            return { key, id: row.id, url };
+          }),
+
+        /** Write bytes to a key already claimed by `reserve`. */
+        put: ({
+          key,
+          body,
+          contentType,
+        }: {
+          key: string;
+          body: FileBody;
+          contentType?: string;
+        }) => hooks.do((h) => h.files.write({ key, body, contentType })),
+
+        /**
+         * Seal a reserved key and produce the reference to persist.
+         *
+         * A client that uploaded straight to the bucket says "done"; the server
+         * must not take its word for it. This asks the backend what is actually
+         * there, and rejects — and deletes — anything absent or over the limit.
+         */
+        commit: (key: string) =>
+          E.gen(function* () {
+            const meta = yield* hooks.do((h) => h.files.peek({ key }));
+            const [row] = yield* instance.files.list({ key });
+
+            if (!meta) {
+              return yield* E.fail(new MissingFileError({ key }));
+            }
+
+            const limit = maxBytes();
+            if (limit && meta.size > limit) {
+              yield* hooks
+                .do((h) => h.files.delete({ key }))
+                .pipe(E.catchAll(() => E.void));
+              if (row) yield* instance.files.delete(row.id);
+              return yield* E.fail(
+                new FileTooLargeError({ key, size: meta.size, limit }),
+              );
+            }
+
+            if (row) {
+              yield* instance.files.update({
+                id: row.id,
+                size: meta.size,
+                contentType: meta.contentType ?? row.contentType,
+                checksum: meta.checksum ?? "",
+              });
+            }
+
+            return toFileRef({ ...meta, key }, row?.name || undefined);
+          }),
+
+        /** Store bytes and return the reference to persist. Server-side path. */
         write: ({
           owner,
           namespace,
@@ -458,34 +563,14 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
           contentType?: string;
         }) =>
           E.gen(function* () {
-            const row = yield* instance.files.create({
-              key: "",
-              namespace,
+            const { key } = yield* files.reserve({
               owner,
-              name: name ?? "",
-              size: 0,
-              contentType: contentType ?? "",
-              checksum: "",
+              namespace,
+              name,
+              contentType,
             });
-
-            const key = makeKey({ namespace, owner, id: row.id, name });
-
-            const meta = yield* hooks.do((h) =>
-              h.files.write({ key, body, contentType }),
-            );
-
-            // The row exists before the bytes do, so a write that dies midway
-            // leaves a reclaimable record rather than an untracked object in the
-            // bucket. Fill it in once the backend confirms what it stored.
-            yield* instance.files.update({
-              id: row.id,
-              key,
-              size: meta.size,
-              contentType: meta.contentType ?? contentType ?? "",
-              checksum: meta.checksum ?? "",
-            });
-
-            return toFileRef({ ...meta, key }, name);
+            yield* files.put({ key, body, contentType });
+            return yield* files.commit(key);
           }),
 
         /** Size / existence / checksum, without pulling the body. */
@@ -509,6 +594,10 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             const rows = yield* instance.files.list({ key });
             yield* E.forEach(rows, (row) => instance.files.delete(row.id));
           }),
+
+        /** Find ownership rows — by key, by owner, by namespace. */
+        list: (partial: { key?: string; owner?: string; namespace?: string }) =>
+          instance.files.list(partial as never),
 
         /** Every file belonging to an owner. */
         of: (owner: string) => instance.files.list({ owner }),
