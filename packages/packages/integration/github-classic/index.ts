@@ -11,9 +11,23 @@ import {
 } from "@open-competition-kit/sdk";
 import { z } from "zod";
 
-const MAX_SUBMISSION_ARCHIVE_BYTES = 10 * 1024 * 1024;
+/**
+ * The archive now goes to the `files` backend rather than being base64'd into a
+ * database row, so this cap is a sanity limit rather than a structural one — the
+ * old 10MB ceiling existed because of where the bytes were being put.
+ */
+const DEFAULT_MAX_SUBMISSION_ARCHIVE_BYTES = 512 * 1024 * 1024;
 const GITHUB_REF_SELECT_KIND = "github:ref-select";
 const GITHUB_REF_FIELD_KEY = "github:ref";
+
+const maxArchiveBytes = once(async () => {
+  const config = await unsafe(kit.config.get());
+  const limit = (config.largeFiles as { maxBytes?: number } | undefined)
+    ?.maxBytes;
+  return typeof limit === "number" && limit > 0 ?
+      limit
+    : DEFAULT_MAX_SUBMISSION_ARCHIVE_BYTES;
+});
 
 const githubOrg = once(async () => {
   return await unsafe(kit.secrets.global.require("GITHUB_ORG"));
@@ -200,18 +214,31 @@ export default {
         selectedRef,
       );
       const archive = Buffer.from(data as ArrayBuffer);
+      const limit = await maxArchiveBytes();
 
-      if (archive.byteLength > MAX_SUBMISSION_ARCHIVE_BYTES) {
-        throw new Error(
-          `Submission archive exceeds ${MAX_SUBMISSION_ARCHIVE_BYTES} bytes.`,
-        );
+      if (archive.byteLength > limit) {
+        throw new Error(`Submission archive exceeds ${limit} bytes.`);
       }
+
+      // The archive goes to the large-file backend, and the job carries only a
+      // reference to it. It used to be base64'd straight into a database row,
+      // which inflated it by a third, could not be streamed, and put every
+      // submission in every backup forever.
+      const ref = await unsafe(
+        kit.files.write({
+          owner: jobRecord.id,
+          namespace: "open-competition-kit/namespace/job",
+          body: archive,
+          name: `${repo}-${selectedRef.ref}.zip`,
+          contentType: "application/zip",
+        }),
+      );
 
       await unsafe(
         kit.jobs.context.set({
           owner: jobRecord.id,
-          reference: reference.std.submissionSourceCodeZipB64,
-          value: archive.toString("base64"),
+          reference: reference.std.submissionSource,
+          value: ref,
         }),
       );
 
@@ -221,6 +248,18 @@ export default {
           // as it means we don't have a runner lined up.
           { status: "prepared" }
       );
+    },
+
+    /**
+     * The archive is per-job scratch: once the job is done, nothing needs it, and
+     * leaving it behind means every re-run of every submission accumulates in the
+     * bucket forever.
+     */
+    teardown: async ({ job }, next) => {
+      await unsafe(kit.files.purge(job)).catch((e) =>
+        console.error(`[github-classic] Could not purge files for job ${job}`, e),
+      );
+      return (await next?.({ job })) ?? { status: "done" };
     },
   },
 } satisfies Package;

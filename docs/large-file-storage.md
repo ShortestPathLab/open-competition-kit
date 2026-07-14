@@ -1,24 +1,19 @@
 # Large file storage — design
 
-**Status: the storage layer and both backends are implemented.** What is built:
+**Status: implemented and adopted.** Submissions no longer base64 their source
+into Postgres.
 
-- `FileRef` and the `files` implementation point (`packages/core/file.ts`,
-  `packages/core/hook/index.ts`)
-- the `file` ownership table, key derivation, and `purge`-based garbage
-  collection (`packages/core/open-competition-kit.ts`)
-- `@open-competition-kit/large-files-local`
-- `@open-competition-kit/large-files-s3` (Bun's native S3 client)
-
-**What is not yet built — the adoption step.** Nothing writes through this layer
-yet; submissions still base64 their source into Postgres. Still to do:
-
-1. an upload endpoint and a `kind: file` form field (the "upload path" below), and
-2. migrating `integration/github-classic` to `files.write()` a `FileRef` instead
-   of a base64 string.
-
-(2) is a **breaking change for existing runners**, including FIT5047's, which
-reads `reference.std.submissionSourceCodeZipB64` from job context directly. See
-"Migrating what exists".
+- `FileRef` and the `files` implementation point — `packages/core/file.ts`,
+  `packages/core/hook/index.ts`
+- the `file` ownership table, key derivation, `reserve`/`put`/`commit`, and
+  `purge`-based garbage collection — `packages/core/open-competition-kit.ts`
+- `@open-competition-kit/large-files-local` and
+  `@open-competition-kit/large-files-s3` (Bun's native S3 client)
+- the upload path — `/api/files/*` in the UI service, and a `kind: file` field in
+  `@open-competition-kit/form-json`
+- `integration/github-classic` writes a `FileRef`; `standard` and the FIT5047
+  runner read it, and both still fall back to the legacy base64 context value so
+  jobs created before the migration keep running
 
 ## The problem
 

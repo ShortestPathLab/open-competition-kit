@@ -1,6 +1,8 @@
 import sdk, {
   cast,
   enrolments,
+  files,
+  isFile,
   jobs,
   outputs,
   reference,
@@ -12,7 +14,26 @@ import sdk, {
 import Zip from "jszip";
 import { load as loadLeaderboard } from "./leaderboard";
 
-async function resolveSource(job: string) {
+/**
+ * The submission archive, however the integration chose to hand it over.
+ *
+ * Prefers a `FileRef` — the bytes stream out of the large-file backend, so the
+ * archive can be far larger than a database row. Falls back to the legacy base64
+ * context value so jobs created before the migration still run.
+ */
+async function resolveSource(job: string): Promise<Uint8Array | string> {
+  const fileRef = await cast<unknown>()(
+    jobs.context.get({
+      owner: job,
+      reference: reference.std.submissionSource,
+    }),
+  );
+
+  if (!fileRef.error && isFile(fileRef.value)) {
+    const stream = await unsafe(files.read(fileRef.value));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+
   const codeZipB64 = await cast<string>()(
     jobs.context.require({
       owner: job,
@@ -20,8 +41,10 @@ async function resolveSource(job: string) {
     }),
   );
   if (!codeZipB64.error) return codeZipB64.value;
+
   throw new Error(
     `Could not resolve source code for job. This package looks for sources from contexts with the following references: ${[
+      reference.std.submissionSource,
       reference.std.submissionSourceCodeZipB64,
     ].join(", ")}`,
   );
@@ -101,7 +124,9 @@ export default {
 
       try {
         const result = eval(competition.runner.body ?? "");
-        const unzipped = await Zip.loadAsync(source, { base64: true });
+        const unzipped = await Zip.loadAsync(source, {
+          base64: typeof source === "string",
+        });
         const output = Object.entries(unzipped.files).map(
           ([k, v]) =>
             `${v.dir ? `[directory]` : `[file]`} ${k} ${v.date.toISOString()}`,
