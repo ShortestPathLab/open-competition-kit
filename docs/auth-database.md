@@ -92,7 +92,7 @@ is simply not built.
 
 ## The options
 
-### A. Point better-auth at the same Postgres — *recommended*
+### A. Point better-auth at the same Postgres — *chosen, and implemented*
 
 The config already carries the connection details:
 
@@ -102,9 +102,27 @@ db:
   url: postgres://…
 ```
 
-Read them in `get-auth.ts` and hand them to better-auth's **native** Postgres
-support instead of `auth.sqlite`. Auth gets its own tables in the same Postgres
-database as the kit.
+They are read in `auth-base-config.ts` and handed to better-auth's **native**
+Postgres driver instead of `auth.sqlite`. Auth gets its own tables in the same
+Postgres database as the kit.
+
+> **Auth's tables live in a separate Postgres schema (`auth`), and that is not
+> cosmetic.**
+>
+> The `db/prisma` package runs `prisma db push --accept-data-loss` on startup,
+> which reconciles `public` against the schema it generates — and **drops any
+> table there it does not know about**. better-auth's tables are not in that
+> schema. Sharing `public` therefore means the kit silently deletes every user,
+> session and OAuth account on its next boot.
+>
+> This is not hypothetical: it happened during implementation. Auth worked, then
+> the next process that touched Prisma destroyed it, and the symptom was
+> `relation "session" does not exist` from an unrelated request.
+>
+> Two migration systems, one database, both assuming they own `public`. The fix
+> is a schema each: the connection pool issues `SET search_path TO auth`, so
+> better-auth's migrations create its tables out of Prisma's reach. Same
+> database, same backups, no collision.
 
 - **Effort:** roughly ten lines; replaces the bun:sqlite in `auth-base-config.ts`.
 - **No adapter, no core changes, no custom query layer to keep correct.**

@@ -8,6 +8,20 @@ const POSTGRES = new Set(["postgresql", "postgres", "pg"]);
 const MYSQL = new Set(["mysql", "mariadb"]);
 
 /**
+ * Auth's tables live in their own Postgres schema, and this is not cosmetic.
+ *
+ * The kit's Prisma package runs `prisma db push --accept-data-loss` at startup,
+ * which reconciles `public` against the schema it generates — and *drops* any
+ * table there that it does not know about. better-auth's tables are not in that
+ * schema, so sharing `public` means the kit silently deletes every user, session
+ * and OAuth account on the next boot.
+ *
+ * Two migration systems, one database: give them a schema each. Same connection,
+ * same backups, same transactions if we ever want them; no collision.
+ */
+const AUTH_SCHEMA = "auth";
+
+/**
  * Auth stores to the same database the kit does.
  *
  * Auth sits deliberately outside OpenCompetitionKit's scope — the kit only keeps
@@ -30,7 +44,18 @@ const database = createIsomorphicFn()
 
     if (url && POSTGRES.has(kind)) {
       const { Pool } = await import("pg");
-      return new Pool({ connectionString: url });
+      const pool = new Pool({ connectionString: url });
+
+      // Every connection this pool hands out works inside the auth schema, so
+      // better-auth's migrations create its tables there rather than in `public`,
+      // where Prisma's `db push` would drop them.
+      pool.on("connect", (client) => {
+        void client.query(`SET search_path TO ${AUTH_SCHEMA}`);
+      });
+
+      await pool.query(`CREATE SCHEMA IF NOT EXISTS ${AUTH_SCHEMA}`);
+
+      return pool;
     }
 
     if (url && MYSQL.has(kind)) {
