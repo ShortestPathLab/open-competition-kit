@@ -10,6 +10,7 @@ import sdk, {
   type Package,
 } from "@open-competition-kit/sdk";
 import Zip from "jszip";
+import { load as loadLeaderboard } from "./leaderboard";
 
 async function resolveSource(job: string) {
   const codeZipB64 = await cast<string>()(
@@ -38,6 +39,14 @@ export default {
       const payload = { ...args, competition: track.competition };
       const existing = await unsafe(enrolments.list(payload));
       return (existing[0] ?? (await unsafe(enrolments.create(payload)))).id;
+    },
+  },
+  leaderboard: {
+    loader: async ({ def, competition }, next) => {
+      const inherited = await next?.({ def, competition });
+      if (inherited) return inherited;
+
+      return { def: { ...def, items: await loadLeaderboard(def, competition) } };
     },
   },
   submissions: {
