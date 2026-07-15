@@ -44,15 +44,23 @@ const database = createIsomorphicFn()
 
     if (url && POSTGRES.has(kind)) {
       const { Pool } = await import("pg");
-      const pool = new Pool({ connectionString: url });
 
-      // Every connection this pool hands out works inside the auth schema, so
-      // better-auth's migrations create its tables there rather than in `public`,
-      // where Prisma's `db push` would drop them.
-      pool.on("connect", (client) => {
-        void client.query(`SET search_path TO ${AUTH_SCHEMA}`);
+      // Scope every connection to the auth schema via the startup `options`
+      // parameter, so it is set before any query can run on the connection.
+      //
+      // The obvious alternative — an `on("connect")` handler that fires
+      // `SET search_path` — races: pg does not await the handler, so better-auth
+      // gets the fresh connection and issues its query while the un-awaited SET
+      // is still in flight ("client is already executing a query"). A page load
+      // opens several connections at once, so the race is routine, not rare, and
+      // surfaces as auth requests that hang or fail with no response.
+      const pool = new Pool({
+        connectionString: url,
+        options: `-c search_path=${AUTH_SCHEMA}`,
       });
 
+      // Idempotent, and independent of search_path — so it works even on the
+      // very first connection, when the schema it points at does not exist yet.
       await pool.query(`CREATE SCHEMA IF NOT EXISTS ${AUTH_SCHEMA}`);
 
       return pool;

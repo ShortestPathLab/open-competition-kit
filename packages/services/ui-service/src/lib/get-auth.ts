@@ -44,7 +44,27 @@ const _options = createServerFn().handler(async () => {
 
 const options = once(_options);
 
-export const auth = once(async () => {
+/**
+ * Memoise only a *successful* result. `once` caches a rejected promise too, so a
+ * single cold-start hiccup — a momentary DB blip, a migration that raced — would
+ * otherwise be cached and returned to every later request, bricking auth for the
+ * whole process until restart. Here a failure clears the cache so the next
+ * request retries.
+ */
+const onceOk = <T>(fn: () => Promise<T>) => {
+  let cached: Promise<T> | undefined;
+  return () => {
+    if (!cached) {
+      cached = fn().catch((e) => {
+        cached = undefined;
+        throw e;
+      });
+    }
+    return cached;
+  };
+};
+
+export const auth = onceOk(async () => {
   await createIsomorphicFn()
     .client(() => {})
     .server(async () => {
