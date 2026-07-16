@@ -10,7 +10,7 @@
     },
     "packages/core": {
       "name": "@open-competition-kit/core",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@effect/platform": "^0.92.1",
         "@effect/platform-bun": "^0.81.1",
@@ -30,7 +30,7 @@
     },
     "packages/packages/db/prisma": {
       "name": "@open-competition-kit/db-prisma",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@prisma/adapter-pg": "^7.0.0",
@@ -50,7 +50,7 @@
     },
     "packages/packages/form/json": {
       "name": "@open-competition-kit/form-json",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@rjsf/core": "^6.5.2",
@@ -73,7 +73,7 @@
     },
     "packages/packages/integration/github-classic": {
       "name": "@open-competition-kit/integration-github-classic",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "es-toolkit": "^1.46.1",
@@ -89,7 +89,7 @@
     },
     "packages/packages/large-files/local": {
       "name": "@open-competition-kit/large-files-local",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "es-toolkit": "^1.46.1",
@@ -103,7 +103,7 @@
     },
     "packages/packages/large-files/s3": {
       "name": "@open-competition-kit/large-files-s3",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "es-toolkit": "^1.46.1",
@@ -117,7 +117,7 @@
     },
     "packages/packages/leaderboard/ag-grid": {
       "name": "@open-competition-kit/leaderboard-ag-grid",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@types/react": "^19.2.14",
@@ -138,7 +138,7 @@
     },
     "packages/packages/leaderboard/card": {
       "name": "@open-competition-kit/leaderboard-card",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@types/react": "^19.2.14",
@@ -157,7 +157,7 @@
     },
     "packages/packages/leaderboard/chart": {
       "name": "@open-competition-kit/leaderboard-chart",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "@types/react": "^19.2.14",
@@ -177,7 +177,7 @@
     },
     "packages/packages/noop": {
       "name": "@open-competition-kit/noop",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
       },
@@ -190,7 +190,7 @@
     },
     "packages/packages/sandbox/docker": {
       "name": "@open-competition-kit/sandbox-docker",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
       },
@@ -203,7 +203,7 @@
     },
     "packages/packages/standard": {
       "name": "@open-competition-kit/standard",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
         "jszip": "^3.10.1",
@@ -217,7 +217,7 @@
     },
     "packages/sdk": {
       "name": "@open-competition-kit/sdk",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "dependencies": {
         "@effect/platform": "^0.92.1",
         "@effect/platform-bun": "^0.81.1",
