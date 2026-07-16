@@ -15,6 +15,7 @@ import {
 } from "*/components/ui/field";
 import { Input } from "*/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { authFetchOptions, authRequestErrorMessage } from "@/lib/auth-request";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -30,7 +31,7 @@ export function SignupForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSignUp = async (e: React.SubmitEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -40,18 +41,40 @@ export function SignupForm({
     }
 
     setLoading(true);
-    await authClient.signUp.email(
-      { name, email, password },
-      {
-        onSuccess: async () => {
-          router.navigate({ to: "/competitions" });
-        },
-        onError: (ctx) => {
-          setError(ctx.error.message);
-        },
-      },
-    );
-    setLoading(false);
+    try {
+      const { data, error } = await authClient.signUp.email(
+        { name, email, password },
+        authFetchOptions,
+      );
+      if (error) {
+        setError(
+          error.message ?? "Could not create your account. Please try again.",
+        );
+        setLoading(false);
+        return;
+      }
+      // Both paths below navigate away, so `loading` stays set on the way out
+      // and the button doesn't flash back to "Create Account" mid-transition.
+
+      // `autoSignIn` can be turned off in config, in which case signing up
+      // leaves no session. There is nobody to provision yet, so skip the
+      // completion route — it waits on a session that would never arrive.
+      if (!data?.token) {
+        router.navigate({ to: "/sign-in" });
+        return;
+      }
+
+      // Route new accounts through the same completion step as sign-in so
+      // `configureUser` provisions the kit user record. It lands on "/" (which
+      // redirects to /competitions) once that finishes.
+      router.navigate({
+        to: "/sign-in/complete/$method",
+        params: { method: "email" },
+      });
+    } catch (err) {
+      setError(authRequestErrorMessage(err));
+      setLoading(false);
+    }
   };
 
   return (
