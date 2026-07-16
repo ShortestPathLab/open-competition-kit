@@ -24,7 +24,7 @@ import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
-import { authMiddleware } from "src/lib/auth.server";
+import { authMiddleware } from "src/lib/auth-server";
 import { resolveId } from "src/lib/configure-user";
 import { useSubmissionDetail } from "src/lib/submission-fn";
 import { queryClient } from "src/router";

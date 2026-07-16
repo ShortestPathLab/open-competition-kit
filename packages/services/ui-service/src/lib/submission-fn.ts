@@ -13,7 +13,7 @@ import {
   type UserSubmissionSummary,
 } from "./competition-data";
 import { z } from "zod";
-import { authMiddleware } from "./auth.server";
+import { authMiddleware } from "./auth-server";
 import { resolveId } from "./configure-user";
 
 const competitionSubmissionsInput = z.object({

@@ -1,7 +1,7 @@
 import sdk, { unsafe, type $props } from "@open-competition-kit/sdk";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { authMiddleware } from "./auth.server";
+import { authMiddleware } from "./auth-server";
 import { resolveId } from "./configure-user";
 
 export const getLoadedForm = createServerFn({ method: "GET" })

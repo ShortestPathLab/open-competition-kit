@@ -1,6 +1,6 @@
 import { createServerOnlyFn } from "@tanstack/react-start";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
-import { getAuthSession } from "./auth.server";
+import { getAuthSession } from "./auth-server";
 import { adminStatus } from "./admin";
 
 /** Files staged by a participant belong to that participant until a submission claims them. */

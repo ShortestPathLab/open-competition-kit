@@ -22,7 +22,7 @@ import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
-import { authMiddleware } from "src/lib/auth.server";
+import { authMiddleware } from "src/lib/auth-server";
 import { useCompetition } from "src/lib/competition-fn";
 import { queryClient } from "src/router";
 import { toast } from "sonner";

@@ -1,6 +1,6 @@
 import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
-import { getAuthSession } from "./auth.server";
+import { getAuthSession } from "./auth-server";
 
 export type AdminStatus = {
   signedIn: boolean;
