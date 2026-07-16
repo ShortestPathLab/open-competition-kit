@@ -14,29 +14,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The package list comes from list-packages.sh so that it cannot drift from
+  # publish.sh. It used to be spelled out here, and four packages were missing.
+  list-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: List publishable packages
+        id: list
+        run: |
+          echo "packages=$(./list-packages.sh | jq -Rsc 'split("\n") | map(select(length > 0))')" >> "${GITHUB_OUTPUT}"
+
   build-and-publish:
+    needs: list-packages
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
+      id-token: write
       packages: write
 
     strategy:
       fail-fast: false
       matrix:
-        package:
-          - path: packages/core
-          - path: packages/packages/db/prisma
-          - path: packages/packages/form/json
-          - path: packages/packages/integration/github-classic
-          - path: packages/packages/leaderboard/ag-grid
-          - path: packages/packages/noop
-          - path: packages/packages/standard
-          - path: packages/sdk
+        path: ${{ fromJSON(needs.list-packages.outputs.packages) }}
 
     defaults:
       run:
-        working-directory: ${{ matrix.package.path }}
+        working-directory: ${{ matrix.path }}
 
     steps:
       - name: Check out repository
@@ -59,10 +67,12 @@ jobs:
       - name: Update dependencies
         run: bun update
 
+      # `bun pm pack -quiet` fails outright — Invalid Argument '-q'. The flag is
+      # --quiet, and without it the tarball path is buried in pack's output.
       - name: Publish package
         run: |
-          DEST=$(bun pm pack -quiet)
-          bunx npm publish ${DEST} --provenance
+          DEST=$(bun pm pack --quiet)
+          bunx npm publish "${DEST}" --provenance --access public
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

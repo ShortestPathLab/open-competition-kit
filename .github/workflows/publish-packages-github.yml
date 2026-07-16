@@ -1,4 +1,4 @@
-name: Publish Packages
+name: Publish Packages (GitHub Packages)
 
 on:
   # push:
@@ -10,11 +10,26 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: publish-packages-${{ github.ref }}
+  group: publish-packages-github-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # The package list comes from list-packages.sh so that it cannot drift from
+  # publish.sh. It used to be spelled out here, and four packages were missing.
+  list-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: List publishable packages
+        id: list
+        run: |
+          echo "packages=$(./list-packages.sh | jq -Rsc 'split("\n") | map(select(length > 0))')" >> "${GITHUB_OUTPUT}"
+
   build-and-publish:
+    needs: list-packages
     runs-on: ubuntu-latest
 
     permissions:
@@ -24,19 +39,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package:
-          - path: packages/core
-          - path: packages/packages/db/prisma
-          - path: packages/packages/form/json
-          - path: packages/packages/integration/github-classic
-          - path: packages/packages/leaderboard/ag-grid
-          - path: packages/packages/noop
-          - path: packages/packages/standard
-          - path: packages/sdk
+        path: ${{ fromJSON(needs.list-packages.outputs.packages) }}
 
     defaults:
       run:
-        working-directory: ${{ matrix.package.path }}
+        working-directory: ${{ matrix.path }}
 
     steps:
       - name: Check out repository
