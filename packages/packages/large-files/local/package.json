@@ -1,5 +1,5 @@
 {
-  "version": "0.0.6",
+  "version": "0.0.8",
   "name": "@open-competition-kit/large-files-local",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

@@ -11,6 +11,6 @@
     "packages/**"
   ],
   "dependencies": {
-    "@typescript/native-preview": "^7.0.0-dev.20260513.1"
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2"
   }
 }
