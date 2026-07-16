@@ -18,6 +18,35 @@ import type { Namespace } from "./namespace";
 import type { SerialisableValue } from "./serialisable";
 import { flow } from "./utils/flow";
 
+/**
+ * What a sandbox is given when the caller says nothing.
+ *
+ * These exist because the code being run is a stranger's. A runner that forgets
+ * to pass limits gets confined anyway; the only way to widen them is to say so.
+ * The wall-clock default is deliberately generous — an evaluation suite is
+ * allowed to be slow — while memory and process count are not, because those are
+ * how a single submission takes the host down with it.
+ */
+const DEFAULT_TIMEOUT_MS = 300_000;
+const DEFAULT_MEMORY_MB = 2048;
+const DEFAULT_PIDS = 256;
+
+export type SandboxRequest = {
+  image: string;
+  command: readonly string[];
+  files?: Readonly<Record<string, Uint8Array | string>>;
+  env?: Readonly<Record<string, string>>;
+  cwd?: string;
+  timeoutMs?: number;
+  limits?: {
+    memoryMb?: number;
+    cpus?: number;
+    pids?: number;
+    network?: boolean;
+    writable?: boolean;
+  };
+};
+
 export class CollectionOwnerError extends D.TaggedError(
   "CollectionOwnerError",
 ) {}
@@ -646,6 +675,38 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
 
       // ─────────────────────────────────────────────────────
 
+      /**
+       * Running untrusted code.
+       *
+       * A thin pass-through: unlike `files`, there is no state here to protect —
+       * no key to derive, no ownership row to write. What this layer does own is
+       * the confinement policy, so that a sandbox package cannot quietly ship a
+       * weaker default than the one every caller is entitled to assume.
+       */
+      const sandbox = {
+        run: (request: SandboxRequest) =>
+          E.gen(function* () {
+            const settings = (config.sandbox ?? {}) as {
+              timeoutMs?: number;
+              memoryMb?: number;
+              pids?: number;
+            };
+
+            return yield* hooks.do((h) =>
+              h.sandbox.run({
+                ...request,
+                timeoutMs:
+                  request.timeoutMs ?? settings.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+                limits: {
+                  memoryMb: settings.memoryMb ?? DEFAULT_MEMORY_MB,
+                  pids: settings.pids ?? DEFAULT_PIDS,
+                  ...request.limits,
+                },
+              }),
+            );
+          }),
+      };
+
       return {
         secrets,
         config: {
@@ -663,6 +724,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         context,
         outputs,
         files,
+        sandbox,
         hooks,
       } satisfies OpenCompetitionKitApi;
     }),

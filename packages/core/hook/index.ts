@@ -58,6 +58,55 @@ export const Hooks = S.Struct({
       string | undefined
     >(),
   }),
+  /**
+   * Running untrusted code.
+   *
+   * Infrastructure, like `db` and `files`: it needs a real machine, so it cannot
+   * cross a language boundary. A runner describes *what* to run and how tightly
+   * to confine it; the package decides how — Docker today, something else later.
+   *
+   * The defaults deny: no network, a memory cap, a process cap, a read-only root
+   * and a wall-clock limit. A caller must opt back out, because the code being
+   * run was written by someone the organiser has never met.
+   */
+  sandbox: S.Struct({
+    run: hook<
+      {
+        /** The image, already built. Sandboxes do not build. */
+        image: string;
+        command: readonly string[];
+        /**
+         * Files to place inside before it starts, keyed by absolute path. This
+         * is how a submission gets in: the image owns the harness, and these
+         * overlay only what the submission is allowed to change.
+         */
+        files?: Readonly<Record<string, Uint8Array | string>>;
+        env?: Readonly<Record<string, string>>;
+        /** Where `command` runs. Defaults to the image's WORKDIR. */
+        cwd?: string;
+        /** Wall-clock limit. The sandbox is killed, not asked, when it passes. */
+        timeoutMs?: number;
+        limits?: {
+          memoryMb?: number;
+          cpus?: number;
+          /** Process cap. Without one, `:(){ :|:& };:` takes the host down. */
+          pids?: number;
+          /** Off unless asked for. */
+          network?: boolean;
+          /** Writable root. Off unless asked for. */
+          writable?: boolean;
+        };
+      },
+      {
+        stdout: string;
+        stderr: string;
+        code: number;
+        /** True when the wall-clock limit killed it, which `code` alone cannot tell you. */
+        timedOut: boolean;
+        elapsedMs: number;
+      }
+    >(),
+  }),
   enrolments: S.Struct({
     /**
      * The enrol handler.

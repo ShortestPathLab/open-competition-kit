@@ -188,6 +188,19 @@
         "typescript": "^5",
       },
     },
+    "packages/packages/sandbox/docker": {
+      "name": "@open-competition-kit/sandbox-docker",
+      "version": "0.0.8",
+      "dependencies": {
+        "@open-competition-kit/sdk": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/packages/standard": {
       "name": "@open-competition-kit/standard",
       "version": "0.0.8",
@@ -675,6 +688,8 @@
     "@open-competition-kit/leaderboard-chart": ["@open-competition-kit/leaderboard-chart@workspace:packages/packages/leaderboard/chart"],
 
     "@open-competition-kit/noop": ["@open-competition-kit/noop@workspace:packages/packages/noop"],
+
+    "@open-competition-kit/sandbox-docker": ["@open-competition-kit/sandbox-docker@workspace:packages/packages/sandbox/docker"],
 
     "@open-competition-kit/sdk": ["@open-competition-kit/sdk@workspace:packages/sdk"],
 

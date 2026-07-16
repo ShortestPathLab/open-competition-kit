@@ -94,6 +94,17 @@ export type OpenCompetitionKitApi = {
     /** Reclaim an owner's files. */
     purge: unknown;
   };
+  /**
+   * Running untrusted code.
+   *
+   * Goes to the package implementing the `sandbox` hooks. This layer applies the
+   * confinement defaults, so a runner cannot be handed something weaker than it
+   * expects.
+   */
+  sandbox: {
+    /** Run a command in an isolated environment and collect its output. */
+    run: unknown;
+  };
   secrets: { global: { get: unknown }; user: unknown };
   /**
    * Hook package access.

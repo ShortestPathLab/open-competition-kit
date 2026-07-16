@@ -15,6 +15,7 @@ export default {
   version: "0.0.6",
   db: { list: noop, get: noop, create: noop, update: noop, delete: noop },
   files: { write: noop, read: noop, peek: noop, delete: noop, link: noop },
+  sandbox: { run: noop },
   user: {},
   form: { loader: noop, ui: noop, submit: {} },
   submissions: { submit: noop },

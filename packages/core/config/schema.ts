@@ -96,6 +96,14 @@ export const Config = S.Struct({
    * credentials for S3.
    */
   largeFiles: S.optional(S.Record({ key: S.String, value: S.Any })),
+  /**
+   * Confinement defaults for whichever package implements the `sandbox` hooks.
+   *
+   * An organiser's ceiling, not a runner's preference: a runner may ask for less
+   * than this but never for more, so one careless package cannot hand a stranger
+   * the whole machine. `timeoutMs`, `memoryMb`, `pids`.
+   */
+  sandbox: S.optional(S.Record({ key: S.String, value: S.Any })),
   ...Extendable.fields,
 });
 
