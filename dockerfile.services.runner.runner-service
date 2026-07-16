@@ -1,5 +1,26 @@
 FROM oven/bun:latest
 
+# The Docker CLI, for the sandbox-docker package.
+#
+# The client only — not a daemon. It talks to the host's daemon over the socket,
+# so the containers it starts are siblings of this one rather than children.
+# Mount /var/run/docker.sock to use it; without the mount the CLI is inert and
+# every other package still works.
+ARG DOCKER_VERSION=27.3.1
+ARG TARGETARCH
+RUN set -eu; \
+  case "${TARGETARCH:-amd64}" in \
+    amd64) arch=x86_64 ;; \
+    arm64) arch=aarch64 ;; \
+    *) echo "unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+  esac; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends curl ca-certificates; \
+  curl -fsSL "https://download.docker.com/linux/static/stable/${arch}/docker-${DOCKER_VERSION}.tgz" \
+    | tar -xz -C /usr/local/bin --strip-components=1 docker/docker; \
+  apt-get purge -y curl; apt-get autoremove -y; rm -rf /var/lib/apt/lists/*; \
+  docker --version
+
 WORKDIR /
 
 COPY . .
