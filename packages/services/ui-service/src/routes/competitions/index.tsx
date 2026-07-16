@@ -25,9 +25,7 @@ function CompetitionsPage() {
       <main className="mx-auto max-w-5xl px-6 py-8">
         <PageHeader
           title="Competitions"
-          description={
-            "Participate in smth smth by\nsmth smth smth\nsmth smth smth smth."
-          }
+          description="Browse the competitions on offer, enrol in a track, and submit your work for evaluation."
         />
         <div className="mt-6">
           <SearchInput placeholder="Search competitions" />
