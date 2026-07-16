@@ -10,6 +10,7 @@ import { Link, useMatchRoute, useRouter } from "@tanstack/react-router";
 import { Bell, Menu } from "lucide-react";
 import Avatar from "boring-avatars";
 import { authClient } from "@/lib/auth-client";
+import { getAdminStatus } from "src/lib/admin";
 import { getAuthConfig } from "src/lib/get-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -22,7 +23,6 @@ const publicLinks = [
 ];
 
 interface NavbarProps {
-  variant?: "public" | "admin";
   appName?: string;
 }
 
@@ -70,7 +70,7 @@ function MobileNavbar({ brand, navLinks, actions }: MobileNavbarProps) {
   );
 }
 
-export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
+export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
   const match = useMatchRoute();
   const router = useRouter();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
@@ -79,6 +79,15 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
   const { data: authConfig } = useQuery({
     queryKey: ["authConfig"],
     queryFn: () => fetchAuthConfig(),
+  });
+
+  // Ask the server who is actually an admin rather than inferring it from the
+  // session: the `/dashboard` guard checks the config allowlist, so anything
+  // less here shows a button that only bounces the user back.
+  const fetchAdminStatus = useServerFn(getAdminStatus);
+  const { data: adminStatus } = useQuery({
+    queryKey: ["adminStatus"],
+    queryFn: () => fetchAdminStatus(),
   });
 
   const handleSignOut = async () => {
@@ -92,6 +101,7 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
   };
 
   const isLoggedIn = !!session?.user;
+  const isAdmin = adminStatus?.isAdmin ?? false;
   const emailEnabled = authConfig?.emailEnabled ?? false;
   const brand = (
     <Link
@@ -119,7 +129,7 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
   ));
 
   const adminNoticeAction =
-    variant === "admin" ? (
+    isAdmin ? (
       <button className="p-2 text-muted-foreground transition-colors hover:text-foreground">
         <Bell className="h-5 w-5" />
         <span className="sr-only">Notifications</span>
@@ -139,9 +149,9 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
   ) : null;
 
   const dashboardAction =
-    variant === "admin" ? (
+    isAdmin ? (
       <Link to="/dashboard" className="block">
-        <Button className="w-full">{isLoggedIn ? "Dashboard" : "Sudo"}</Button>
+        <Button className="w-full">Dashboard</Button>
       </Link>
     ) : null;
 
@@ -158,7 +168,6 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
 
   const signedOutActions = (
     <>
-      {dashboardAction}
       {emailEnabled && (
         <Link
           to="/register"
@@ -203,7 +212,6 @@ export function Navbar({ variant = "public", appName = "GPPC" }: NavbarProps) {
         </>
       ) : (
         <>
-          {dashboardAction}
           {emailEnabled && (
             <Link
               to="/register"

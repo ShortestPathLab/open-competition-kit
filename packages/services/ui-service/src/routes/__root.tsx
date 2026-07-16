@@ -6,7 +6,6 @@ import { Navbar } from "*/components/navbar";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import sdk from "@open-competition-kit/sdk";
-import { authClient } from "src/lib/auth-client";
 import { queryClient } from "src/router";
 import appCss from "../styles.css?url";
 
@@ -38,7 +37,6 @@ export const Route = createRootRoute({
 });
 
 function Shell({ children }: { children: React.ReactNode }) {
-  const { data: session } = authClient.useSession();
   const fetchAppConfig = useServerFn(getAppConfig);
 
   const { data: config } = useQuery({
@@ -48,10 +46,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen [view-transition-name:main-content]">
-      <Navbar
-        variant={session?.user ? "admin" : "public"}
-        appName={config?.name}
-      />
+      <Navbar appName={config?.name} />
       {children}
     </div>
   );
