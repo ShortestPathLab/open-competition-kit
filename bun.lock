@@ -52,6 +52,7 @@
       "name": "@open-competition-kit/form-json",
       "version": "0.0.9",
       "dependencies": {
+        "@open-competition-kit/core": "workspace:*",
         "@open-competition-kit/sdk": "workspace:*",
         "@rjsf/core": "^6.5.2",
         "@rjsf/shadcn": "^6.5.2",

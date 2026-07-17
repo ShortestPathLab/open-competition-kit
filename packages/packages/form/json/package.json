@@ -18,7 +18,8 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "@open-competition-kit/sdk": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@open-competition-kit/core": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest"

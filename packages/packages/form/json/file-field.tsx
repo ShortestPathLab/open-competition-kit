@@ -1,5 +1,9 @@
 import type { FieldProps } from "@rjsf/utils";
-import { isFile, type FileRef } from "@open-competition-kit/sdk";
+// From core/file, not the sdk barrel. This file is bundled for a browser, and
+// the barrel reaches Bun's shell, Effect's node platform and youch — none of
+// which esbuild can resolve without a Node platform, so the bundle fails and
+// takes the whole form loader down with it. Import the leaf that holds `isFile`.
+import { isFile, type FileRef } from "@open-competition-kit/core/file";
 import React from "react";
 import { upload, type UploadProgress } from "./upload";
 
