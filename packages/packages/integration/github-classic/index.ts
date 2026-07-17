@@ -97,7 +97,6 @@ async function listLatestRefsForUser(user: string): Promise<GithubRefOption[]> {
     repo,
     per_page: 100,
   });
-  console.log(data);
   return data.map(({ name }) => ({
     id: name,
     label: name,
