@@ -1,5 +1,4 @@
-import { makeComponent, type Package } from "@open-competition-kit/sdk";
-import { once } from "es-toolkit";
+import { lazyComponent, type Package } from "@open-competition-kit/sdk";
 import chart from "./chart";
 
 export default {
@@ -7,5 +6,5 @@ export default {
   description:
     "Renders Open Competition Kit leaderboard definitions as bar, line, or area charts with Recharts.",
   version: "0.0.6",
-  leaderboard: { ui: once(async () => makeComponent(chart)) },
+  leaderboard: { ui: lazyComponent(chart) },
 } satisfies Package;

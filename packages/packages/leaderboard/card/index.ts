@@ -1,5 +1,4 @@
-import { makeComponent, type Package } from "@open-competition-kit/sdk";
-import { once } from "es-toolkit";
+import { lazyComponent, type Package } from "@open-competition-kit/sdk";
 import card from "./card";
 
 export default {
@@ -7,5 +6,5 @@ export default {
   description:
     "Renders Open Competition Kit leaderboard definitions as stat cards, for headline values and top-N summaries.",
   version: "0.0.6",
-  leaderboard: { ui: once(async () => makeComponent(card)) },
+  leaderboard: { ui: lazyComponent(card) },
 } satisfies Package;

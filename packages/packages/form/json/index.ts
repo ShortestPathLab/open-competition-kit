@@ -1,6 +1,5 @@
-import { once } from "es-toolkit";
 import {
-  makeComponent,
+  lazyComponent,
   type Package,
   type PropTypes,
 } from "@open-competition-kit/sdk";
@@ -11,5 +10,5 @@ export default {
   description:
     "Renders configured Open Competition Kit form definitions as JSON Schema forms with React and shadcn components.",
   version: "0.0.6",
-  form: { ui: once(async () => makeComponent(form)) },
+  form: { ui: lazyComponent(form) },
 } satisfies Package;
