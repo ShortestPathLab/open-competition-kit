@@ -1,5 +1,5 @@
 {
-  "version": "0.0.9",
+  "version": "0.0.10",
   "name": "@open-competition-kit/core",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
