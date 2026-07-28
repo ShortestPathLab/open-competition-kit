@@ -12,6 +12,10 @@ type LeaderboardItem = LeaderboardDef["items"][number];
 
 const propsSchema = z.object({
   ...meta.shape,
+  // `name` sits on the leaderboard def itself, not on `Meta` — a board carries
+  // both, and configs use `name`. Zod drops what is not declared, so leaving
+  // this to the `meta` spread costs the board its heading.
+  name: z.string().optional(),
   shape: z.object({ ...shape.shape, ...meta.shape }).array(),
   items: z.record(z.string(), value).array(),
 }) satisfies z.ZodType<LeaderboardDef>;

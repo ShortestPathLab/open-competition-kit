@@ -113,10 +113,13 @@ export function useKitComponent<T extends ComponentHookPath>(
   });
   return useMemo(
     () => (props: ComponentHookMap[T]) => {
+      // No font rule here on purpose. `font-family` inherits across the shadow
+      // boundary, so a renderer that declares nothing picks up the app's Inter.
+      // The rule that used to sit here named Geist, which nothing loads, and so
+      // dropped every kit component to the browser's default serif.
       return KitComponent ?
           <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
             <root.div>
-              <style>{"* { font-family: 'Geist' }"}</style>
               <KitComponent {...props} />
             </root.div>
           </CatchBoundary>
