@@ -6,6 +6,13 @@ import type { FieldProps } from "@rjsf/utils";
 import { isFile, type FileRef } from "@open-competition-kit/core/file";
 import React from "react";
 import { upload, type UploadProgress } from "./upload";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "./ui/field";
+import { Input } from "./ui/input";
 
 const format = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -56,21 +63,18 @@ export function FileField(props: FieldProps) {
     : 0;
 
   return (
-    <div className="mb-4">
-      <label
-        className="mb-1 block text-sm font-medium text-stone-900"
-        htmlFor={id}
-      >
+    <Field data-invalid={error ? "true" : undefined}>
+      <FieldLabel htmlFor={id}>
         {schema.title}
-        {required ? <span className="ml-0.5 text-red-600">*</span> : null}
-      </label>
+        {required ?
+          <span aria-hidden="true" className="text-destructive">
+            *
+          </span>
+        : null}
+      </FieldLabel>
 
-      {schema.description ?
-        <p className="mb-2 text-sm text-stone-600">{schema.description}</p>
-      : null}
-
-      <input
-        className="block w-full rounded-md border border-stone-300 p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-stone-100 file:px-3 file:py-1.5 file:text-sm"
+      <Input
+        className="h-auto py-1.5 file:mr-2.5 file:rounded-md file:bg-secondary file:px-2 file:py-0.5 file:text-secondary-foreground"
         disabled={!!progress}
         id={id}
         onChange={(e) => void pick(e.currentTarget.files?.[0])}
@@ -78,31 +82,40 @@ export function FileField(props: FieldProps) {
       />
 
       {progress ?
-        <div className="mt-2">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-200">
+        <div className="flex flex-col gap-1.5">
+          <div
+            aria-valuemax={100}
+            aria-valuemin={0}
+            aria-valuenow={percent}
+            className="h-1.5 w-full overflow-hidden rounded-full bg-secondary"
+            role="progressbar"
+          >
             <div
-              className="h-full rounded-full bg-stone-900 transition-all"
+              className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${percent}%` }}
             />
           </div>
-          <p className="mt-1 text-xs text-stone-600">
+          <FieldDescription>
             Uploading… {percent}% ({format(progress.loaded)} of{" "}
             {format(progress.total)})
-          </p>
+          </FieldDescription>
         </div>
       : null}
 
       {current && !progress ?
-        <p className="mt-2 text-sm text-stone-700">
-          <span className="font-medium">{current.name ?? "File"}</span>{" "}
-          <span className="text-stone-500">({format(current.size)})</span>{" "}
-          <span className="text-green-700">uploaded</span>
-        </p>
+        <FieldDescription>
+          <span className="font-medium text-foreground">
+            {current.name ?? "File"}
+          </span>{" "}
+          ({format(current.size)}) uploaded
+        </FieldDescription>
       : null}
 
-      {error ?
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+      {schema.description ?
+        <FieldDescription>{schema.description}</FieldDescription>
       : null}
-    </div>
+
+      {error ? <FieldError>{error}</FieldError> : null}
+    </Field>
   );
 }

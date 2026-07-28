@@ -1,4 +1,3 @@
-import Form from "@rjsf/shadcn";
 import type { RegistryFieldsType, RJSFSchema, UiSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import React from "react";
@@ -6,6 +5,10 @@ import type { $props, ComponentDef } from "@open-competition-kit/sdk";
 import { meta, point, shape } from "@open-competition-kit/sdk/z";
 import { z } from "zod";
 import { FileField } from "./file-field";
+import { Form } from "./rjsf/theme";
+import { css } from "./theme/css";
+import { useHostDarkMode } from "./ui/dark-mode";
+import { PortalContainerProvider } from "./ui/portal";
 
 // Form values are serialisable, not merely scalar: a file field's value is a
 // `FileRef` object, and the submission body is JSON regardless.
@@ -87,7 +90,6 @@ function buildSchema(props: FormDef): RJSFSchema {
       }
 
       if (shapeItem.kind === "select" && shapeItem.options?.length) {
-        property.type === "string";
         property.oneOf = shapeItem.options.map((option) => ({
           const: option.value ?? option.id,
           title: option.name ?? option.id,
@@ -102,15 +104,20 @@ function buildSchema(props: FormDef): RJSFSchema {
     }),
   );
 
-  return {
+  const schema: RJSFSchema = {
     title: props.label ?? "Submission Options",
-    description: props.description ?? "",
     type: "object",
     required: props.shape
       .filter((shapeItem) => shapeItem.required)
       .map((shapeItem) => shapeItem.id),
     properties,
   };
+
+  if (props.description) {
+    schema.description = props.description;
+  }
+
+  return schema;
 }
 
 function buildUiSchema(props: FormDef): UiSchema {
@@ -152,46 +159,43 @@ function buildFormData(props: FormDef) {
   };
 }
 
+const fields: RegistryFieldsType = { file: FileField };
+
 export function JsonForm({ onSubmit, def }: typeof $props.form.ui) {
   const result = z.safeParse(propsSchema as z.ZodType<FormDef>, def);
   if (!result.success)
     throw new Error(
       `Error: ${z.prettifyError(result.error)}\nReceived: ${JSON.stringify(def, null, 2)}`,
     );
+
+  const portalContainer = React.useRef<HTMLDivElement>(null);
+  const isDark = useHostDarkMode();
+
   const schema = buildSchema(result.data);
   const uiSchema = buildUiSchema(result.data);
   const formData = buildFormData(result.data);
-  const fields: RegistryFieldsType = { file: FileField };
 
   return (
-    <>
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@rjsf/shadcn@6.5.2/dist/default.css"
-      />
-      <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.min.js" />
-      <div>
-        <div>
-          <h2 className="m-0 text-2xl font-semibold tracking-tight text-stone-950">
-            {result.data.label}
-          </h2>
-          <p className="mt-2 text-stone-600">{propsSchema.description}</p>
-        </div>
-
-        <div>
-          <Form
-            schema={schema}
-            uiSchema={uiSchema}
-            formData={formData}
-            fields={fields}
-            validator={validator}
-            onSubmit={({ formData }) => {
-              onSubmit?.(formData);
-            }}
-          />
-        </div>
-      </div>
-    </>
+    <div className={isDark ? "dark" : undefined}>
+      {/* A kit component mounts inside a shadow root with no stylesheet of its
+          own, so the form carries one. A plain <style> with no `precedence` is
+          the one shape React 19 renders where it is written rather than
+          hoisting into the document head, where it could not reach in here. */}
+      <style>{css}</style>
+      <PortalContainerProvider value={portalContainer}>
+        <Form
+          schema={schema}
+          uiSchema={uiSchema}
+          formData={formData}
+          fields={fields}
+          validator={validator}
+          onSubmit={({ formData }) => {
+            onSubmit?.(formData);
+          }}
+        />
+      </PortalContainerProvider>
+      <div ref={portalContainer} />
+    </div>
   );
 }
 

@@ -28,6 +28,33 @@ form:
 | `select` (with `options:`) | string |
 | `file` | a `FileRef` object |
 
+## Styling
+
+The controls in `ui/` are copies of ui-service's shadcn components, unchanged
+apart from their import paths. Refreshing one is a copy and paste. `ui/select.tsx`
+is the single exception: it passes a portal `container` so the popup opens inside
+the form rather than in `document.body`.
+
+`rjsf/` is the RJSF theme over those controls. Anything it does not name falls
+back to `@rjsf/core`'s own template.
+
+A kit component mounts inside a shadow root with no stylesheet, so the form
+carries one. `theme/tailwind.css` is the source; `bun run build:css` compiles it
+into `theme/css.ts`, which the form injects as a `<style>`. Run that after
+changing a class name, or the new class will not exist at runtime.
+
+It ships as a TypeScript string because the SDK bundles components with
+`esbuild --bundle` and no loader configuration, so a string is the only form the
+bundler carries without being taught about CSS.
+
+Colour and radius tokens read the host page first and fall back to a copy of
+ui-service's palette. Custom properties cross a shadow boundary, so a form
+inside one follows whatever the surrounding app sets on `<html>`, in either
+light or dark. The token block is emitted under `:root, :host`, and `:host` is
+the half that applies inside a shadow tree. `dark:` variants need more than
+that, because a selector inside a shadow tree cannot see `<html>`, so the form
+watches the host's class and re-applies `dark` to its own root.
+
 ## `kind: file`
 
 The bytes never travel through the form's submit. The file is uploaded as soon as

@@ -1,0 +1,129 @@
+/*
+ * Source for the stylesheet the form injects into its own shadow root.
+ * Compiled by `bun run build:css`, which writes `theme/css.ts`.
+ *
+ * `source(none)` plus explicit `@source` lines: this file is compiled from a
+ * package rather than an app, so Tailwind's automatic source detection would
+ * walk up out of the package and scan the whole monorepo.
+ */
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+
+@source "../*.tsx";
+@source "../ui/*.tsx";
+@source "../rjsf/*.tsx";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Fallback palette, used only when nothing above the form defines these.
+ * Copied from ui-service `src/styles.css`.
+ */
+:root,
+:host {
+  --fb-background: oklch(0.9792 0.0041 271.37);
+  --fb-foreground: oklch(0.1858 0.0294 271.15);
+  --fb-card: oklch(1 0 0);
+  --fb-card-foreground: oklch(0.1858 0.0294 271.15);
+  --fb-popover: oklch(1 0 0);
+  --fb-popover-foreground: oklch(0.1858 0.0294 271.15);
+  --fb-primary: oklch(0.5106 0.2301 276.97);
+  --fb-primary-foreground: oklch(1 0 0);
+  --fb-secondary: oklch(0.9671 0.007 268.55);
+  --fb-secondary-foreground: oklch(0.1858 0.0294 271.15);
+  --fb-muted: oklch(0.9671 0.007 268.55);
+  --fb-muted-foreground: oklch(0.4467 0.0345 267.9);
+  --fb-accent: oklch(0.9671 0.007 268.55);
+  --fb-accent-foreground: oklch(0.1858 0.0294 271.15);
+  --fb-destructive: oklch(0.577 0.245 27.325);
+  --fb-border: oklch(0.931 0.0113 269.55);
+  --fb-input: oklch(0.882 0.0173 267.78);
+  --fb-ring: oklch(0.5106 0.2301 276.97);
+  --fb-radius: 0.625rem;
+}
+
+.dark {
+  --fb-background: oklch(0.161 0.012 273.45);
+  --fb-foreground: oklch(0.9646 0.0096 273.36);
+  --fb-card: oklch(0.1986 0.014 275.62);
+  --fb-card-foreground: oklch(0.9646 0.0096 273.36);
+  --fb-popover: oklch(0.1986 0.014 275.62);
+  --fb-popover-foreground: oklch(0.9646 0.0096 273.36);
+  --fb-primary: oklch(0.6801 0.1583 276.93);
+  --fb-primary-foreground: oklch(0.161 0.0173 273.45);
+  --fb-secondary: oklch(0.2334 0.016 273.56);
+  --fb-secondary-foreground: oklch(0.9646 0.0096 273.36);
+  --fb-muted: oklch(0.2334 0.016 273.56);
+  --fb-muted-foreground: oklch(0.7425 0.0312 270.97);
+  --fb-accent: oklch(0.2334 0.016 273.56);
+  --fb-accent-foreground: oklch(0.9646 0.0096 273.36);
+  --fb-destructive: oklch(0.704 0.191 22.216);
+  --fb-border: oklch(1 0 0 / 9%);
+  --fb-input: oklch(1 0 0 / 16%);
+  --fb-ring: oklch(0.6801 0.1583 276.93);
+}
+
+/*
+ * Each token reads the host page's value first and the fallback second.
+ * Custom properties cross a shadow boundary, so a form mounted in a shadow
+ * root inherits whatever the surrounding app set on <html> and follows its
+ * light and dark palettes without this stylesheet knowing anything about them.
+ *
+ * Plain `@theme` rather than `@theme inline` on purpose: it emits the tokens
+ * under `:root, :host`, and `:host` is the half that reaches inside a shadow
+ * tree. A token block written as bare `:root` matches nothing in there, which
+ * is how the old `@rjsf/shadcn` stylesheet lost every shadow it declared.
+ */
+@theme {
+  --color-background: var(--background, var(--fb-background));
+  --color-foreground: var(--foreground, var(--fb-foreground));
+  --color-card: var(--card, var(--fb-card));
+  --color-card-foreground: var(--card-foreground, var(--fb-card-foreground));
+  --color-popover: var(--popover, var(--fb-popover));
+  --color-popover-foreground: var(
+    --popover-foreground,
+    var(--fb-popover-foreground)
+  );
+  --color-primary: var(--primary, var(--fb-primary));
+  --color-primary-foreground: var(
+    --primary-foreground,
+    var(--fb-primary-foreground)
+  );
+  --color-secondary: var(--secondary, var(--fb-secondary));
+  --color-secondary-foreground: var(
+    --secondary-foreground,
+    var(--fb-secondary-foreground)
+  );
+  --color-muted: var(--muted, var(--fb-muted));
+  --color-muted-foreground: var(--muted-foreground, var(--fb-muted-foreground));
+  --color-accent: var(--accent, var(--fb-accent));
+  --color-accent-foreground: var(
+    --accent-foreground,
+    var(--fb-accent-foreground)
+  );
+  --color-destructive: var(--destructive, var(--fb-destructive));
+  --color-border: var(--border, var(--fb-border));
+  --color-input: var(--input, var(--fb-input));
+  --color-ring: var(--ring, var(--fb-ring));
+
+  --radius-sm: calc(var(--radius, var(--fb-radius)) - 4px);
+  --radius-md: calc(var(--radius, var(--fb-radius)) - 2px);
+  --radius-lg: var(--radius, var(--fb-radius));
+  --radius-xl: calc(var(--radius, var(--fb-radius)) + 4px);
+
+  /*
+   * Named rather than inherited, so a standalone render is not left with the
+   * browser default serif. "Inter Variable" comes from the host's @fontsource
+   * import; font faces registered on the main document are visible inside
+   * shadow trees, so this resolves to the same font the app is using.
+   */
+  --font-sans: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/*
+ * Preflight sets a font on `:host` but no colour, and there is no <body> in a
+ * shadow tree to carry one.
+ */
+:host {
+  color: var(--color-foreground);
+}
