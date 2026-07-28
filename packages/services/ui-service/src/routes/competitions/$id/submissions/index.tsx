@@ -1,4 +1,4 @@
-import { Loader } from "*/components/loader";
+import { PageSkeleton } from "*/components/skeletons";
 import { SubmissionBrowser } from "*/components/submission-browser";
 import { SectionHeader } from "*/components/section-header";
 import { Button } from "*/components/ui/button";
@@ -18,7 +18,7 @@ function CompetitionSubmissionsPage() {
   const { data: submissions = [], isLoading: submissionsLoading } =
     useCompetitionSubmissions(session?.user?.id, id);
 
-  if (!competition) return <Loader />;
+  if (!competition) return <PageSkeleton />;
 
   return (
     <div className="space-y-4">

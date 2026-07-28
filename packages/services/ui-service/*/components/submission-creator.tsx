@@ -1,11 +1,11 @@
 import { Button } from "*/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "*/components/ui/card";
+  Panel,
+  PanelBody,
+  PanelDescription,
+  PanelHeader,
+  PanelTitle,
+} from "*/components/panel";
 import {
   Select,
   SelectContent,
@@ -15,10 +15,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "*/components/ui/select";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
+import { FormSkeleton } from "*/components/skeletons";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
+import { Layers3, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -31,7 +39,6 @@ import { EnrolmentCard } from "./enrolment-card";
 import { getEnrollmentStatus } from "src/lib/enrolment-fn";
 import { getLoadedForm } from "src/lib/form-fn";
 import { createSubmission } from "src/lib/submission-fn";
-import { resolveId } from "src/lib/configure-user";
 
 interface SubmissionCreatorProps {
   competition: CompetitionSummary;
@@ -76,10 +83,7 @@ export function SubmissionCreator({
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
     queryFn:
       session?.user?.id && trackId ?
-        () =>
-          fetchEnrollmentStatus({
-            data: { userId: resolveId(session.user), trackId },
-          })
+        () => fetchEnrollmentStatus({ data: { trackId } })
       : skipToken,
   });
 
@@ -124,9 +128,18 @@ export function SubmissionCreator({
 
   if (tracks.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-        This competition does not have any tracks available for submission yet.
-      </div>
+      <Empty className="rounded-2xl border border-dashed border-border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Layers3 />
+          </EmptyMedia>
+          <EmptyTitle>No tracks available</EmptyTitle>
+          <EmptyDescription>
+            This competition does not have any tracks available for submission
+            yet.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -178,9 +191,18 @@ export function SubmissionCreator({
           </div>
 
           {!selectedTrack ?
-            <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-              Choose a track to continue.
-            </div>
+            <Empty className="rounded-2xl border border-dashed border-border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Layers3 />
+                </EmptyMedia>
+                <EmptyTitle>Choose a track to continue</EmptyTitle>
+                <EmptyDescription>
+                  Pick a track above to review its rules and open the submission
+                  form.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           : <>
               <EnrolmentCard
                 isSignedIn={Boolean(session?.user)}
@@ -224,12 +246,7 @@ export function SubmissionCreator({
 
               {session?.user && isEnrolled ?
                 <div className="space-y-4">
-                  {formLoading ?
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Loading submission form.
-                    </div>
-                  : null}
+                  {formLoading ? <FormSkeleton fields={4} /> : null}
 
                   {formIsError ?
                     <p className="text-sm font-medium text-destructive">
@@ -282,21 +299,23 @@ export function SubmissionCreator({
         </div>
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader className="border-b border-border/60">
-          <CardTitle>{selectedTrack?.name ?? "Rules"}</CardTitle>
-          <CardDescription>
+      <Panel>
+        <PanelHeader className="flex-col items-start gap-1">
+          <PanelTitle>{selectedTrack?.name ?? "Rules"}</PanelTitle>
+          <PanelDescription>
             {selectedTrack?.description ??
               "Select a track to review its rules."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="prose mt-4 max-w-none prose-sm">
-          <Markdown remarkPlugins={[remarkGfm]}>
-            {selectedTrack?.rules ||
-              "No rules have been published for this track yet."}
-          </Markdown>
-        </CardContent>
-      </Card>
+          </PanelDescription>
+        </PanelHeader>
+        <PanelBody>
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <Markdown remarkPlugins={[remarkGfm]}>
+              {selectedTrack?.rules ||
+                "No rules have been published for this track yet."}
+            </Markdown>
+          </div>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

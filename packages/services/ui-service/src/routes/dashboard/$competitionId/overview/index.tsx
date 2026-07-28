@@ -8,7 +8,15 @@ import { ToggleTabs } from "*/components/toggle-tabs";
 import { SearchInput } from "*/components/search-input";
 import { DataTable } from "*/components/data-table";
 import type { Column } from "*/components/data-table";
-import { Loader } from "*/components/loader";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
+import { PageSkeleton } from "*/components/skeletons";
+import { ClipboardList } from "lucide-react";
 import { authClient } from "src/lib/auth-client";
 import { ensureAdmin } from "src/lib/admin";
 import { useMemo, useState } from "react";
@@ -100,10 +108,10 @@ const getDashboardData = createServerFn({ method: "GET" })
 
 function StatusPill({ status }: { status: string }) {
   const tone =
-    FAILED.has(status) ? "bg-red-500/10 text-red-600"
-    : UNFINISHED.has(status) ? "bg-amber-500/10 text-amber-600"
+    FAILED.has(status) ? "bg-destructive/10 text-destructive"
+    : UNFINISHED.has(status) ? "bg-warning/10 text-warning"
     : status === "no job" ? "bg-muted text-muted-foreground"
-    : "bg-green-500/10 text-green-600";
+    : "bg-success/10 text-success";
 
   return (
     <span
@@ -166,7 +174,7 @@ function AdminOverviewPage() {
     );
   }, [data?.submissions, track, query]);
 
-  if (isLoading) return <Loader className="p-6" />;
+  if (isLoading) return <PageSkeleton />;
 
   const stats = data?.stats ?? [];
   const tracks = [ALL_TRACKS, ...(data?.tracks ?? [])];
@@ -202,9 +210,18 @@ function AdminOverviewPage() {
 
       {submissions.length ?
         <DataTable columns={columns} data={submissions} />
-      : <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          No submissions yet.
-        </div>
+      : <Empty className="rounded-lg border border-dashed border-border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ClipboardList />
+            </EmptyMedia>
+            <EmptyTitle>No submissions yet</EmptyTitle>
+            <EmptyDescription>
+              Submissions across this competition's tracks will appear here once
+              competitors start entering.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       }
     </div>
   );

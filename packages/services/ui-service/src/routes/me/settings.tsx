@@ -1,9 +1,16 @@
 import { SectionHeader } from "*/components/section-header";
 import { Button } from "*/components/ui/button";
-import { Loader } from "*/components/loader";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
+import { PageSkeleton } from "*/components/skeletons";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { authClient } from "src/lib/auth-client";
-import { LogOut } from "lucide-react";
+import { Lock, LogOut } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/me/settings")({
@@ -12,7 +19,7 @@ export const Route = createFileRoute("/me/settings")({
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-6 border-b border-border/60 py-3 last:border-0">
+    <div className="flex items-baseline justify-between gap-6 border-b border-border py-3 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className="text-right text-sm font-medium text-foreground">
         {value}
@@ -26,15 +33,23 @@ function MeSettingsPage() {
   const { data: session, isPending } = authClient.useSession();
   const [signingOut, setSigningOut] = useState(false);
 
-  if (isPending) return <Loader className="p-6" />;
+  if (isPending) return <PageSkeleton />;
 
   const user = session?.user;
 
   if (!user) {
     return (
-      <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-        Sign in to view your settings.
-      </div>
+      <Empty className="rounded-2xl border border-dashed border-border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Lock />
+          </EmptyMedia>
+          <EmptyTitle>Sign in to view your settings</EmptyTitle>
+          <EmptyDescription>
+            Your account details are only visible when you're signed in.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -62,8 +77,8 @@ function MeSettingsPage() {
             label="Email verified"
             value={
               user.emailVerified ?
-                <span className="text-green-600">Verified</span>
-              : <span className="text-amber-600">Not verified</span>
+                <span className="text-success">Verified</span>
+              : <span className="text-warning">Not verified</span>
             }
           />
           <Row

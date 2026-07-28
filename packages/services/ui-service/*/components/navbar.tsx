@@ -6,6 +6,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "*/components/ui/dropdown-menu";
+import { Skeleton } from "*/components/ui/skeleton";
+import { ThemeToggle } from "*/components/theme-toggle";
 import { Link, useMatchRoute, useRouter } from "@tanstack/react-router";
 import { Bell, Menu } from "lucide-react";
 import Avatar from "boring-avatars";
@@ -34,7 +36,7 @@ interface DesktopNavbarProps {
 
 function DesktopNavbar({ brand, navLinks, actions }: DesktopNavbarProps) {
   return (
-    <header className="hidden h-14 items-center justify-between border-b border-border px-6 py-3 [view-transition-name:header] md:flex">
+    <header className="bg-card hidden h-14 items-center justify-between border-b border-border px-6 py-3 [view-transition-name:header] md:flex">
       <div className="flex min-w-0 items-center gap-6">
         {brand}
         <nav className="flex items-center gap-4">{navLinks}</nav>
@@ -52,20 +54,23 @@ interface MobileNavbarProps {
 
 function MobileNavbar({ brand, navLinks, actions }: MobileNavbarProps) {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border px-4 py-3 [view-transition-name:header] md:hidden">
+    <header className="bg-card flex h-14 items-center justify-between border-b border-border px-4 py-3 [view-transition-name:header] md:hidden">
       {brand}
-      <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Open navigation menu</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72">
-          <div className="flex flex-col gap-1 p-1">
-            <div className="border-b border-border pb-2">{navLinks}</div>
-            <div className="pt-2">{actions}</div>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-1">
+        <ThemeToggle />
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Open navigation menu</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            <div className="flex flex-col gap-1 p-1">
+              <div className="border-b border-border pb-2">{navLinks}</div>
+              <div className="pt-2">{actions}</div>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   );
 }
@@ -108,7 +113,7 @@ export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
       to="/"
       className="flex min-w-0 items-center gap-2 font-semibold text-lg"
     >
-      <div className="h-8 w-8 shrink-0 rounded-full bg-muted">
+      <div className="h-6 w-6 shrink-0 rounded-full bg-muted">
         <Avatar name={appName} width="100%" height="100%" />
       </div>
       <span className="truncate">{appName}</span>
@@ -129,31 +134,32 @@ export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
   ));
 
   const adminNoticeAction =
-    isAdmin ? (
+    isAdmin ?
       <button className="p-2 text-muted-foreground transition-colors hover:text-foreground">
         <Bell className="h-5 w-5" />
         <span className="sr-only">Notifications</span>
       </button>
-    ) : null;
+    : null;
 
-  const profileLink = isLoggedIn ? (
-    <Link to="/me" className="block">
-      <div className="h-8 w-8 overflow-hidden rounded-full bg-muted">
-        <Avatar
-          name={session.user.name ?? session.user.email}
-          width="100%"
-          height="100%"
-        />
-      </div>
-    </Link>
-  ) : null;
+  const profileLink =
+    isLoggedIn ?
+      <Link to="/me" className="block">
+        <div className="h-8 w-8 overflow-hidden rounded-full bg-muted">
+          <Avatar
+            name={session.user.name ?? session.user.email}
+            width="100%"
+            height="100%"
+          />
+        </div>
+      </Link>
+    : null;
 
   const dashboardAction =
-    isAdmin ? (
+    isAdmin ?
       <Link to="/dashboard" className="block">
         <Button className="w-full">Dashboard</Button>
       </Link>
-    ) : null;
+    : null;
 
   const signedInActions = (
     <>
@@ -185,51 +191,58 @@ export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
     </>
   );
 
-  const desktopActions = sessionLoading
-    ? null
-    : isLoggedIn
-      ? signedInActions
-      : signedOutActions;
-  const mobileActions = sessionLoading ? null : (
-    <div className="flex flex-col gap-2">
-      {isLoggedIn ? (
-        <>
-          <div className="flex items-center justify-between gap-2 w-full mb-1">
-            {profileLink && (
-              <div className=" flex items-center gap-3 rounded-md px-2 py-1">
-                {profileLink}
-                <span className="min-w-0 truncate text-sm font-medium">
-                  {session.user.name ?? session.user.email}
-                </span>
-              </div>
+  const desktopActions =
+    sessionLoading ?
+      <div
+        className="flex items-center gap-2"
+        role="status"
+        aria-label="Loading account"
+      >
+        <Skeleton className="h-9 w-20 rounded-md" />
+        <Skeleton className="size-9 rounded-full" />
+      </div>
+    : isLoggedIn ? signedInActions
+    : signedOutActions;
+  const mobileActions =
+    sessionLoading ? null : (
+      <div className="flex flex-col gap-2">
+        {isLoggedIn ?
+          <>
+            <div className="flex items-center justify-between gap-2 w-full mb-1">
+              {profileLink && (
+                <div className=" flex items-center gap-3 rounded-md px-2 py-1">
+                  {profileLink}
+                  <span className="min-w-0 truncate text-sm font-medium">
+                    {session.user.name ?? session.user.email}
+                  </span>
+                </div>
+              )}
+              {adminNoticeAction}
+            </div>
+            {dashboardAction}
+            <Button onClick={handleSignOut} variant="outline">
+              Sign out
+            </Button>
+          </>
+        : <>
+            {emailEnabled && (
+              <Link
+                to="/register"
+                className="rounded-md border border-border px-4 py-2 text-sm"
+              >
+                Register
+              </Link>
             )}
-            {adminNoticeAction}
-          </div>
-          {dashboardAction}
-          <Button onClick={handleSignOut} variant="outline">
-            Sign out
-          </Button>
-        </>
-      ) : (
-        <>
-          {emailEnabled && (
             <Link
-              to="/register"
-              className="rounded-md border border-border px-4 py-2 text-sm"
+              to="/sign-in"
+              className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
             >
-              Register
+              Sign in
             </Link>
-          )}
-          <Link
-            to="/sign-in"
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
-          >
-            Sign in
-          </Link>
-        </>
-      )}
-    </div>
-  );
+          </>
+        }
+      </div>
+    );
 
   const mobileNavLinks = (
     <nav className="flex flex-col gap-1">
@@ -254,7 +267,12 @@ export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
       <DesktopNavbar
         brand={brand}
         navLinks={navLinks}
-        actions={desktopActions}
+        actions={
+          <>
+            <ThemeToggle />
+            {desktopActions}
+          </>
+        }
       />
       <MobileNavbar
         brand={brand}

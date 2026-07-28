@@ -2,10 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
-import { Loader } from "*/components/loader";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
+import { PageSkeleton } from "*/components/skeletons";
 import { SectionHeader } from "*/components/section-header";
 import { ensureAdmin } from "src/lib/admin";
-import { Info } from "lucide-react";
+import { Info, SearchX } from "lucide-react";
 import { z } from "zod";
 
 /**
@@ -57,7 +64,7 @@ export const Route = createFileRoute("/dashboard/$competitionId/configure/")({
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-6 border-b border-border/60 py-2.5 last:border-0">
+    <div className="flex items-baseline justify-between gap-6 border-b border-border py-2.5 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className="text-right text-sm font-medium text-foreground">
         {value}
@@ -75,13 +82,22 @@ function ConfigurePage() {
     queryFn: () => fetchConfig({ data: competitionId }),
   });
 
-  if (isLoading) return <Loader className="p-6" />;
+  if (isLoading) return <PageSkeleton />;
   if (!config) {
     return (
-      <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-        No competition with id{" "}
-        <code className="font-mono">{competitionId}</code> in the config.
-      </div>
+      <Empty className="rounded-lg border border-dashed border-border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <SearchX />
+          </EmptyMedia>
+          <EmptyTitle>Competition not found</EmptyTitle>
+          <EmptyDescription>
+            No competition with id{" "}
+            <code className="font-mono">{competitionId}</code> exists in the
+            config.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -93,7 +109,7 @@ function ConfigurePage() {
           description="The live configuration for this competition."
         />
 
-        <div className="mt-3 flex items-start gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
             Read-only. These values come from{" "}
@@ -114,8 +130,8 @@ function ConfigurePage() {
             label="Database URL"
             value={
               config.database.configured ?
-                <span className="text-muted-foreground">Configured</span>
-              : <span className="text-red-600">Missing</span>
+                <span className="text-success">Configured</span>
+              : <span className="text-destructive">Missing</span>
             }
           />
         </div>

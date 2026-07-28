@@ -17,17 +17,16 @@ export function TabNav({ tabs, variant = "pill" }: TabNavProps) {
   const { pathname } = useLocation();
 
   return (
-    <nav className="flex items-center gap-1">
+    <nav className="items-center gap-0 flex">
       {tabs.map((tab) => {
-        const isActive = tab.exact
-          ? pathname === tab.href
-          : pathname.startsWith(tab.href);
+        const isActive =
+          tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
         return (
           <Link
             key={tab.href}
             to={tab.href}
             className={cn(
-              "flex items-center  gap-1.5 px-3 py-2 text-sm text-muted-foreground transition-colors",
+              "flex items-center justify-center gap-1.5 px-2 py-4 w-full text-sm text-muted-foreground transition-colors",
               variant === "underline" &&
                 "border-b-2 hover:text-foreground border-transparent",
               variant === "pill" && "rounded-md hover:text-primary ",
@@ -36,7 +35,7 @@ export function TabNav({ tabs, variant = "pill" }: TabNavProps) {
                 "bg-primary/10 text-primary font-medium",
               variant === "underline" &&
                 isActive &&
-                "border-primary text-primary font-medium",
+                "border-primary text-primary font-medium bg-primary/5",
             )}
           >
             {tab.label}

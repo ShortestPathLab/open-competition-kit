@@ -1,4 +1,21 @@
-import { PageHeader } from "*/components/page-header";
+import { PageHeaderBand } from "*/components/page-header-band";
+import { Panel, PanelBody } from "*/components/panel";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "*/components/ui/breadcrumb";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
+import { Trophy } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -8,7 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "*/components/ui/select";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useRouter,
+} from "@tanstack/react-router";
 import { useKitComponent } from "src/hooks/use-kit-component";
 import { getLeaderboards, getLoadedLeaderboard } from "src/lib/leaderboard-fn";
 
@@ -57,52 +79,97 @@ function LeaderboardPage() {
 
   return (
     <div className="min-h-screen">
-      <main className="mx-auto max-w-5xl px-6 py-8">
-        <PageHeader
-          title="Leaderboards"
-          description="Track the top performing agents across all active competitions."
-          actions={
-            selectedLeaderboard ? (
-              <Select
-                items={leaderboards.map((leaderboard) => ({
-                  label: leaderboard.name,
-                  value: leaderboard.id,
-                }))}
-                value={selectedLeaderboard.id}
-                onValueChange={(leaderboardId) => {
-                  if (!leaderboardId) return;
-                  router.navigate({
-                    to: "/leaderboards/$leaderboardId",
-                    params: { leaderboardId },
-                  });
-                }}
-              >
-                <SelectTrigger className="w-72">
-                  <SelectValue placeholder="Choose a leaderboard" />
-                </SelectTrigger>
-                <SelectContent align="end">
-                  <SelectGroup>
-                    <SelectLabel>Leaderboards</SelectLabel>
-                    {leaderboards.map((leaderboard) => (
-                      <SelectItem key={leaderboard.id} value={leaderboard.id}>
-                        {leaderboard.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            ) : null
-          }
-        />
-
+      <PageHeaderBand
+        breadcrumb={
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink render={<Link to="/competitions" />}>
+                  Competitions
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {selectedLeaderboard ? (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      render={
+                        <Link
+                          to="/competitions/$id"
+                          params={{ id: selectedLeaderboard.competitionId }}
+                        />
+                      }
+                    >
+                      {selectedLeaderboard.competitionName}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </>
+              ) : null}
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Leaderboards</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        }
+        title="Leaderboards"
+        description={
+          selectedLeaderboard ?
+            "Public standings, built from evaluated submissions."
+          : "Standings across active competitions."
+        }
+        actions={
+          selectedLeaderboard ? (
+            <Select
+              items={leaderboards.map((leaderboard) => ({
+                label: leaderboard.name,
+                value: leaderboard.id,
+              }))}
+              value={selectedLeaderboard.id}
+              onValueChange={(leaderboardId) => {
+                if (!leaderboardId) return;
+                router.navigate({
+                  to: "/leaderboards/$leaderboardId",
+                  params: { leaderboardId },
+                });
+              }}
+            >
+              <SelectTrigger className="w-72">
+                <SelectValue placeholder="Choose a leaderboard" />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectGroup>
+                  <SelectLabel>Leaderboards</SelectLabel>
+                  {leaderboards.map((leaderboard) => (
+                    <SelectItem key={leaderboard.id} value={leaderboard.id}>
+                      {leaderboard.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          ) : null
+        }
+      />
+      <main className="mx-auto max-w-7xl px-6 py-8">
         {selectedLeaderboard && leaderboardDef ? (
-          <div className="mt-8">
-            <Leaderboard def={leaderboardDef} />
-          </div>
+          <Panel>
+            <PanelBody>
+              <Leaderboard def={leaderboardDef} />
+            </PanelBody>
+          </Panel>
         ) : (
-          <div className="mt-8 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-            No leaderboards have been configured yet.
-          </div>
+          <Empty className="rounded-2xl border border-dashed border-border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Trophy />
+              </EmptyMedia>
+              <EmptyTitle>No leaderboards yet</EmptyTitle>
+              <EmptyDescription>
+                No leaderboards have been configured for this competition yet.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </main>
     </div>

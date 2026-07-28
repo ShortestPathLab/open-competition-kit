@@ -1,4 +1,12 @@
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Trophy } from "lucide-react";
 import { getLeaderboards } from "src/lib/leaderboard-fn";
 
 export const Route = createFileRoute("/leaderboards/")({
@@ -23,11 +31,19 @@ function LeaderboardsIndexPage() {
 
   return (
     <div className="min-h-screen">
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-6 py-8">
         {leaderboards.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-            No leaderboards have been configured yet.
-          </div>
+          <Empty className="rounded-2xl border border-dashed border-border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Trophy />
+              </EmptyMedia>
+              <EmptyTitle>No leaderboards yet</EmptyTitle>
+              <EmptyDescription>
+                No leaderboards have been configured for this deployment yet.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : null}
       </main>
     </div>

@@ -1,30 +1,21 @@
 import { EnrolmentCard } from "*/components/enrolment-card";
-import { Loader } from "*/components/loader";
+import { PageSkeleton } from "*/components/skeletons";
+import { Panel, PanelHeader, PanelTitle, PanelBody } from "*/components/panel";
 import { Button } from "*/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "*/components/ui/card";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ArrowLeft } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import sdk from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
 import { getTrackSummary } from "src/lib/competition-data";
-import { resolveId } from "src/lib/configure-user";
+import { getEnrollmentStatus } from "src/lib/enrolment-fn";
 import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
   component: TrackDetailsPage,
 });
-
-const enrolmentInput = z.object({ userId: z.string(), trackId: z.string() });
 
 const trackInput = z.object({ trackId: z.string() });
 
@@ -33,25 +24,6 @@ const getTrack = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     return getTrackSummary(data.trackId);
   });
-
-const getEnrollmentStatus = createServerFn({ method: "GET" })
-  .inputValidator(enrolmentInput)
-  .handler(async ({ data }) => {
-    const result = await sdk.enrolments.isEnrolled(data.userId, data.trackId);
-    if (result.error) throw result.error;
-    return result.value;
-  });
-
-function TrackMetaCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-background p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-2 break-all text-sm font-medium text-foreground">
-        {value}
-      </p>
-    </div>
-  );
-}
 
 function TrackDetailsPage() {
   const { id: competitionId, trackId } = Route.useParams();
@@ -68,14 +40,11 @@ function TrackDetailsPage() {
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
     queryFn:
       session?.user?.id ?
-        () =>
-          fetchEnrollmentStatus({
-            data: { userId: resolveId(session.user), trackId },
-          })
+        () => fetchEnrollmentStatus({ data: { trackId } })
       : skipToken,
   });
 
-  if (trackLoading) return <Loader className="p-6" />;
+  if (trackLoading) return <PageSkeleton />;
   if (!track) return <div>Track not found</div>;
 
   return (
@@ -88,6 +57,15 @@ function TrackDetailsPage() {
         <ArrowLeft className="h-4 w-4" />
         Back to tracks
       </Link>
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Track
+        </p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight">{track.name}</h1>
+        <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
+          {track.description}
+        </p>
+      </div>
       <EnrolmentCard
         isSignedIn={Boolean(session?.user)}
         isLoading={enrollmentLoading}
@@ -121,44 +99,19 @@ function TrackDetailsPage() {
           </Button>
         }
       />
-
-      <Card className="overflow-hidden rounded-lg border-border shadow-sm">
-        <CardContent className="px-6 py-6">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl space-y-4">
-              <div className="text-xs font-medium text-muted-foreground">
-                Track
-              </div>
-              <div className="space-y-3">
-                <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
-                  {track.name}
-                </h1>
-                <p className="max-w-2xl text-sm text-muted-foreground">
-                  {track.description}
-                </p>
-              </div>
-            </div>
-            <div className="grid w-full max-w-md gap-3 sm:grid-cols-2">
-              <TrackMetaCard label="Competition" value={competitionId} />
-              <TrackMetaCard label="Track ID" value={track.id} />
-              <TrackMetaCard
-                label="Submissions"
-                value="Available after enrolment"
-              />
-              <TrackMetaCard label="Status" value="Open for participation" />
-            </div>
+      <Panel>
+        <PanelHeader>
+          <PanelTitle>Rules</PanelTitle>
+        </PanelHeader>
+        <PanelBody>
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <Markdown remarkPlugins={[remarkGfm]}>
+              {track.rules ||
+                "No rules have been published for this track yet."}
+            </Markdown>
           </div>
-        </CardContent>
-      </Card>
-      <Card key={track.id} className="shadow-sm">
-        <CardHeader className="border-b border-border/60">
-          <CardTitle>Rules</CardTitle>
-          <CardDescription>{track.name}</CardDescription>
-        </CardHeader>
-        <CardContent className="prose max-w-none prose-sm">
-          <Markdown remarkPlugins={[remarkGfm]}>{track.rules}</Markdown>
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

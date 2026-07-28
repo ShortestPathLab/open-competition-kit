@@ -1,4 +1,4 @@
-import { Loader } from "*/components/loader";
+import { PageSkeleton } from "*/components/skeletons";
 import { SubmissionCreator } from "*/components/submission-creator";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCompetition } from "src/lib/competition-fn";
@@ -18,7 +18,7 @@ function CompetitionSubmissionCreatePage() {
   const { trackId } = Route.useSearch();
   const { data: competition } = useCompetition(id);
 
-  if (!competition) return <Loader />;
+  if (!competition) return <PageSkeleton />;
 
   return (
     <SubmissionCreator competition={competition} initialTrackId={trackId} />

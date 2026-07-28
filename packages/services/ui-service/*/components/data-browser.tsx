@@ -1,9 +1,17 @@
-import { Loader } from "*/components/loader";
+import { ListSkeleton } from "*/components/skeletons";
 import { SearchInput } from "*/components/search-input";
 import { Button } from "*/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
 import { cn } from "*/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { ClipboardList, SearchX } from "lucide-react";
+import { ClipboardList, Lock, SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 import { useDeferredValue, useMemo, useState } from "react";
 
@@ -105,43 +113,36 @@ export function DataBrowser<T>({
       </div>
 
       {isSessionLoading ? (
-        <div className="rounded-2xl border border-dashed border-border p-6">
-          <Loader label="Loading your account details..." className="min-h-0" />
-        </div>
+        <ListSkeleton aria-label="Loading your account details..." />
       ) : !isSignedIn ? (
-        <div className="rounded-2xl border border-dashed border-border p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <h3 className="text-base font-semibold text-foreground">
-                {signInTitle}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {signInDescription}
-              </p>
-            </div>
+        <Empty className="rounded-2xl border border-dashed border-border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Lock />
+            </EmptyMedia>
+            <EmptyTitle>{signInTitle}</EmptyTitle>
+            <EmptyDescription>{signInDescription}</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
             <Button render={<Link to="/sign-in" />}>Sign in</Button>
-          </div>
-        </div>
+          </EmptyContent>
+        </Empty>
       ) : isLoading ? (
-        <div className="rounded-2xl border border-dashed border-border p-6">
-          <Loader label={loadingLabel} className="min-h-0" />
-        </div>
+        <ListSkeleton aria-label={loadingLabel} />
       ) : filteredItems.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            {items.length === 0 ? (
-              <ClipboardList className="h-5 w-5 text-muted-foreground" />
-            ) : (
-              <SearchX className="h-5 w-5 text-muted-foreground" />
-            )}
-          </div>
-          <h3 className="mt-4 text-base font-semibold text-foreground">
-            {items.length === 0 ? emptyTitle : noResultsTitle}
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {items.length === 0 ? emptyDescription : noResultsDescription}
-          </p>
-        </div>
+        <Empty className="rounded-2xl border border-dashed border-border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              {items.length === 0 ? <ClipboardList /> : <SearchX />}
+            </EmptyMedia>
+            <EmptyTitle>
+              {items.length === 0 ? emptyTitle : noResultsTitle}
+            </EmptyTitle>
+            <EmptyDescription>
+              {items.length === 0 ? emptyDescription : noResultsDescription}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         renderResults(filteredItems)
       )}

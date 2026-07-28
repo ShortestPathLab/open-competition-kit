@@ -1,12 +1,19 @@
-import { Loader } from "*/components/loader";
+import { PageSkeleton } from "*/components/skeletons";
 import { Button } from "*/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "*/components/ui/card";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
+import {
+  Panel,
+  PanelBody,
+  PanelDescription,
+  PanelHeader,
+  PanelTitle,
+} from "*/components/panel";
 import {
   Item,
   ItemContent,
@@ -20,7 +27,15 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { assert, last, startCase } from "es-toolkit";
-import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  Inbox,
+  Loader2,
+  Lock,
+  MousePointerClick,
+  RotateCcw,
+  SearchX,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
@@ -47,12 +62,30 @@ const rerunSubmission = createServerFn({ method: "POST" })
     return unsafe(sdk.jobs.createFromSubmission(submission.id));
   });
 
-function prettyResult(result: string) {
-  try {
-    return JSON.stringify(JSON.parse(result), null, 2);
-  } catch {
-    return result;
+function prettyResult(value: unknown): string {
+  if (value === null || value === undefined) return "None";
+
+  if (typeof value === "string") {
+    // The string may itself be JSON-encoded (e.g. a stringified object); if so,
+    // pretty-print it. Otherwise show the plain string as-is.
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed !== null && typeof parsed === "object") {
+        return JSON.stringify(parsed, null, 2);
+      }
+    } catch {
+      // Not JSON, fall through and render the raw string.
+    }
+    return value;
   }
+
+  // Objects and arrays: render as pretty-printed JSON instead of "[object Object]".
+  if (typeof value === "object") {
+    return JSON.stringify(value, null, 2);
+  }
+
+  // Numbers, booleans, etc.
+  return String(value);
 }
 
 function statusLabel(status: string) {
@@ -63,14 +96,14 @@ function statusTone(status: string) {
   switch (status.toLowerCase()) {
     case "completed":
     case "success":
-      return "bg-emerald-500/10 text-emerald-700";
+      return "bg-success/10 text-success";
     case "failed":
     case "error":
-      return "bg-red-500/10 text-red-700";
+      return "bg-destructive/10 text-destructive";
     case "running":
-      return "bg-blue-500/10 text-blue-700";
+      return "bg-primary/10 text-primary";
     default:
-      return "bg-amber-500/10 text-amber-700";
+      return "bg-warning/10 text-warning";
   }
 }
 
@@ -79,7 +112,7 @@ function SubmissionDetailPage() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   assert(session, "Unauthorized");
   const { data: detail, isLoading } = useSubmissionDetail(
-    resolveId(session.user),
+    session.user.id,
     submissionId,
   );
   const rerunSubmissionFn = useServerFn(rerunSubmission);
@@ -109,119 +142,141 @@ function SubmissionDetailPage() {
     },
   });
 
-  if (sessionLoading || isLoading) return <Loader />;
+  if (sessionLoading || isLoading) return <PageSkeleton />;
 
   if (!session?.user) {
     return (
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground">
-            Sign in to inspect your submissions.
-          </p>
-        </CardContent>
-      </Card>
+      <Empty className="rounded-2xl border border-dashed border-border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Lock />
+          </EmptyMedia>
+          <EmptyTitle>Sign in to inspect your submissions</EmptyTitle>
+          <EmptyDescription>
+            Your submissions are only visible when you're signed in.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
-  if (!detail) return <div>Submission not found</div>;
+  if (!detail) {
+    return (
+      <Empty className="rounded-2xl border border-dashed border-border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <SearchX />
+          </EmptyMedia>
+          <EmptyTitle>Submission not found</EmptyTitle>
+          <EmptyDescription>
+            We couldn't find a submission with this ID.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Button
         variant="ghost"
+        size="sm"
         render={<Link to="/me/submissions" />}
-        className="w-fit"
+        className="-ml-2 w-fit"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="size-4" />
         Back to submissions
       </Button>
 
-      <Card className="shadow-sm">
-        <CardContent className="px-6 py-6">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl space-y-3">
-              <div className="text-xs font-medium">Submission</div>
-              <div className="space-y-3">
-                <h1 className="text-3xl font-semibold text-foreground">
-                  {detail.trackName}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {detail.competitionName}
-                </p>
-                <p className="font-mono text-xs text-muted-foreground">
-                  {detail.id}
-                </p>
-              </div>
-            </div>
-            <div className="grid w-full max-w-md gap-3 sm:grid-cols-2 ">
-              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <p className="text-xs text-muted-foreground">Runs</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">
-                  {detail.jobs.length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Submission
+          </p>
+          <h1 className="mt-1.5 text-2xl font-bold tracking-tight">
+            {detail.trackName}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {detail.competitionName}
+          </p>
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            {detail.id}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-card px-5 py-3.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Runs
+          </p>
+          <p className="mt-1 font-mono text-xl font-semibold tabular-nums">
+            {detail.jobs.length}
+          </p>
+        </div>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        <Card className="shadow-sm">
-          <CardHeader className="border-b border-border">
-            <div className="space-y-4">
-              <div>
-                <CardTitle>Choose a run</CardTitle>
-                <CardDescription>
-                  Select a job on the left to inspect its outputs and logs on
-                  the right.
-                </CardDescription>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  render={
-                    <Link
-                      to="/competitions/$id/tracks/$trackId"
-                      params={{
-                        id: detail.competitionId,
-                        trackId: detail.trackId,
-                      }}
-                    />
-                  }
-                >
-                  Open track
-                </Button>
-                <Button
-                  variant="outline"
-                  render={
-                    <Link
-                      to="/competitions/$id/submissions/new"
-                      params={{ id: detail.competitionId }}
-                      search={{ trackId: detail.trackId }}
-                    />
-                  }
-                >
-                  Make another submission
-                </Button>
-                <Button
-                  onClick={() => mutation.mutate()}
-                  disabled={mutation.isPending}
-                >
-                  {mutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RotateCcw className="h-4 w-4" />
-                  )}
-                  Re-run
-                </Button>
-              </div>
+        <Panel>
+          <PanelHeader className="flex-col items-start gap-3">
+            <div>
+              <PanelTitle>Choose a run</PanelTitle>
+              <PanelDescription className="mt-1">
+                Select a job on the left to inspect its outputs and logs on the
+                right.
+              </PanelDescription>
             </div>
-          </CardHeader>
-          <CardContent className="">
+            <div className="flex w-full flex-col gap-2">
+              <Button
+                variant="outline"
+                render={
+                  <Link
+                    to="/competitions/$id/tracks/$trackId"
+                    params={{
+                      id: detail.competitionId,
+                      trackId: detail.trackId,
+                    }}
+                  />
+                }
+              >
+                Open track
+              </Button>
+              <Button
+                variant="outline"
+                render={
+                  <Link
+                    to="/competitions/$id/submissions/new"
+                    params={{ id: detail.competitionId }}
+                    search={{ trackId: detail.trackId }}
+                  />
+                }
+              >
+                Make another submission
+              </Button>
+              <Button
+                onClick={() => mutation.mutate()}
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="size-4" />
+                )}
+                Re-run
+              </Button>
+            </div>
+          </PanelHeader>
+          <PanelBody>
             {detail.jobs.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                No jobs exist yet for this submission. Use rerun to create one.
-              </div>
+              <Empty className="rounded-xl border border-dashed border-border">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Inbox />
+                  </EmptyMedia>
+                  <EmptyTitle>No runs yet</EmptyTitle>
+                  <EmptyDescription>
+                    No jobs exist yet for this submission. Use re-run to create
+                    one.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <ItemGroup className="gap-2">
                 {detail.jobs
@@ -270,50 +325,47 @@ function SubmissionDetailPage() {
                   .reverse()}
               </ItemGroup>
             )}
-          </CardContent>
-        </Card>
+          </PanelBody>
+        </Panel>
 
         <div className="space-y-4">
-          <Card className="shadow-sm">
-            <CardHeader className="border-b border-border">
-              <CardTitle>Submission payload</CardTitle>
-              <CardDescription>
+          <Panel>
+            <PanelHeader className="flex-col items-start gap-1">
+              <PanelTitle>Submission payload</PanelTitle>
+              <PanelDescription>
                 The original content that was sent for this submission.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 ">
-              <div>
-                <p className="text-sm font-medium text-foreground">Payload</p>
-                <pre className="mt-2 overflow-x-auto rounded-lg border border-border bg-muted/30 p-4 text-sm whitespace-pre-wrap break-all">
-                  {detail.body}
-                </pre>
-              </div>
-            </CardContent>
-          </Card>
+              </PanelDescription>
+            </PanelHeader>
+            <PanelBody>
+              <pre className="overflow-x-auto rounded-lg border border-border bg-muted/40 p-4 text-sm break-all whitespace-pre-wrap">
+                {detail.body}
+              </pre>
+            </PanelBody>
+          </Panel>
 
-          <Card className="shadow-sm">
-            <CardHeader className="border-b border-border">
-              <div className="flex items-start justify-between gap-3">
+          <Panel>
+            <PanelHeader className="flex-col items-start gap-1">
+              <div className="flex w-full items-start justify-between gap-3">
                 <div>
-                  <CardTitle>
+                  <PanelTitle>
                     {selectedJob ? "Selected run" : "Run details"}
-                  </CardTitle>
-                  <CardDescription>
+                  </PanelTitle>
+                  <PanelDescription className="mt-1">
                     {selectedJob
                       ? "This panel shows the outputs and logs for the run selected on the left."
                       : "Choose a run from the left-hand list to inspect it here."}
-                  </CardDescription>
+                  </PanelDescription>
                 </div>
                 {selectedJob ? (
-                  <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">
-                      {startCase(statusLabel(selectedJob.status))}
-                    </span>
-                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusTone(selectedJob.status)}`}
+                  >
+                    {startCase(statusLabel(selectedJob.status))}
+                  </span>
                 ) : null}
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4 ">
+            </PanelHeader>
+            <PanelBody className="space-y-4">
               {selectedJob ? (
                 <>
                   <div className="grid gap-3 md:grid-cols-3">
@@ -342,9 +394,17 @@ function SubmissionDetailPage() {
                       Outputs
                     </p>
                     {selectedJob.outputs.length === 0 ? (
-                      <div className="mt-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                        No outputs have been produced for this job yet.
-                      </div>
+                      <Empty className="mt-2 rounded-lg border border-dashed border-border">
+                        <EmptyHeader>
+                          <EmptyMedia variant="icon">
+                            <Inbox />
+                          </EmptyMedia>
+                          <EmptyTitle>No outputs yet</EmptyTitle>
+                          <EmptyDescription>
+                            No outputs have been produced for this job yet.
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
                     ) : (
                       <div className="mt-3 space-y-3">
                         {selectedJob.outputs.map((output) => (
@@ -360,7 +420,7 @@ function SubmissionDetailPage() {
                                 {output.id}
                               </p>
                             </div>
-                            <pre className="mt-3 overflow-x-auto rounded-md bg-muted/30 p-3 text-sm whitespace-pre-wrap break-all">
+                            <pre className="mt-3 overflow-x-auto rounded-md bg-muted/40 p-3 text-sm break-all whitespace-pre-wrap">
                               {prettyResult(output.value)}
                             </pre>
                           </div>
@@ -379,12 +439,20 @@ function SubmissionDetailPage() {
                   </div>
                 </>
               ) : (
-                <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                  Select a job from the sidebar to inspect its details.
-                </div>
+                <Empty className="rounded-lg border border-dashed border-border">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <MousePointerClick />
+                    </EmptyMedia>
+                    <EmptyTitle>No run selected</EmptyTitle>
+                    <EmptyDescription>
+                      Select a job from the sidebar to inspect its details.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               )}
-            </CardContent>
-          </Card>
+            </PanelBody>
+          </Panel>
         </div>
       </div>
     </div>

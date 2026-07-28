@@ -12,14 +12,16 @@ function AdminCompetitionLayout() {
   const { data: competition } = useCompetition(competitionId);
 
   return (
-    <div>
-      <div className="flex items-center justify-between border-b border-border px-6 py-2">
-        <div className="flex items-center gap-4 [view-transition-name:admin-header]">
-          <CompetitionSelector name={competition?.name ?? competitionId} />
-          <AdminCompetitionTabs competitionId={competitionId} />
+    <div className="min-h-screen">
+      <div className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2">
+          <div className="flex items-center gap-4 [view-transition-name:admin-header]">
+            <CompetitionSelector name={competition?.name ?? competitionId} />
+            <AdminCompetitionTabs competitionId={competitionId} />
+          </div>
         </div>
       </div>
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-6 py-8">
         <Outlet />
       </main>
     </div>

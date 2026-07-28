@@ -1,12 +1,20 @@
-import { Loader } from "*/components/loader";
+import { PageSkeleton } from "*/components/skeletons";
 import { Button } from "*/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "*/components/ui/card";
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "*/components/ui/empty";
+import {
+  Panel,
+  PanelBody,
+  PanelDescription,
+  PanelHeader,
+  PanelTitle,
+} from "*/components/panel";
 import {
   Select,
   SelectContent,
@@ -19,7 +27,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
+import { Layers3, Loader2, Lock } from "lucide-react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
 import { authMiddleware } from "src/lib/auth-server";
@@ -81,7 +89,7 @@ function CompetitionEnrolPage() {
     },
   });
 
-  if (!competition) return <Loader />;
+  if (!competition) return <PageSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -93,28 +101,41 @@ function CompetitionEnrolPage() {
         </p>
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader className="border-b border-border/60">
-          <CardTitle>Choose a track</CardTitle>
-          <CardDescription>
+      <Panel>
+        <PanelHeader className="flex-col items-start gap-1">
+          <PanelTitle>Choose a track</PanelTitle>
+          <PanelDescription>
             Participation happens at the track level for this competition.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5 pt-4">
+          </PanelDescription>
+        </PanelHeader>
+        <PanelBody className="space-y-5">
           {!session?.user ? (
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold">Sign in to enrol</h3>
-                <p className="text-sm text-muted-foreground">
+            <Empty className="border border-dashed border-border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Lock />
+                </EmptyMedia>
+                <EmptyTitle>Sign in to enrol</EmptyTitle>
+                <EmptyDescription>
                   Your enrolments are attached to your account.
-                </p>
-              </div>
-              <Button render={<Link to="/sign-in" />}>Sign in</Button>
-            </div>
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button render={<Link to="/sign-in" />}>Sign in</Button>
+              </EmptyContent>
+            </Empty>
           ) : competition.tracks.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-              This competition does not have any tracks available yet.
-            </div>
+            <Empty className="rounded-2xl border border-dashed border-border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Layers3 />
+                </EmptyMedia>
+                <EmptyTitle>No tracks available</EmptyTitle>
+                <EmptyDescription>
+                  This competition does not have any tracks available yet.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <>
               <div className="grid gap-2 md:max-w-md">
@@ -149,7 +170,7 @@ function CompetitionEnrolPage() {
               </div>
 
               {selectedTrack ? (
-                <div className="rounded-2xl border border-border/70 bg-background p-4">
+                <div className="rounded-xl border border-border bg-muted/40 p-4">
                   <h3 className="text-base font-semibold text-foreground">
                     {selectedTrack.name}
                   </h3>
@@ -186,8 +207,8 @@ function CompetitionEnrolPage() {
               ) : null}
             </>
           )}
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }
