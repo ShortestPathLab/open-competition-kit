@@ -105,26 +105,30 @@ export async function listUserEnrolments(
     listCompetitionSummaries(),
   ]);
 
-  return userEnrolments.map((enrolment) => {
+  return userEnrolments.flatMap((enrolment) => {
     const competition = allCompetitions.find((competition) =>
       competition.tracks.some((track) => track.id === enrolment.track),
-    )!;
+    );
 
-    const track = competition.tracks.find(
+    const track = competition?.tracks.find(
       (track) => track.id === enrolment.track,
-    )!;
+    );
 
-    return {
-      id: enrolment.id,
-      track,
-      competition: {
-        ...competition,
-        tracks: competition.tracks.length ? competition.tracks : [track],
+    // An enrolment outlives its track. Tracks come from the competition config,
+    // so dropping one there leaves rows behind that point at nothing. Skip those
+    // rather than letting one stale row throw away the whole list.
+    if (!competition || !track) return [];
+
+    return [
+      {
+        id: enrolment.id,
+        track,
+        competition,
+        submissions: userSubmissions
+          .filter((submission) => submission.track === enrolment.track)
+          .map((submission) => ({ id: submission.id, body: submission.body })),
       },
-      submissions: userSubmissions
-        .filter((submission) => submission.track === enrolment.track)
-        .map((submission) => ({ id: submission.id, body: submission.body })),
-    };
+    ];
   });
 }
 

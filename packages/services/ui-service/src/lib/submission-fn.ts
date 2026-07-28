@@ -17,18 +17,23 @@ import { authMiddleware } from "./auth-server";
 import { resolveId } from "./configure-user";
 
 const competitionSubmissionsInput = z.object({
-  userId: z.string(),
   competitionId: z.string(),
 });
 
-const userSubmissionsInput = z.string();
-
 const submissionDetailInput = z.object({
-  userId: z.string(),
   submissionId: z.string(),
 });
 
 export type SubmissionBrowserItem = UserSubmissionSummary;
+
+// A serialisable JSON value: a job output may be any of these, not just a string.
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
 export type SubmissionDetail = SubmissionBrowserItem & {
   jobs: Array<{
@@ -38,33 +43,42 @@ export type SubmissionDetail = SubmissionBrowserItem & {
     outputs: Array<{
       id: string;
       job: string;
-      value: string;
+      // A JSON value: string, number, boolean, null, object, or array.
+      value: JsonValue;
       reference: string;
     }>;
   }>;
 };
 
+/**
+ * Every one of these reads is scoped to the caller, so the user id comes from
+ * the session rather than the request body. The kit keys users by `resolveId`,
+ * not by better-auth's `session.user.id`, so a client-supplied id matched no
+ * rows; it also let a caller read another entrant's submissions by naming them.
+ */
 const getCompetitionSubmissions = createServerFn({ method: "GET" })
   .inputValidator(competitionSubmissionsInput)
-  .handler(async ({ data }) => {
-    const submissions = await listUserSubmissions(data.userId);
+  .middleware([authMiddleware])
+  .handler(async ({ data, context: { session } }) => {
+    const submissions = await listUserSubmissions(resolveId(session.user));
     return submissions.filter(
       (submission) => submission.competitionId === data.competitionId,
     );
   });
 
 const getUserSubmissions = createServerFn({ method: "GET" })
-  .inputValidator(userSubmissionsInput)
-  .handler(async ({ data: userId }) => {
-    return listUserSubmissions(userId);
-  });
+  .middleware([authMiddleware])
+  .handler(({ context: { session } }) =>
+    listUserSubmissions(resolveId(session.user)),
+  );
 
 const getSubmissionDetail = createServerFn({ method: "GET" })
   .inputValidator(submissionDetailInput)
-  .handler(async ({ data }): Promise<SubmissionDetail> => {
+  .middleware([authMiddleware])
+  .handler(async ({ data, context: { session } }): Promise<SubmissionDetail> => {
     const submission = await unsafe(submissions.get(data.submissionId));
 
-    if (submission.user !== data.userId) {
+    if (submission.user !== resolveId(session.user)) {
       throw new Error("Unauthorized");
     }
 
@@ -90,7 +104,7 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
           outputs: outputContexts.map((output) => ({
             id: output.id,
             job: output.owner,
-            value: String(output.value ?? ""),
+            value: (output.value ?? null) as JsonValue,
             reference: output.reference,
           })),
           logs: "Logs are not available in the current runner implementation yet.",
@@ -109,38 +123,46 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
     };
   });
 
+/**
+ * `sessionUserId` never reaches the server. It separates one signed-in user's
+ * cached submissions from the next's, and holds each query back until the
+ * session has loaded.
+ */
 export function useCompetitionSubmissions(
-  userId?: string,
+  sessionUserId?: string,
   competitionId?: string,
 ) {
   const getCompetitionSubmissionsFn = useServerFn(getCompetitionSubmissions);
   return useQuery({
-    queryKey: ["competitionSubmissions", userId, competitionId],
+    queryKey: ["competitionSubmissions", sessionUserId, competitionId],
     queryFn:
-      userId && competitionId
-        ? () => getCompetitionSubmissionsFn({ data: { userId, competitionId } })
+      sessionUserId && competitionId
+        ? () => getCompetitionSubmissionsFn({ data: { competitionId } })
         : skipToken,
   });
 }
 
-export function useUserSubmissions(userId?: string) {
+export function useUserSubmissions(sessionUserId?: string) {
   const getUserSubmissionsFn = useServerFn(getUserSubmissions);
   return useQuery({
-    queryKey: ["userSubmissions", userId],
-    queryFn: userId ? () => getUserSubmissionsFn({ data: userId }) : skipToken,
+    queryKey: ["userSubmissions", sessionUserId],
+    queryFn: sessionUserId ? () => getUserSubmissionsFn() : skipToken,
   });
 }
 
-export function useSubmissionDetail(userId?: string, submissionId?: string) {
+export function useSubmissionDetail(
+  sessionUserId?: string,
+  submissionId?: string,
+) {
   const getSubmissionDetailFn = useServerFn(getSubmissionDetail);
   return useQuery({
-    queryKey: ["submissionDetail", userId, submissionId],
+    queryKey: ["submissionDetail", sessionUserId, submissionId],
     refetchInterval: 1000,
     queryFn:
-      userId && submissionId
+      sessionUserId && submissionId
         ? () =>
             getSubmissionDetailFn({
-              data: { userId, submissionId },
+              data: { submissionId },
             }) as Promise<SubmissionDetail>
         : skipToken,
   });
