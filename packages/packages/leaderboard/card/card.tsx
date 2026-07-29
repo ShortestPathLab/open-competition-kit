@@ -1,5 +1,6 @@
 import type { ComponentDef, $props } from "@open-competition-kit/sdk";
 import { meta, shape, value } from "@open-competition-kit/sdk/z";
+import { useHostDarkMode } from "@open-competition-kit/sdk/theme";
 import React from "react";
 import { z } from "zod";
 import { dark, light, seriesColour, type Theme } from "./theme";
@@ -20,23 +21,6 @@ const propsSchema = z.object({
 
 type Parsed = z.infer<typeof propsSchema> & CardDef;
 type Item = Parsed["items"][number];
-
-function usePrefersDark() {
-  const query = "(prefers-color-scheme: dark)";
-  const [isDark, setIsDark] = React.useState(
-    () => globalThis.matchMedia?.(query).matches ?? false,
-  );
-
-  React.useEffect(() => {
-    const mq = globalThis.matchMedia?.(query);
-    if (!mq) return;
-    const onChange = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  return isDark;
-}
 
 const asNumber = (v: unknown) => {
   if (typeof v === "number") return v;
@@ -65,7 +49,7 @@ const format = (v: unknown) => {
 };
 
 export function Cards({ def }: CardProps) {
-  const isDark = usePrefersDark();
+  const isDark = useHostDarkMode();
   const theme: Theme = isDark ? dark : light;
 
   const result = z.safeParse(propsSchema as z.ZodType<Parsed>, def);
@@ -148,9 +132,13 @@ export function Cards({ def }: CardProps) {
           <div
             key={`${String(item.job ?? item.submission ?? index)}`}
             style={{
-              background: theme.surface,
-              border: `1px solid ${theme.border}`,
-              borderRadius: 14,
+              // The page's own card colours when there is a page above: custom
+              // properties cross the shadow boundary, so a podium sitting in an
+              // app matches the surfaces around it instead of bringing its own
+              // near-white. The theme's values are the standalone fallback.
+              background: `var(--card, ${theme.surface})`,
+              border: `1px solid var(--border, ${theme.border})`,
+              borderRadius: "var(--radius, 14px)",
               display: "grid",
               gap: 12,
               padding: 20,

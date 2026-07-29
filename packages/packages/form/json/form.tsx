@@ -7,7 +7,7 @@ import { z } from "zod";
 import { FileField } from "./file-field";
 import { Form } from "./rjsf/theme";
 import { css } from "./theme/css";
-import { useHostDarkMode } from "./ui/dark-mode";
+import { useHostDarkMode } from "@open-competition-kit/sdk/theme";
 import { PortalContainerProvider } from "./ui/portal";
 
 // Form values are serialisable, not merely scalar: a file field's value is a

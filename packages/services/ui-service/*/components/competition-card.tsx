@@ -1,5 +1,7 @@
+import { Badge } from "*/components/ui/badge";
 import { Link } from "@tanstack/react-router";
 import BoringAvatar from "boring-avatars";
+import { PencilRuler } from "lucide-react";
 
 interface CompetitionCardProps {
   id: string;
@@ -7,6 +9,8 @@ interface CompetitionCardProps {
   organiser: string;
   trackCount?: number;
   imageUrl?: string;
+  /** Drafts only ever reach an organiser, so the marker is for their benefit. */
+  isDraft?: boolean;
 }
 
 export function CompetitionCard({
@@ -15,6 +19,7 @@ export function CompetitionCard({
   organiser,
   trackCount,
   imageUrl,
+  isDraft,
 }: CompetitionCardProps) {
   return (
     <Link
@@ -39,9 +44,17 @@ export function CompetitionCard({
         )}
       </div>
       <div className="p-4">
-        <p className="font-semibold tracking-tight group-hover:underline">
-          {name}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-semibold tracking-tight group-hover:underline">
+            {name}
+          </p>
+          {isDraft ? (
+            <Badge variant="secondary" className="shrink-0">
+              <PencilRuler />
+              Draft
+            </Badge>
+          ) : null}
+        </div>
         <p className="mt-0.5 text-sm text-muted-foreground">{organiser}</p>
         {trackCount !== undefined ? (
           <p className="mt-3 border-t border-border pt-3 font-mono text-xs tabular-nums text-muted-foreground">

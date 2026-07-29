@@ -12,6 +12,7 @@ import sdk, {
   type Package,
 } from "@open-competition-kit/sdk";
 import Zip from "jszip";
+import { standardRefusals } from "./gates";
 import { load as loadLeaderboard } from "./leaderboard";
 
 /**
@@ -73,6 +74,21 @@ export default {
     },
   },
   submissions: {
+    /**
+     * The three rules an organiser configures on a track: its open and close
+     * times, a total attempt ceiling, and a rolling rate limit.
+     *
+     * Additive, like every gate. Ours are appended to whatever the packages
+     * further out decided and the combined list is passed inward, so installing
+     * a gate of your own never displaces these.
+     */
+    gate: async ({ user, track, refusals }, next) => {
+      const all = [
+        ...refusals,
+        ...(await standardRefusals(user, track, Date.now())),
+      ];
+      return (await next?.({ user, track, refusals: all })) ?? all;
+    },
     submit: async (args, next) => {
       const inherited = await next?.(args);
       if (inherited) return inherited;
@@ -134,14 +150,14 @@ export default {
         await unsafe(
           outputs.set({
             owner: jobRecord.id,
-            reference: "contents",
+            reference: reference.output("contents"),
             value: output.join("\n"),
           }),
         );
         await unsafe(
           outputs.set({
             owner: jobRecord.id,
-            reference: "default",
+            reference: reference.std.output,
             value: JSON.stringify(result ?? null),
           }),
         );

@@ -18,7 +18,7 @@ export default {
   sandbox: { run: noop },
   user: {},
   form: { loader: noop, ui: noop, submit: {} },
-  submissions: { submit: noop },
+  submissions: { submit: noop, gate: noop },
   runner: { ui: {}, run: noop, setup: noop, teardown: noop },
   track: { enrol: {} },
   leaderboard: { ui: noop, loader: noop },

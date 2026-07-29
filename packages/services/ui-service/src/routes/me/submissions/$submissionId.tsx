@@ -26,7 +26,7 @@ import { Separator } from "*/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { assert, last, startCase } from "es-toolkit";
+import { last, startCase } from "es-toolkit";
 import {
   ArrowLeft,
   Inbox,
@@ -41,11 +41,19 @@ import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authClient } from "src/lib/auth-client";
 import { authMiddleware } from "src/lib/auth-server";
 import { resolveId } from "src/lib/configure-user";
+import { ensureSubmissionVisible } from "src/lib/route-guards";
 import { useSubmissionDetail } from "src/lib/submission-fn";
 import { queryClient } from "src/router";
 import { z } from "zod";
 
 export const Route = createFileRoute("/me/submissions/$submissionId")({
+  // Ownership decides existence here. A submission belonging to another entrant
+  // is a 404, not a "forbidden": the second one would tell a stranger that the
+  // id they guessed is real.
+  // In the loader, so the 404 keeps the "Your competitions" header and tabs
+  // above it. A `notFound` from `beforeLoad` carries no route id and would take
+  // the whole page.
+  loader: ({ params }) => ensureSubmissionVisible(params.submissionId),
   component: SubmissionDetailPage,
 });
 
@@ -110,9 +118,11 @@ function statusTone(status: string) {
 function SubmissionDetailPage() {
   const { submissionId } = Route.useParams();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
-  assert(session, "Unauthorized");
+  // No assertion on the session: it is undefined on the first render of every
+  // visit, and throwing there took the whole page down before the signed out
+  // branch below ever got a chance to render.
   const { data: detail, isLoading } = useSubmissionDetail(
-    session.user.id,
+    session?.user?.id,
     submissionId,
   );
   const rerunSubmissionFn = useServerFn(rerunSubmission);

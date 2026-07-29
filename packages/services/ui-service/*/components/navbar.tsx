@@ -20,7 +20,6 @@ import { useQuery } from "@tanstack/react-query";
 const publicLinks = [
   { href: "/", label: "Home" },
   { href: "/competitions", label: "Competitions" },
-  { href: "/leaderboards", label: "Leaderboards" },
   { href: "/about", label: "About" },
 ];
 

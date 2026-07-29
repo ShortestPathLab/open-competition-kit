@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CompetitionPageHeader } from "*/components/competition-page-header";
+import { HeaderMeta, PageBody } from "*/components/page-header-band";
 import { PageSkeleton } from "*/components/skeletons";
 import {
   Panel,
@@ -27,40 +29,62 @@ function CompetitionRulesPage() {
   const tracksWithRules = competition.tracks.filter((track) => track.rules);
 
   return (
-    <div className="space-y-6">
-      <Panel>
-        <PanelHeader className="flex-col items-start gap-1">
-          <PanelTitle>General rules</PanelTitle>
-          <PanelDescription>
-            Rules that apply across the entire competition.
-          </PanelDescription>
-        </PanelHeader>
-        <PanelBody>
-          <div className={proseClass}>
-            <Markdown remarkPlugins={[remarkGfm]}>
-              {competition.rules || "No rules have been published yet."}
-            </Markdown>
-          </div>
-        </PanelBody>
-      </Panel>
+    <>
+      <CompetitionPageHeader
+        competitionId={id}
+        competitionName={competition.name}
+        title="Rules"
+        description="What applies across the whole competition, and what each track adds on top."
+        meta={
+          tracksWithRules.length ? (
+            <HeaderMeta>
+              <span>
+                <b>{tracksWithRules.length}</b>{" "}
+                {tracksWithRules.length === 1 ? "track adds" : "tracks add"}{" "}
+                rules of their own
+              </span>
+            </HeaderMeta>
+          ) : undefined
+        }
+        tabs
+      />
+      <PageBody className="space-y-6">
+        <Panel>
+          <PanelHeader className="flex-col items-start gap-1">
+            <PanelTitle>General rules</PanelTitle>
+            <PanelDescription>
+              Rules that apply across the entire competition.
+            </PanelDescription>
+          </PanelHeader>
+          <PanelBody>
+            <div className={proseClass}>
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {competition.rules || "No rules have been published yet."}
+              </Markdown>
+            </div>
+          </PanelBody>
+        </Panel>
 
-      {tracksWithRules.length > 0 ? (
-        <div className="grid gap-6">
-          {tracksWithRules.map((track) => (
-            <Panel key={track.id}>
-              <PanelHeader className="flex-col items-start gap-1">
-                <PanelTitle>{track.name}</PanelTitle>
-                <PanelDescription>{track.description}</PanelDescription>
-              </PanelHeader>
-              <PanelBody>
-                <div className={proseClass}>
-                  <Markdown remarkPlugins={[remarkGfm]}>{track.rules}</Markdown>
-                </div>
-              </PanelBody>
-            </Panel>
-          ))}
-        </div>
-      ) : null}
-    </div>
+        {tracksWithRules.length > 0 ? (
+          <div className="grid gap-6">
+            {tracksWithRules.map((track) => (
+              <Panel key={track.id}>
+                <PanelHeader className="flex-col items-start gap-1">
+                  <PanelTitle>{track.name}</PanelTitle>
+                  <PanelDescription>{track.description}</PanelDescription>
+                </PanelHeader>
+                <PanelBody>
+                  <div className={proseClass}>
+                    <Markdown remarkPlugins={[remarkGfm]}>
+                      {track.rules}
+                    </Markdown>
+                  </div>
+                </PanelBody>
+              </Panel>
+            ))}
+          </div>
+        ) : null}
+      </PageBody>
+    </>
   );
 }

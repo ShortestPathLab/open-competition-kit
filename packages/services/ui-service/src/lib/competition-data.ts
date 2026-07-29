@@ -6,6 +6,8 @@ import {
   tracks,
   unsafe,
 } from "@open-competition-kit/sdk";
+import { isVisibleTo } from "@open-competition-kit/sdk/visibility";
+import { adminStatus } from "./admin";
 
 export type TrackSummary = {
   id: string;
@@ -14,6 +16,15 @@ export type TrackSummary = {
   overview: string;
   rules: string;
   competitionId: string;
+  /**
+   * The submission window, as ISO 8601 instants. Sent raw rather than as a
+   * resolved open/closed flag: these summaries are cached by react-query, and a
+   * flag computed here would keep saying "open" for as long as the cache holds.
+   * The client re-derives the state on each render, and the server rejects late
+   * submissions regardless of what the client believes.
+   */
+  opensAt?: string;
+  closesAt?: string;
 };
 
 export type CompetitionSummary = {
@@ -24,6 +35,11 @@ export type CompetitionSummary = {
   overview: string;
   rules: string;
   tracks: TrackSummary[];
+  /**
+   * Only ever `"draft"` for an organiser, since nobody else is handed a draft in
+   * the first place. It exists so their pages can say so.
+   */
+  visibility?: string;
 };
 
 export type SubmissionSummary = { id: string; body: string };
@@ -48,10 +64,31 @@ function makeCompetitionDescription(name: string, trackCount: number) {
   return `${name} currently has ${trackCount} tracks available.`;
 }
 
+/**
+ * A draft is missing rather than forbidden, for the same reason the route guard
+ * says so: "forbidden" tells a stranger the competition exists.
+ *
+ * This lives here rather than only in the guard because every one of these
+ * summaries is reachable through a `createServerFn`, and a server function is a
+ * public HTTP endpoint whether or not a route ever renders it.
+ */
+class CompetitionNotFoundError extends Error {
+  constructor(id: string) {
+    super(`Competition "${id}" not found.`);
+  }
+}
+
 export async function getCompetitionSummary(
   id: string,
 ): Promise<CompetitionSummary> {
-  const competition = await unsafe(competitions.get(id));
+  const [competition, admin] = await Promise.all([
+    unsafe(competitions.get(id)),
+    adminStatus(),
+  ]);
+
+  if (!isVisibleTo(competition, admin.isAdmin)) {
+    throw new CompetitionNotFoundError(id);
+  }
 
   const competitionTracks = await unsafe(tracks.of(competition));
 
@@ -63,6 +100,8 @@ export async function getCompetitionSummary(
     overview: track.overview ?? "",
     rules: track.rules ?? "",
     competitionId: id,
+    opensAt: track.opensAt,
+    closesAt: track.closesAt,
   }));
 
   return {
@@ -82,12 +121,58 @@ export async function getCompetitionSummary(
 export async function listCompetitionSummaries(): Promise<
   CompetitionSummary[]
 > {
-  const competitionRecords = await unsafe(competitions.list({}));
+  const [competitionRecords, admin] = await Promise.all([
+    unsafe(competitions.list({})),
+    adminStatus(),
+  ]);
+  // Filtered before the summaries are built, not after: `getCompetitionSummary`
+  // throws on a draft, so mapping the unfiltered list would reject the whole
+  // index the moment one competition went unpublished.
   return Promise.all(
-    competitionRecords.map((competition) =>
-      getCompetitionSummary(competition.id),
+    competitionRecords
+      .filter((competition) => isVisibleTo(competition, admin.isAdmin))
+      .map((competition) => getCompetitionSummary(competition.id)),
+  );
+}
+
+/**
+ * Guards a write against the track's competition being published.
+ *
+ * Reading a draft is already impossible for anyone but an organiser, but enrolling
+ * and submitting do not go through any of the read paths — they take a track id
+ * and act on it. Without this, a track id leaked or guessed while a competition
+ * was still being drafted would still accept entrants.
+ */
+export async function ensureTrackAvailable(trackId: string): Promise<void> {
+  const track = await unsafe(tracks.get(trackId));
+  const [competition, admin] = await Promise.all([
+    unsafe(competitions.get(track.competition)),
+    adminStatus(),
+  ]);
+
+  if (!isVisibleTo(competition, admin.isAdmin)) {
+    throw new CompetitionNotFoundError(track.competition);
+  }
+}
+
+/**
+ * How many submissions a competition has taken, across all of its tracks.
+ *
+ * A whole-competition figure, not the caller's own: it sits in the public stat
+ * strip next to the track and leaderboard counts, and those describe the
+ * competition rather than whoever happens to be reading. Counted track by track
+ * because a submission records the track it went to and nothing above it.
+ */
+export async function countCompetitionSubmissions(competitionId: string) {
+  const competition = await getCompetitionSummary(competitionId);
+  const perTrack = await Promise.all(
+    competition.tracks.map((track) =>
+      unsafe(submissions.list({ track: track.id })),
     ),
   );
+  return perTrack.reduce((total, trackSubmissions) => {
+    return total + trackSubmissions.length;
+  }, 0);
 }
 
 export async function getTrackSummary(trackId: string) {

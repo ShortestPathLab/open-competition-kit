@@ -149,6 +149,13 @@ export type OpenCompetitionKitApi = {
      * initial jobs they want to create.
      */
     submit: unknown;
+    /**
+     * Ask whether a user may submit to a track, without submitting.
+     *
+     * Runs the same gate chain `submit` enforces, so a form can show the reason
+     * up front instead of letting someone fill it in and be turned away.
+     */
+    gate: unknown;
   };
 
   jobs: CollectionApi & {

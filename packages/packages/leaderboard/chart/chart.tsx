@@ -1,5 +1,6 @@
 import type { ComponentDef, $props } from "@open-competition-kit/sdk";
 import { meta, shape, value } from "@open-competition-kit/sdk/z";
+import { useHostDarkMode } from "@open-competition-kit/sdk/theme";
 import React from "react";
 import {
   Area,
@@ -33,24 +34,6 @@ type Item = Parsed["items"][number];
 
 const KINDS = ["bar", "line", "area"] as const;
 type Kind = (typeof KINDS)[number];
-
-/** Renderers can't read the host page's theme, so ask the platform directly. */
-function usePrefersDark() {
-  const query = "(prefers-color-scheme: dark)";
-  const [isDark, setIsDark] = React.useState(
-    () => globalThis.matchMedia?.(query).matches ?? false,
-  );
-
-  React.useEffect(() => {
-    const mq = globalThis.matchMedia?.(query);
-    if (!mq) return;
-    const onChange = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  return isDark;
-}
 
 const asNumber = (v: unknown) => {
   if (typeof v === "number") return v;
@@ -162,7 +145,7 @@ function TooltipCard({
 }
 
 export function Chart({ def }: ChartProps) {
-  const isDark = usePrefersDark();
+  const isDark = useHostDarkMode();
   const theme = isDark ? dark : light;
 
   const result = z.safeParse(propsSchema as z.ZodType<Parsed>, def);
@@ -261,7 +244,22 @@ export function Chart({ def }: ChartProps) {
   const common = { data, margin: { bottom: 4, left: 4, right: 12, top: 8 } };
 
   return (
-    <div style={{ width: "100%" }}>
+    // The plot's own surface. The host places a chart the way it places any
+    // other renderer, bare and under the board's heading, so the card has to
+    // come from here. Custom properties cross the shadow boundary, so it takes
+    // the page's palette and radius when there is a page, and the theme's own
+    // values when the chart renders alone. `boxSizing` is spelled out because
+    // no reset reaches inside a shadow root.
+    <div
+      style={{
+        background: `var(--card, ${theme.surface})`,
+        border: `1px solid var(--border, ${theme.border})`,
+        borderRadius: "var(--radius, 12px)",
+        boxSizing: "border-box",
+        padding: 16,
+        width: "100%",
+      }}
+    >
       <ResponsiveContainer height={height} width="100%">
         {kind === "line" ?
           <LineChart {...common}>

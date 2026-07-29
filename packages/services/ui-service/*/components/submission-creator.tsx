@@ -23,10 +23,14 @@ import {
   EmptyTitle,
 } from "*/components/ui/empty";
 import { FormSkeleton } from "*/components/skeletons";
+import {
+  SubmissionWindowSummary,
+  useWindowState,
+} from "*/components/submission-window";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Layers3, Loader2 } from "lucide-react";
+import { Layers3, Loader2, LockKeyhole } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -38,7 +42,7 @@ import { queryClient } from "src/router";
 import { EnrolmentCard } from "./enrolment-card";
 import { getEnrollmentStatus } from "src/lib/enrolment-fn";
 import { getLoadedForm } from "src/lib/form-fn";
-import { createSubmission } from "src/lib/submission-fn";
+import { createSubmission, useSubmissionGate } from "src/lib/submission-fn";
 
 interface SubmissionCreatorProps {
   competition: CompetitionSummary;
@@ -78,14 +82,25 @@ export function SubmissionCreator({
   );
 
   const selectedTrack = tracks.find((track) => track.id === trackId);
+  // Drives the schedule panel only. Whether the form opens is the server's call,
+  // since the deadline is one of several gates and the rest need the database.
+  const windowState = useWindowState(selectedTrack ?? {});
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
     queryFn:
-      session?.user?.id && trackId ?
-        () => fetchEnrollmentStatus({ data: { trackId } })
-      : skipToken,
+      session?.user?.id && trackId
+        ? () => fetchEnrollmentStatus({ data: { trackId } })
+        : skipToken,
   });
+
+  const { data: gate, isLoading: gateLoading } = useSubmissionGate(
+    session?.user?.id,
+    isEnrolled ? trackId : undefined,
+  );
+  // Closed until the server says otherwise. An unanswered gate is not an open
+  // one, and the alternative flashes a form that is about to be taken away.
+  const isOpen = gate?.allowed === true;
 
   const {
     data: formDef,
@@ -95,9 +110,9 @@ export function SubmissionCreator({
   } = useQuery({
     queryKey: ["submissionForm", session?.user?.id, trackId],
     queryFn:
-      session?.user?.id && trackId && isEnrolled ?
-        () => getLoadedFormFn({ data: trackId })
-      : skipToken,
+      session?.user?.id && trackId && isEnrolled
+        ? () => getLoadedFormFn({ data: trackId })
+        : skipToken,
   });
 
   const mutation = useMutation({
@@ -145,14 +160,10 @@ export function SubmissionCreator({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      {/* No heading of its own. The page above already says this is a new
+          submission, and two titles saying the same thing in different words
+          read as two different things. */}
       <div className="space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">Create a submission</h2>
-          <p className="text-sm text-muted-foreground">
-            Choose a track, review its rules, and complete the submission form.
-          </p>
-        </div>
-
         <div className="space-y-5">
           <div className="grid gap-2">
             <label htmlFor="track-picker" className="text-sm font-medium">
@@ -183,14 +194,20 @@ export function SubmissionCreator({
                 </SelectGroup>
               </SelectContent>
             </Select>
-            {selectedTrack ?
+            {selectedTrack ? (
               <p className="text-sm text-muted-foreground">
                 {selectedTrack.description}
               </p>
-            : null}
+            ) : null}
+            {selectedTrack ? (
+              <SubmissionWindowSummary
+                window={selectedTrack}
+                state={windowState}
+              />
+            ) : null}
           </div>
 
-          {!selectedTrack ?
+          {!selectedTrack ? (
             <Empty className="rounded-2xl border border-dashed border-border">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -203,7 +220,8 @@ export function SubmissionCreator({
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
-          : <>
+          ) : (
+            <>
               <EnrolmentCard
                 isSignedIn={Boolean(session?.user)}
                 isLoading={enrollmentLoading}
@@ -244,58 +262,87 @@ export function SubmissionCreator({
                 }
               />
 
-              {session?.user && isEnrolled ?
+              {session?.user && isEnrolled && gateLoading ? (
+                <FormSkeleton fields={4} />
+              ) : null}
+
+              {session?.user && isEnrolled && gate && !gate.allowed ? (
+                <Empty className="rounded-2xl border border-dashed border-border">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <LockKeyhole />
+                    </EmptyMedia>
+                    <EmptyTitle>You cannot submit right now</EmptyTitle>
+                    <EmptyDescription>
+                      {/* Every refusal, not just the first. A competitor who is
+                          past the deadline and out of attempts should not have to
+                          fix one to discover the other. */}
+                      <span className="flex flex-col gap-1.5">
+                        {/* Keyed by position too: nothing stops two packages
+                            from naming their gate the same thing. */}
+                        {gate.refusals.map((refusal, index) => (
+                          <span key={`${refusal.gate}-${index}`}>
+                            {refusal.reason}
+                          </span>
+                        ))}
+                      </span>
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : null}
+
+              {session?.user && isEnrolled && isOpen ? (
                 <div className="space-y-4">
                   {formLoading ? <FormSkeleton fields={4} /> : null}
 
-                  {formIsError ?
+                  {formIsError ? (
                     <p className="text-sm font-medium text-destructive">
-                      {formError instanceof Error ?
-                        formError.message
-                      : "Submission form failed to load."}
+                      {formError instanceof Error
+                        ? formError.message
+                        : "Submission form failed to load."}
                     </p>
-                  : null}
+                  ) : null}
 
-                  {formDef ?
+                  {formDef ? (
                     <SubmissionForm
                       def={formDef}
                       onSubmit={async (values) => {
                         await mutation.mutateAsync(values);
                       }}
                     />
-                  : null}
+                  ) : null}
 
                   <div className="flex flex-wrap items-center gap-3">
-                    {mutation.isPending ?
+                    {mutation.isPending ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Creating submission.
                       </div>
-                    : null}
+                    ) : null}
                     <p className="text-sm text-muted-foreground">
-                      {mutation.isPending ?
-                        "Submission will be created shortly."
-                      : `Submission will be created for ${selectedTrack.name}.`}
+                      {mutation.isPending
+                        ? "Submission will be created shortly."
+                        : `Submission will be created for ${selectedTrack.name}.`}
                     </p>
                   </div>
 
-                  {mutation.isError ?
+                  {mutation.isError ? (
                     <p className="text-sm font-medium text-destructive">
-                      {mutation.error instanceof Error ?
-                        mutation.error.message
-                      : "Submission failed."}
+                      {mutation.error instanceof Error
+                        ? mutation.error.message
+                        : "Submission failed."}
                     </p>
-                  : null}
+                  ) : null}
 
-                  {mutation.isSuccess ?
+                  {mutation.isSuccess ? (
                     <p className="text-sm text-muted-foreground">
                       Submission created for {selectedTrack.name}.
                     </p>
-                  : null}
+                  ) : null}
                 </div>
-              : null}
+              ) : null}
             </>
-          }
+          )}
         </div>
       </div>
 

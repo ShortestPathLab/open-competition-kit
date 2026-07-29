@@ -13,6 +13,7 @@ import type {
   SerialisableObject,
   SerialisableValue,
 } from "../serialisable";
+import type { GateRequest, Refusal } from "../gate";
 import { componentSource } from "./component";
 import { db } from "./db";
 import { hook } from "./hook";
@@ -137,6 +138,30 @@ export const Hooks = S.Struct({
       { user: string; body: string; track: string },
       { submission: string; jobs: string[] }
     >(),
+    /**
+     * Whether this user may submit to this track right now, asked before any
+     * submission exists.
+     *
+     * Chained like every other hook, and threaded the way `form.loader` threads
+     * its `def`: `refusals` holds what the packages further out have already
+     * decided, and an implementation adds its own before passing the combined
+     * list inward.
+     *
+     *     gate: async ({ user, track, refusals }, next) => {
+     *       const all = [...refusals, ...mine]
+     *       return (await next?.({ user, track, refusals: all })) ?? all
+     *     }
+     *
+     * The `?? all` tail is what terminates the chain, since `noop` sits innermost
+     * in most configurations and answers with nothing. Returning your own list
+     * rather than what `next` gave back discards every refusal beneath you, which
+     * is the one mistake here that reads as correct.
+     *
+     * A query, not an action: the submission form asks this before it renders, so
+     * a competitor reads why they cannot submit instead of finding out by trying.
+     * The same call decides the real thing inside `submissions.submit`.
+     */
+    gate: hook<GateRequest, readonly Refusal[]>(),
   }),
   runner: S.Struct({
     ui: S.Unknown,

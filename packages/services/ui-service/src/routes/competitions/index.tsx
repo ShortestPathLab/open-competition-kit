@@ -15,6 +15,7 @@ import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { SearchX, Trophy } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { listCompetitionSummaries } from "src/lib/competition-data";
+import { isDraft } from "@open-competition-kit/sdk/visibility";
 
 export const Route = createFileRoute("/competitions/")({
   component: CompetitionsPage,
@@ -96,6 +97,7 @@ function CompetitionsPage() {
                 name={comp.name}
                 organiser={comp.organiser}
                 trackCount={comp.tracks.length}
+                isDraft={isDraft(comp)}
               />
             ))}
           </div>

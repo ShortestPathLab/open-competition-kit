@@ -2,8 +2,14 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { CompetitionSelector } from "*/components/competition-selector";
 import { AdminCompetitionTabs } from "../../../../*/components/admin-competition-tabs";
 import { useCompetition } from "src/lib/competition-fn";
+import { ensureCompetition } from "src/lib/route-guards";
 
 export const Route = createFileRoute("/dashboard/$competitionId")({
+  // The parent `/dashboard` route has already turned away anyone who is not an
+  // organiser, so this only has to answer whether the competition is real.
+  beforeLoad: async ({ params }) => ({
+    competition: await ensureCompetition(params.competitionId),
+  }),
   component: AdminCompetitionLayout,
 });
 

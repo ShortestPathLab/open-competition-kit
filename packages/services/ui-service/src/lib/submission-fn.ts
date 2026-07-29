@@ -8,7 +8,9 @@ import sdk, {
   tracks,
   unsafe,
 } from "@open-competition-kit/sdk";
+import type { GateVerdict } from "@open-competition-kit/sdk/gate";
 import {
+  ensureTrackAvailable,
   listUserSubmissions,
   type UserSubmissionSummary,
 } from "./competition-data";
@@ -186,10 +188,46 @@ const submissionInput = z.object({
   value: z.record(z.string(), jsonValue),
 });
 
+const gateInput = z.object({ trackId: z.string() });
+
+/**
+ * Why this competitor cannot submit to this track, asked before the form renders.
+ *
+ * Advisory. `createSubmission` runs the same chain through the kit, so a stale
+ * answer here costs a confusing moment and nothing else. The user is taken from
+ * the session rather than the request, since a caller who could name someone else
+ * would be reading that person's attempt history out of the refusal details.
+ */
+export const getSubmissionGate = createServerFn({ method: "GET" })
+  .inputValidator(gateInput)
+  .middleware([authMiddleware])
+  .handler(async ({ data, context: { session } }): Promise<GateVerdict> => {
+    await ensureTrackAvailable(data.trackId);
+    return unsafe(
+      sdk.submissions.gate(resolveId(session.user), data.trackId),
+    ) as Promise<GateVerdict>;
+  });
+
+export function useSubmissionGate(userId?: string, trackId?: string) {
+  const getSubmissionGateFn = useServerFn(getSubmissionGate);
+  return useQuery({
+    queryKey: ["submissionGate", userId, trackId],
+    // A window opens or a rate limit expires while the page is sitting there, so
+    // the answer goes stale on its own without anybody touching anything.
+    refetchInterval: 30_000,
+    queryFn:
+      userId && trackId ?
+        () => getSubmissionGateFn({ data: { trackId } })
+      : skipToken,
+  });
+}
+
 export const createSubmission = createServerFn({ method: "POST" })
   .inputValidator(submissionInput)
   .middleware([authMiddleware])
   .handler(async ({ data, context: { session } }) => {
+    await ensureTrackAvailable(data.trackId);
+
     const enrolmentStatus = await sdk.enrolments.isEnrolled(
       resolveId(session.user),
       data.trackId,

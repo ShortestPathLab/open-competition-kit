@@ -1,10 +1,30 @@
 export const stem = "open-competition-kit/tag" as const;
 
 /**
+ * The reference a job output is stored under.
+ *
+ * Every output goes under the stem, so a runner and the board that reads it
+ * agree on one name without either having to spell it out. A bare name written
+ * straight into `outputs.set` collides with any other package that picks the
+ * same word, and a board pointed at the other spelling reads nothing and
+ * renders empty with no error to explain it.
+ */
+export const output = <T extends string>(name: T) =>
+  `${stem}/output/${name}` as const;
+
+/**
  * A collection of standard reference codes recommended for
  * cross-compatibility.
  */
 export const std = {
+  /**
+   * The output a leaderboard reads unless its `output:` names another.
+   *
+   * A runner writes the values it wants ranked here: a scalar, an object of
+   * them, or an array of either.
+   */
+  output: output("default"),
+
   /**
    * A `FileRef` pointing at the zipped code submission.
    *

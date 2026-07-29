@@ -13,29 +13,42 @@ interface TabNavProps {
   variant?: "underline" | "pill";
 }
 
+/**
+ * A tab strip, sized to its labels and aligned left.
+ *
+ * Tabs used to be stretched with `w-full` and centred, which spread five of
+ * them across the whole page and read as a segmented control rather than as
+ * navigation. Left aligned, the strip starts where every other line of the
+ * header starts and stops when it runs out of tabs.
+ */
 export function TabNav({ tabs, variant = "pill" }: TabNavProps) {
   const { pathname } = useLocation();
 
   return (
-    <nav className="items-center gap-0 flex">
+    <nav
+      className={cn(
+        "flex items-center overflow-x-auto",
+        variant === "pill" ? "gap-1" : "gap-6",
+      )}
+    >
       {tabs.map((tab) => {
-        const isActive =
-          tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+        const isActive = tab.exact
+          ? pathname === tab.href
+          : pathname.startsWith(tab.href);
         return (
           <Link
             key={tab.href}
             to={tab.href}
             className={cn(
-              "flex items-center justify-center gap-1.5 px-2 py-4 w-full text-sm text-muted-foreground transition-colors",
+              "flex shrink-0 items-center gap-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground",
               variant === "underline" &&
-                "border-b-2 hover:text-foreground border-transparent",
-              variant === "pill" && "rounded-md hover:text-primary ",
-              variant === "pill" &&
-                isActive &&
-                "bg-primary/10 text-primary font-medium",
+                "-mb-px border-b-2 border-transparent py-2.5",
+              variant === "pill" && "rounded-md px-3 py-1.5",
+              variant === "pill" && isActive && "bg-secondary text-foreground",
               variant === "underline" &&
                 isActive &&
-                "border-primary text-primary font-medium bg-primary/5",
+                "border-primary text-foreground",
+              isActive && "font-medium",
             )}
           >
             {tab.label}

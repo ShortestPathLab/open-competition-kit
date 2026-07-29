@@ -1,6 +1,7 @@
+import { CompetitionPageHeader } from "*/components/competition-page-header";
+import { HeaderMeta, PageBody } from "*/components/page-header-band";
 import { PageSkeleton } from "*/components/skeletons";
 import { SubmissionBrowser } from "*/components/submission-browser";
-import { SectionHeader } from "*/components/section-header";
 import { Button } from "*/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { authClient } from "src/lib/auth-client";
@@ -21,10 +22,16 @@ function CompetitionSubmissionsPage() {
   if (!competition) return <PageSkeleton />;
 
   return (
-    <div className="space-y-4">
-      <SectionHeader
-        title="My submissions"
-        description="Search your submissions in this competition and jump back into a track when needed."
+    <>
+      {/* The title says "Your submissions" while the crumb says "Submissions":
+          the crumb names the section a reader is navigating, and the title
+          names what is actually on the page, which is only ever their own. */}
+      <CompetitionPageHeader
+        competitionId={id}
+        competitionName={competition.name}
+        title="Your submissions"
+        crumb="Submissions"
+        description="Everything you have entered here, and a way back into the track it went to."
         actions={
           <Button
             render={
@@ -34,8 +41,19 @@ function CompetitionSubmissionsPage() {
             New submission
           </Button>
         }
+        meta={
+          session?.user ? (
+            <HeaderMeta>
+              <span>
+                <b>{submissions.length}</b>{" "}
+                {submissions.length === 1 ? "submission" : "submissions"}
+              </span>
+            </HeaderMeta>
+          ) : undefined
+        }
+        tabs
       />
-      <div>
+      <PageBody>
         <SubmissionBrowser
           submissions={submissions}
           isSessionLoading={sessionLoading}
@@ -43,7 +61,7 @@ function CompetitionSubmissionsPage() {
           isLoading={submissionsLoading}
           emptyDescription="Enrol in a track and create a submission to start building your history."
         />
-      </div>
-    </div>
+      </PageBody>
+    </>
   );
 }

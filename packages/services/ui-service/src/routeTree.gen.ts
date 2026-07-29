@@ -15,13 +15,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as MeIndexRouteImport } from './routes/me/index'
-import { Route as LeaderboardsIndexRouteImport } from './routes/leaderboards/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions/index'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as MeSettingsRouteImport } from './routes/me/settings'
 import { Route as MeEnrolmentsRouteImport } from './routes/me/enrolments'
-import { Route as LeaderboardsLeaderboardIdRouteImport } from './routes/leaderboards/$leaderboardId'
 import { Route as DashboardCompetitionIdRouteRouteImport } from './routes/dashboard/$competitionId/route'
 import { Route as CompetitionsIdRouteRouteImport } from './routes/competitions/$id/route'
 import { Route as MeSubmissionsIndexRouteImport } from './routes/me/submissions/index'
@@ -39,8 +37,10 @@ import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from './route
 import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from './routes/dashboard/$competitionId/configure/index'
 import { Route as CompetitionsIdTracksIndexRouteImport } from './routes/competitions/$id/tracks/index'
 import { Route as CompetitionsIdSubmissionsIndexRouteImport } from './routes/competitions/$id/submissions/index'
+import { Route as CompetitionsIdLeaderboardsIndexRouteImport } from './routes/competitions/$id/leaderboards/index'
 import { Route as CompetitionsIdTracksTrackIdRouteImport } from './routes/competitions/$id/tracks/$trackId'
 import { Route as CompetitionsIdSubmissionsNewRouteImport } from './routes/competitions/$id/submissions/new'
+import { Route as CompetitionsIdLeaderboardsLeaderboardIdRouteImport } from './routes/competitions/$id/leaderboards/$leaderboardId'
 
 const MeRouteRoute = MeRouteRouteImport.update({
   id: '/me',
@@ -72,11 +72,6 @@ const MeIndexRoute = MeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MeRouteRoute,
 } as any)
-const LeaderboardsIndexRoute = LeaderboardsIndexRouteImport.update({
-  id: '/leaderboards/',
-  path: '/leaderboards/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -102,12 +97,6 @@ const MeEnrolmentsRoute = MeEnrolmentsRouteImport.update({
   path: '/enrolments',
   getParentRoute: () => MeRouteRoute,
 } as any)
-const LeaderboardsLeaderboardIdRoute =
-  LeaderboardsLeaderboardIdRouteImport.update({
-    id: '/leaderboards/$leaderboardId',
-    path: '/leaderboards/$leaderboardId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const DashboardCompetitionIdRouteRoute =
   DashboardCompetitionIdRouteRouteImport.update({
     id: '/$competitionId',
@@ -199,6 +188,12 @@ const CompetitionsIdSubmissionsIndexRoute =
     path: '/submissions/',
     getParentRoute: () => CompetitionsIdRouteRoute,
   } as any)
+const CompetitionsIdLeaderboardsIndexRoute =
+  CompetitionsIdLeaderboardsIndexRouteImport.update({
+    id: '/leaderboards/',
+    path: '/leaderboards/',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
 const CompetitionsIdTracksTrackIdRoute =
   CompetitionsIdTracksTrackIdRouteImport.update({
     id: '/tracks/$trackId',
@@ -211,6 +206,12 @@ const CompetitionsIdSubmissionsNewRoute =
     path: '/submissions/new',
     getParentRoute: () => CompetitionsIdRouteRoute,
   } as any)
+const CompetitionsIdLeaderboardsLeaderboardIdRoute =
+  CompetitionsIdLeaderboardsLeaderboardIdRouteImport.update({
+    id: '/leaderboards/$leaderboardId',
+    path: '/leaderboards/$leaderboardId',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -218,13 +219,11 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
-  '/leaderboards/$leaderboardId': typeof LeaderboardsLeaderboardIdRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about/': typeof AboutIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/leaderboards/': typeof LeaderboardsIndexRoute
   '/me/': typeof MeIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/sign-in/': typeof SignInIndexRoute
@@ -239,8 +238,10 @@ export interface FileRoutesByFullPath {
   '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
   '/me/submissions/': typeof MeSubmissionsIndexRoute
+  '/competitions/$id/leaderboards/$leaderboardId': typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
   '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
   '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/competitions/$id/leaderboards/': typeof CompetitionsIdLeaderboardsIndexRoute
   '/competitions/$id/submissions/': typeof CompetitionsIdSubmissionsIndexRoute
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
@@ -249,13 +250,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
-  '/leaderboards/$leaderboardId': typeof LeaderboardsLeaderboardIdRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about': typeof AboutIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/leaderboards': typeof LeaderboardsIndexRoute
   '/me': typeof MeIndexRoute
   '/register': typeof RegisterIndexRoute
   '/sign-in': typeof SignInIndexRoute
@@ -270,8 +269,10 @@ export interface FileRoutesByTo {
   '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
   '/competitions/$id': typeof CompetitionsIdIndexRoute
   '/me/submissions': typeof MeSubmissionsIndexRoute
+  '/competitions/$id/leaderboards/$leaderboardId': typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
   '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
   '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/competitions/$id/leaderboards': typeof CompetitionsIdLeaderboardsIndexRoute
   '/competitions/$id/submissions': typeof CompetitionsIdSubmissionsIndexRoute
   '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure': typeof DashboardCompetitionIdConfigureIndexRoute
@@ -284,13 +285,11 @@ export interface FileRoutesById {
   '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
-  '/leaderboards/$leaderboardId': typeof LeaderboardsLeaderboardIdRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about/': typeof AboutIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/leaderboards/': typeof LeaderboardsIndexRoute
   '/me/': typeof MeIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/sign-in/': typeof SignInIndexRoute
@@ -305,8 +304,10 @@ export interface FileRoutesById {
   '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
   '/competitions/$id/': typeof CompetitionsIdIndexRoute
   '/me/submissions/': typeof MeSubmissionsIndexRoute
+  '/competitions/$id/leaderboards/$leaderboardId': typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
   '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
   '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/competitions/$id/leaderboards/': typeof CompetitionsIdLeaderboardsIndexRoute
   '/competitions/$id/submissions/': typeof CompetitionsIdSubmissionsIndexRoute
   '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
   '/dashboard/$competitionId/configure/': typeof DashboardCompetitionIdConfigureIndexRoute
@@ -320,13 +321,11 @@ export interface FileRouteTypes {
     | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
-    | '/leaderboards/$leaderboardId'
     | '/me/enrolments'
     | '/me/settings'
     | '/about/'
     | '/competitions/'
     | '/dashboard/'
-    | '/leaderboards/'
     | '/me/'
     | '/register/'
     | '/sign-in/'
@@ -341,8 +340,10 @@ export interface FileRouteTypes {
     | '/sign-in/complete/$method'
     | '/competitions/$id/'
     | '/me/submissions/'
+    | '/competitions/$id/leaderboards/$leaderboardId'
     | '/competitions/$id/submissions/new'
     | '/competitions/$id/tracks/$trackId'
+    | '/competitions/$id/leaderboards/'
     | '/competitions/$id/submissions/'
     | '/competitions/$id/tracks/'
     | '/dashboard/$competitionId/configure/'
@@ -351,13 +352,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dashboard/$competitionId'
-    | '/leaderboards/$leaderboardId'
     | '/me/enrolments'
     | '/me/settings'
     | '/about'
     | '/competitions'
     | '/dashboard'
-    | '/leaderboards'
     | '/me'
     | '/register'
     | '/sign-in'
@@ -372,8 +371,10 @@ export interface FileRouteTypes {
     | '/sign-in/complete/$method'
     | '/competitions/$id'
     | '/me/submissions'
+    | '/competitions/$id/leaderboards/$leaderboardId'
     | '/competitions/$id/submissions/new'
     | '/competitions/$id/tracks/$trackId'
+    | '/competitions/$id/leaderboards'
     | '/competitions/$id/submissions'
     | '/competitions/$id/tracks'
     | '/dashboard/$competitionId/configure'
@@ -385,13 +386,11 @@ export interface FileRouteTypes {
     | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
-    | '/leaderboards/$leaderboardId'
     | '/me/enrolments'
     | '/me/settings'
     | '/about/'
     | '/competitions/'
     | '/dashboard/'
-    | '/leaderboards/'
     | '/me/'
     | '/register/'
     | '/sign-in/'
@@ -406,8 +405,10 @@ export interface FileRouteTypes {
     | '/sign-in/complete/$method'
     | '/competitions/$id/'
     | '/me/submissions/'
+    | '/competitions/$id/leaderboards/$leaderboardId'
     | '/competitions/$id/submissions/new'
     | '/competitions/$id/tracks/$trackId'
+    | '/competitions/$id/leaderboards/'
     | '/competitions/$id/submissions/'
     | '/competitions/$id/tracks/'
     | '/dashboard/$competitionId/configure/'
@@ -419,10 +420,8 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   MeRouteRoute: typeof MeRouteRouteWithChildren
   CompetitionsIdRouteRoute: typeof CompetitionsIdRouteRouteWithChildren
-  LeaderboardsLeaderboardIdRoute: typeof LeaderboardsLeaderboardIdRoute
   AboutIndexRoute: typeof AboutIndexRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
-  LeaderboardsIndexRoute: typeof LeaderboardsIndexRoute
   RegisterIndexRoute: typeof RegisterIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -477,13 +476,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeIndexRouteImport
       parentRoute: typeof MeRouteRoute
     }
-    '/leaderboards/': {
-      id: '/leaderboards/'
-      path: '/leaderboards'
-      fullPath: '/leaderboards/'
-      preLoaderRoute: typeof LeaderboardsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/'
@@ -518,13 +510,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/me/enrolments'
       preLoaderRoute: typeof MeEnrolmentsRouteImport
       parentRoute: typeof MeRouteRoute
-    }
-    '/leaderboards/$leaderboardId': {
-      id: '/leaderboards/$leaderboardId'
-      path: '/leaderboards/$leaderboardId'
-      fullPath: '/leaderboards/$leaderboardId'
-      preLoaderRoute: typeof LeaderboardsLeaderboardIdRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/dashboard/$competitionId': {
       id: '/dashboard/$competitionId'
@@ -645,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionsIdSubmissionsIndexRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
     }
+    '/competitions/$id/leaderboards/': {
+      id: '/competitions/$id/leaderboards/'
+      path: '/leaderboards'
+      fullPath: '/competitions/$id/leaderboards/'
+      preLoaderRoute: typeof CompetitionsIdLeaderboardsIndexRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
     '/competitions/$id/tracks/$trackId': {
       id: '/competitions/$id/tracks/$trackId'
       path: '/tracks/$trackId'
@@ -657,6 +649,13 @@ declare module '@tanstack/react-router' {
       path: '/submissions/new'
       fullPath: '/competitions/$id/submissions/new'
       preLoaderRoute: typeof CompetitionsIdSubmissionsNewRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/competitions/$id/leaderboards/$leaderboardId': {
+      id: '/competitions/$id/leaderboards/$leaderboardId'
+      path: '/leaderboards/$leaderboardId'
+      fullPath: '/competitions/$id/leaderboards/$leaderboardId'
+      preLoaderRoute: typeof CompetitionsIdLeaderboardsLeaderboardIdRouteImport
       parentRoute: typeof CompetitionsIdRouteRoute
     }
   }
@@ -718,8 +717,10 @@ interface CompetitionsIdRouteRouteChildren {
   CompetitionsIdEnrolRoute: typeof CompetitionsIdEnrolRoute
   CompetitionsIdRulesRoute: typeof CompetitionsIdRulesRoute
   CompetitionsIdIndexRoute: typeof CompetitionsIdIndexRoute
+  CompetitionsIdLeaderboardsLeaderboardIdRoute: typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
   CompetitionsIdSubmissionsNewRoute: typeof CompetitionsIdSubmissionsNewRoute
   CompetitionsIdTracksTrackIdRoute: typeof CompetitionsIdTracksTrackIdRoute
+  CompetitionsIdLeaderboardsIndexRoute: typeof CompetitionsIdLeaderboardsIndexRoute
   CompetitionsIdSubmissionsIndexRoute: typeof CompetitionsIdSubmissionsIndexRoute
   CompetitionsIdTracksIndexRoute: typeof CompetitionsIdTracksIndexRoute
 }
@@ -728,8 +729,11 @@ const CompetitionsIdRouteRouteChildren: CompetitionsIdRouteRouteChildren = {
   CompetitionsIdEnrolRoute: CompetitionsIdEnrolRoute,
   CompetitionsIdRulesRoute: CompetitionsIdRulesRoute,
   CompetitionsIdIndexRoute: CompetitionsIdIndexRoute,
+  CompetitionsIdLeaderboardsLeaderboardIdRoute:
+    CompetitionsIdLeaderboardsLeaderboardIdRoute,
   CompetitionsIdSubmissionsNewRoute: CompetitionsIdSubmissionsNewRoute,
   CompetitionsIdTracksTrackIdRoute: CompetitionsIdTracksTrackIdRoute,
+  CompetitionsIdLeaderboardsIndexRoute: CompetitionsIdLeaderboardsIndexRoute,
   CompetitionsIdSubmissionsIndexRoute: CompetitionsIdSubmissionsIndexRoute,
   CompetitionsIdTracksIndexRoute: CompetitionsIdTracksIndexRoute,
 }
@@ -742,10 +746,8 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   MeRouteRoute: MeRouteRouteWithChildren,
   CompetitionsIdRouteRoute: CompetitionsIdRouteRouteWithChildren,
-  LeaderboardsLeaderboardIdRoute: LeaderboardsLeaderboardIdRoute,
   AboutIndexRoute: AboutIndexRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
-  LeaderboardsIndexRoute: LeaderboardsIndexRoute,
   RegisterIndexRoute: RegisterIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

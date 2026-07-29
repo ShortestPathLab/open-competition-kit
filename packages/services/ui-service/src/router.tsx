@@ -3,6 +3,8 @@ import { createRouter } from "@tanstack/react-router";
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
 import { QueryClient } from "@tanstack/react-query";
+import { ErrorPage } from "*/components/error-page";
+import { NotFoundPage } from "*/components/not-found-page";
 
 export const queryClient = new QueryClient();
 
@@ -13,6 +15,12 @@ export const getRouter = () => {
     context: {
       queryClient,
     },
+    // Every route gets these unless it names its own. `defaultErrorComponent`
+    // catches what loaders, `beforeLoad` guards and renders throw;
+    // `defaultNotFoundComponent` catches `notFound()` and, at the root, a URL
+    // that matches no route at all.
+    defaultErrorComponent: ErrorPage,
+    defaultNotFoundComponent: NotFoundPage,
     defaultPreload: "viewport",
     defaultViewTransition: {
       types: ({ fromLocation, toLocation }) => {

@@ -5,6 +5,11 @@ import type { OpenCompetitionKitApi } from "./api";
 import { OpenCompetitionKitCollections } from "./collections";
 import { OpenCompetitionKitConfig } from "./config";
 import { access, type Accessor } from "./config/access";
+import {
+  describeRefusals,
+  verdictOf,
+  type Refusal,
+} from "./gate";
 import { Hooks, OpenCompetitionKitHooks } from "./hook";
 import { type schemas, type WithHooks } from "./hook/db";
 import {
@@ -63,6 +68,25 @@ export class FileTooLargeError extends D.TaggedError("FileTooLargeError")<{
   size: number;
   limit: number;
 }> {}
+
+/**
+ * A submission the gate chain refused.
+ *
+ * Raised in core rather than in the UI's server function so the rules hold for
+ * every caller — a package, a script, a future API route — and not only for the
+ * one path that happens to render a form. What the rules *are* is not core's
+ * business: it runs the chain and reports what came back.
+ */
+export class SubmissionRefusedError extends D.TaggedError(
+  "SubmissionRefusedError",
+)<{
+  track: string;
+  refusals: readonly Refusal[];
+}> {
+  override get message() {
+    return describeRefusals(this.refusals);
+  }
+}
 
 export function withCollectionUtilities<
   TCreate,
@@ -366,9 +390,36 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
           (submission) => tracks.get(submission.track),
           (track) => instance.submissions.list({ track: track.id }),
         ),
+        /**
+         * Ask the gate chain whether this user may submit, without submitting.
+         *
+         * Seeded with an empty list: core contributes no refusals of its own, so
+         * every rule here comes from a package and can be read off the config
+         * that installed it. The submission form asks this before rendering.
+         */
+        gate: (user: string, track: string) =>
+          E.gen(function* () {
+            const refusals = yield* hooks.do(
+              (h) => h.submissions.gate({ user, track, refusals: [] }),
+              { competitions: { tracks: track } },
+            );
+            return verdictOf(refusals ?? []);
+          }),
         submit: (user: string, body: string, track: string) =>
-          hooks.do((h) => h.submissions.submit({ user, track, body }), {
-            competitions: { tracks: track },
+          E.gen(function* () {
+            // The same question the form asked, asked again where it counts. A
+            // caller that never rendered a form is held to the same rules.
+            const verdict = yield* submissions.gate(user, track);
+            if (!verdict.allowed) {
+              return yield* new SubmissionRefusedError({
+                track,
+                refusals: verdict.refusals,
+              });
+            }
+            return yield* hooks.do(
+              (h) => h.submissions.submit({ user, track, body }),
+              { competitions: { tracks: track } },
+            );
           }),
       };
       // ─── Job ─────────────────────────────────────────────────────────────────────

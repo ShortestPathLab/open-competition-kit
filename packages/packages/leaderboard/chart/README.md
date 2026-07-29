@@ -56,7 +56,21 @@ If you do need two measures, prefer two charts over two series.
 ## Notes
 
 Renderers are mounted in a shadow root with no global stylesheet, so this package
-carries its own theme and styles everything inline. It follows the OS light/dark
-setting via `prefers-color-scheme`. The categorical palette is fixed-order and
-validated for colour-vision deficiency against both surfaces; charts with two or
-more series always show a legend, so identity never rests on colour alone.
+carries its own theme and styles everything inline. It picks light or dark from
+the surrounding page via `useHostDarkMode` in `@open-competition-kit/sdk/theme`,
+which reads the class the app puts on `<html>` and only consults
+`prefers-color-scheme` when the app sets none. Reading the media query alone
+would override a reader who picked light on a dark-scheme machine.
+
+The chart draws its own card: a host places a renderer bare, under the board's
+heading, so the surface has to come from here rather than from a panel around
+it. Its background, border and radius name `--card`, `--border` and `--radius`,
+which cross the shadow boundary, so the plot sits on the same surface as
+everything else on the page; the theme's own values are the fallback for a
+render with no page above it.
+
+The categorical palette is the exception. It is fixed-order and validated for
+colour-vision deficiency against both surfaces, and charts with two or more
+series always show a legend, so identity never rests on colour alone. Those
+values are chosen for chart legibility rather than to match the app, so the
+series colours do not follow the host's tokens.

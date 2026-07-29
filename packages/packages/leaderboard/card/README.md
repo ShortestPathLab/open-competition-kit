@@ -58,5 +58,13 @@ work of ranking is done once at the source.
 ## Notes
 
 Renderers are mounted in a shadow root with no global stylesheet, so this package
-carries its own theme and styles everything inline, following the OS light/dark
-setting. Numbers are set in tabular figures so they line up across cards.
+carries its own theme and styles everything inline. It picks light or dark from
+the surrounding page via `useHostDarkMode` in `@open-competition-kit/sdk/theme`,
+which reads the class the app puts on `<html>` and only consults
+`prefers-color-scheme` when the app sets none. Numbers are set in tabular figures
+so they line up across cards.
+
+The cards' background, border and radius name `--card`, `--border` and
+`--radius`. Custom properties cross the shadow boundary, so a podium rendered
+inside an app is made of the same surfaces as the rest of it, and falls back to
+the theme's own near-white when nothing above sets them.

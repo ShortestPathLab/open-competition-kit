@@ -1,6 +1,7 @@
 import sdk, {
   jobs,
   outputs,
+  reference,
   submissions,
   unsafe,
   users,
@@ -90,17 +91,19 @@ async function collect(competition: string, from: LeaderboardSource) {
 
   const trackIds =
     from.track ? [from.track] : owner.tracks.map((track) => track.id);
-  const reference = from.output ?? "default";
+  const outputReference = from.output ?? reference.std.output;
   const names = new Map<string, string>();
   const rows: Row[] = [];
+  let finished = 0;
 
   for (const track of trackIds) {
     for (const submission of await unsafe(submissions.list({ track }))) {
       for (const job of await unsafe(jobs.list({ submission: submission.id }))) {
         if (UNFINISHED.has(job.status) || FAILED.has(job.status)) continue;
+        finished++;
 
         const output = await unsafe(
-          outputs.get({ owner: job.id, reference }),
+          outputs.get({ owner: job.id, reference: outputReference }),
         ).catch(() => undefined);
 
         const produced = toRows(output);
@@ -129,6 +132,16 @@ async function collect(competition: string, from: LeaderboardSource) {
         }
       }
     }
+  }
+
+  // Finished jobs and still nothing to show means `output:` names a reference
+  // no runner on these tracks writes. Every other layer treats an empty board
+  // as a legitimate answer, so this is the only place that can tell anyone.
+  if (finished && !rows.length) {
+    console.warn(
+      `[standard] ${finished} finished job(s) on ${trackIds.join(", ")} but ` +
+        `no output stored under ${outputReference}.`,
+    );
   }
 
   return rows;

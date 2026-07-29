@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk, { unsafe } from "@open-competition-kit/sdk";
+import sdk, { reference, unsafe } from "@open-competition-kit/sdk";
 import {
   Empty,
   EmptyDescription,
@@ -47,7 +47,7 @@ const getCompetitionConfig = createServerFn({ method: "GET" })
       leaderboards: competition.leaderboards.map((l) => ({
         id: l.id,
         name: l.name ?? l.id,
-        source: l.from ? (l.from.output ?? "default") : "static items",
+        source: l.from ? (l.from.output ?? reference.std.output) : "static items",
       })),
       packages: [...competition.with],
       database: {

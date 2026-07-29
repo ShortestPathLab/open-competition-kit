@@ -16,6 +16,8 @@ import { transform } from "./transform";
 export * from "./schema";
 export * from "./access";
 export * from "./transform";
+export * from "./window";
+export * from "./visibility";
 
 const load = (s: string) =>
   E.try({ try: () => _load(s), catch: (e) => e as YAMLException });

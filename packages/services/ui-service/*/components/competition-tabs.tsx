@@ -14,7 +14,7 @@ export function CompetitionTabs({ competitionId }: CompetitionTabsProps) {
         { label: "Tracks", href: `${base}/tracks` },
         { label: "Rules", href: `${base}/rules` },
         { label: "Submissions", href: `${base}/submissions` },
-        { label: "Leaderboard", href: "/leaderboards", badge: 4 },
+        { label: "Leaderboards", href: `${base}/leaderboards` },
       ]}
     />
   );
