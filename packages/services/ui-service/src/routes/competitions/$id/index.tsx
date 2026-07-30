@@ -1,12 +1,4 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "*/components/ui/breadcrumb";
-import { CompetitionTabs } from "*/components/competition-tabs";
+import { CompetitionPageHeader } from "*/components/competition-page-header";
 import { PageSkeleton } from "*/components/skeletons";
 import { Button } from "*/components/ui/button";
 import { Badge } from "*/components/ui/badge";
@@ -25,17 +17,15 @@ import {
   PopoverTrigger,
 } from "*/components/ui/popover";
 import { DeadlinePanel } from "*/components/deadline-panel";
-import {
-  HeaderStats,
-  PageBody,
-  PageHeaderBand,
-} from "*/components/page-header-band";
+import { HeaderStats, PageBody } from "*/components/page-header-band";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
 import { StandingsPanel } from "*/components/standings-panel";
 import { Stat } from "*/components/stat-strip";
+import { SurfaceSlot } from "*/components/surface-slot";
 import { TrackCard } from "*/components/track-card";
 import { YourCompetitionPanel } from "*/components/your-competition-panel";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { surface } from "@open-competition-kit/sdk/surface";
 import { isDraft } from "@open-competition-kit/sdk/visibility";
 import {
   ArrowRight,
@@ -93,25 +83,14 @@ function CompetitionOverviewPage() {
   return (
     <>
       {/* The one page whose subject is the competition itself, so it keeps the
-          full hero and its own breadcrumb: the competition is the last crumb
-          rather than a link back to somewhere else. */}
-      <PageHeaderBand
+          full hero: the title is the competition's name rather than the page's.
+          The breadcrumb still ends on "Overview", so this page names itself
+          there the way each of its siblings does. */}
+      <CompetitionPageHeader
         className="[view-transition-name:competition-header]"
-        breadcrumb={
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink render={<Link to="/competitions" />}>
-                  Competitions
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{competition.name}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        }
+        competitionId={id}
+        competitionName={competition.name}
+        crumb="Overview"
         media={
           <div className="hidden size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-muted sm:block">
             <BoringAvatar
@@ -207,7 +186,7 @@ function CompetitionOverviewPage() {
             <Stat label="Submissions" value={submissionCount ?? 0} />
           </HeaderStats>
         }
-        nav={<CompetitionTabs competitionId={id} />}
+        tabs
       />
 
       <PageBody>
@@ -269,6 +248,15 @@ function CompetitionOverviewPage() {
                 </div>
               </PanelBody>
             </Panel>
+
+            {/* After the organiser's own words. A package explains how the
+                competition is wired; the overview explains what it is, and that
+                should be read first. */}
+            <SurfaceSlot
+              surface={surface.std.competitionOverview}
+              subject={{ competition: id }}
+              layout="inline"
+            />
           </div>
 
           {/* Rail order is deadline, then standings, then you. It runs from what

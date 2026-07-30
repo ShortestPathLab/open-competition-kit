@@ -16,6 +16,8 @@ import {
   EmptyTitle,
 } from "*/components/ui/empty";
 import { PageSkeleton } from "*/components/skeletons";
+import { SurfaceSlot } from "*/components/surface-slot";
+import { surface } from "@open-competition-kit/sdk/surface";
 import { ClipboardList } from "lucide-react";
 import { authClient } from "src/lib/auth-client";
 import { ensureAdmin } from "src/lib/admin";
@@ -195,6 +197,14 @@ function AdminOverviewPage() {
           <StatCard key={stat.title} {...stat} />
         ))}
       </div>
+
+      {/* The organiser's side of the same arrangement: where a package put the
+          competition's things, so nobody has to read the config to find them. */}
+      <SurfaceSlot
+        surface={surface.std.dashboardOverview}
+        subject={{ competition: competitionId }}
+        layout="inline"
+      />
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">

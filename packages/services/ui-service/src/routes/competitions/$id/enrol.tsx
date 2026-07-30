@@ -26,11 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "*/components/ui/select";
+import { SurfaceSlot } from "*/components/surface-slot";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { Layers3, Loader2, Lock } from "lucide-react";
+import { ArrowRight, CircleCheck, Layers3, Loader2, Lock } from "lucide-react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
+import { surface } from "@open-competition-kit/sdk/surface";
 import { authClient } from "src/lib/auth-client";
 import { authMiddleware } from "src/lib/auth-server";
 import { useCompetition } from "src/lib/competition-fn";
@@ -89,9 +91,14 @@ function CompetitionEnrolPage() {
         }),
       ]);
       toast.success("Enrolled successfully");
-      router.navigate({ to: "/competitions/$id", params: { id } });
     },
   });
+
+  // Enrolling can do more than write a row. An integration may have created a
+  // repository, granted access, and left instructions worth reading, and this
+  // page used to navigate away half a second later with a toast as the only
+  // acknowledgement. What happened stays on screen until the reader leaves it.
+  const enrolment = mutation.data;
 
   if (!competition) return <PageSkeleton />;
 
@@ -143,6 +150,60 @@ function CompetitionEnrolPage() {
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
+            ) : enrolment && selectedTrack ? (
+              <div className="space-y-5">
+                <div className="flex items-start gap-3 rounded-xl border border-success/30 bg-success/5 p-4">
+                  <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" />
+                  <div>
+                    <p className="text-sm font-semibold text-success">
+                      You are entered in {selectedTrack.name}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {competition.name} will count your submissions to this
+                      track from now on.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Whatever else enrolling set up. A package that created
+                    something on the reader's behalf gets to say so here, while
+                    it is still the thing that just happened. */}
+                <SurfaceSlot
+                  surface={surface.std.enrolmentDone}
+                  subject={{
+                    competition: id,
+                    track: selectedTrack.id,
+                    enrolment,
+                  }}
+                  layout="inline"
+                />
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    render={
+                      <Link
+                        to="/competitions/$id/submissions/new"
+                        params={{ id }}
+                        search={{ trackId: selectedTrack.id }}
+                      />
+                    }
+                  >
+                    Make a submission
+                    <ArrowRight />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    render={
+                      <Link
+                        to="/competitions/$id/tracks/$trackId"
+                        params={{ id, trackId: selectedTrack.id }}
+                      />
+                    }
+                  >
+                    Open track
+                  </Button>
+                </div>
+              </div>
             ) : (
               <>
                 <div className="grid gap-2 md:max-w-md">

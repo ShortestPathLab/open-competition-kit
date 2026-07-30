@@ -29,6 +29,12 @@ interface CompetitionPageHeaderProps {
   competitionId: string;
   /** Absent while the competition is still loading, which is why it is optional. */
   competitionName?: string;
+  /**
+   * Leading visual, left of the title block. Reserved for a page whose subject is
+   * a thing rather than a view of one: a track has an avatar, a list of tracks
+   * does not.
+   */
+  media?: ReactNode;
   title: ReactNode;
   /** The bold final breadcrumb. Defaults to `title`, which is only usable when it is a string. */
   crumb?: string;
@@ -66,6 +72,7 @@ export function CompetitionPageHeader({
   description,
   actions,
   meta,
+  media,
   tabs = false,
   className,
 }: CompetitionPageHeaderProps) {
@@ -78,6 +85,7 @@ export function CompetitionPageHeader({
       description={description}
       actions={actions}
       meta={meta}
+      media={media}
       breadcrumb={
         <Breadcrumb>
           <BreadcrumbList>

@@ -4,6 +4,7 @@ import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
 import { ListSkeleton } from "*/components/skeletons";
 import { Stat } from "*/components/stat-strip";
 import { phaseOf } from "*/components/submission-window";
+import { SurfaceSlot } from "*/components/surface-slot";
 import { Button } from "*/components/ui/button";
 import {
   Empty,
@@ -14,6 +15,7 @@ import {
   EmptyTitle,
 } from "*/components/ui/empty";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { surface } from "@open-competition-kit/sdk/surface";
 import { windowStateAt } from "@open-competition-kit/sdk/window";
 import { ArrowRight, ClipboardList, Layers3, Lock } from "lucide-react";
 import { useMemo } from "react";
@@ -58,10 +60,10 @@ function MeIndexPage() {
   return (
     <>
       <MePageHeader
-        root
         // The area is named in the breadcrumb, so the title names the page, the
         // way every section under it does. Titling this one "Your competitions"
-        // as well made the two lines say the same thing twice.
+        // as well made the two lines say the same thing twice, and it left the
+        // breadcrumb stopping a step short of every sibling's.
         title="Overview"
         description="Everything you have entered, in one place."
         actions={
@@ -94,7 +96,14 @@ function MeIndexPage() {
         tabs
       />
 
-      <PageBody>
+      <PageBody className="space-y-6">
+        {/* Above the two lists, and only for a signed-in reader: an account-wide
+            note from a package is about the reader, and the lists below are only
+            the parts of that the product happens to know about. */}
+        {signedIn && !loading ?
+          <SurfaceSlot surface={surface.std.meOverview} subject={{}} layout="inline" />
+        : null}
+
         {loading ?
           <ListSkeleton aria-label="Loading your competitions..." />
         : !signedIn ?
@@ -234,8 +243,8 @@ function MeIndexPage() {
                           <p className="text-sm text-muted-foreground">
                             {submission.competitionName}
                           </p>
-                          <p className="mt-2 font-mono text-xs text-muted-foreground">
-                            {submission.id}
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            Submission {submission.number}
                           </p>
                         </Link>
                       ))}

@@ -7,6 +7,8 @@ import { HeaderStats, PageBody } from "*/components/page-header-band";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
 import { PageSkeleton } from "*/components/skeletons";
 import { Stat } from "*/components/stat-strip";
+import { SurfaceSlot } from "*/components/surface-slot";
+import { ValueTree } from "*/components/value-tree";
 import { Button } from "*/components/ui/button";
 import {
   Empty,
@@ -34,6 +36,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
+import { surface } from "@open-competition-kit/sdk/surface";
 import { authClient } from "src/lib/auth-client";
 import { authMiddleware } from "src/lib/auth-server";
 import { resolveId } from "src/lib/configure-user";
@@ -199,10 +202,9 @@ function RunCard({
         </span>
         <JobStatusBadge status={job.status} />
       </div>
-      <p className="mt-1.5 truncate font-mono text-[11px] text-muted-foreground">
-        {job.id}
-      </p>
-      <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
+      {/* No job id. "Run 2" is what somebody calls this when they ask about it,
+          and the strip is already ordered, so the cuid was only ever noise. */}
+      <p className="mt-1.5 truncate font-mono text-xs text-muted-foreground">
         {outcome}
       </p>
     </button>
@@ -295,7 +297,7 @@ function SubmissionDetailPage() {
       <>
         <MePageHeader
           title="Submission"
-          crumb={submissionId}
+          crumb="Submission"
           trail={SUBMISSIONS_TRAIL}
         />
         <PageBody>
@@ -320,7 +322,7 @@ function SubmissionDetailPage() {
       <>
         <MePageHeader
           title="Submission"
-          crumb={submissionId}
+          crumb="Submission"
           trail={SUBMISSIONS_TRAIL}
         />
         <PageBody>
@@ -330,8 +332,11 @@ function SubmissionDetailPage() {
                 <SearchX />
               </EmptyMedia>
               <EmptyTitle>Submission not found</EmptyTitle>
+              {/* The one place the id belongs: somebody following a link that
+                  does not work needs to see what was looked up. */}
               <EmptyDescription>
-                We couldn't find a submission with this ID.
+                Nothing here belongs to you under{" "}
+                <code className="font-mono">{submissionId}</code>.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -353,7 +358,7 @@ function SubmissionDetailPage() {
     <>
       <MePageHeader
         trail={SUBMISSIONS_TRAIL}
-        crumb={detail.id}
+        crumb={`Submission ${detail.number}`}
         title={
           <span className="flex flex-wrap items-center gap-3">
             {detail.trackName}
@@ -549,9 +554,7 @@ function SubmissionDetailPage() {
                   {readout.nested.map((entry) => (
                     <div key={entry.key} className="px-3 py-2.5">
                       <p className="text-sm font-medium">{entry.label}</p>
-                      <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs whitespace-pre-wrap">
-                        {prettyJson(entry.value)}
-                      </pre>
+                      <ValueTree className="mt-2" value={entry.value} />
                     </div>
                   ))}
                 </PanelBody>
@@ -583,6 +586,17 @@ function SubmissionDetailPage() {
             }
           </Panel>
 
+          {/* Keyed by the run, so a package that keeps something per attempt (a
+              workflow, an artefact, a log elsewhere) points at this one rather
+              than at the submission behind all of them. */}
+          {selectedJob ?
+            <SurfaceSlot
+              surface={surface.std.jobDetail}
+              subject={{ job: selectedJob.id }}
+              layout="inline"
+            />
+          : null}
+
           {selectedJob && selectedJob.outputs.length > 0 ?
             <Panel>
               <PanelHeader>
@@ -600,9 +614,7 @@ function SubmissionDetailPage() {
                     <p className="font-mono text-xs text-muted-foreground">
                       {output.reference}
                     </p>
-                    <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs whitespace-pre-wrap">
-                      {prettyJson(output.value)}
-                    </pre>
+                    <ValueTree className="mt-2" value={output.value} />
                   </div>
                 ))}
               </PanelBody>
@@ -615,54 +627,58 @@ function SubmissionDetailPage() {
             <PanelHeader>
               <PanelTitle>What you submitted</PanelTitle>
             </PanelHeader>
-            {body.fields ?
-              <PanelBody className="space-y-4">
-                {body.fields.map((field) => (
-                  <div key={field.key} className="min-w-0">
+            <PanelBody className="space-y-4">
+              {body.fields.map((field) => (
+                <div key={field.key} className="min-w-0">
+                  {/* A body that is a single unnamed answer has nothing to put
+                      here, and the panel's own heading already names it. */}
+                  {field.label ?
                     <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                       {field.label}
                     </p>
-                    {field.file ?
-                      <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-border bg-muted px-3 py-2.5">
-                        <span className="grid size-7 shrink-0 place-items-center rounded-md bg-brand-subtle font-mono text-[10px] font-bold text-primary">
-                          FILE
+                  : null}
+                  {field.file ?
+                    <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-border bg-muted px-3 py-2.5">
+                      <span className="grid size-7 shrink-0 place-items-center rounded-md bg-brand-subtle font-mono text-[10px] font-bold text-primary">
+                        FILE
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">
+                          {field.file.name}
                         </span>
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-medium">
-                            {field.file.name}
-                          </span>
-                          <span className="block font-mono text-xs text-muted-foreground">
-                            {formatBytes(field.file.size)}
-                          </span>
+                        <span className="block font-mono text-xs text-muted-foreground">
+                          {formatBytes(field.file.size)}
                         </span>
-                        {/* TODO(files): needs a route that resolves a FileRef to
-                            a signed URL for whoever owns it. */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="ml-auto"
-                          disabled
-                        >
-                          <Download className="size-3.5" />
-                        </Button>
-                      </div>
-                    : <p className="mt-1 text-sm wrap-break-word">
-                        {formatResultValue(field.value)}
-                      </p>
-                    }
-                  </div>
-                ))}
-              </PanelBody>
-            : <PanelBody>
-                <pre className="overflow-x-auto rounded-lg border border-border bg-muted p-3 font-mono text-xs break-all whitespace-pre-wrap">
-                  {detail.body}
-                </pre>
-              </PanelBody>
-            }
-            {body.fields ?
-              <RawDisclosure label="Raw submission body" value={detail.body} />
-            : null}
+                      </span>
+                      {/* TODO(files): needs a route that resolves a FileRef to
+                          a signed URL for whoever owns it. */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto"
+                        disabled
+                      >
+                        <Download className="size-3.5" />
+                      </Button>
+                    </div>
+                  : <ValueTree
+                      className={cn(field.label && "mt-1")}
+                      value={field.value}
+                    />
+                  }
+                </div>
+              ))}
+            </PanelBody>
+            <RawDisclosure label="Raw submission body" value={detail.body} />
           </Panel>
+
+          {/* Under what they submitted, because that is what this is about: where
+              the contents actually came from, which the body alone cannot say
+              once a form field holds a ref or a file reference. */}
+          <SurfaceSlot
+            surface={surface.std.submissionDetail}
+            subject={{ submission: detail.id }}
+          />
 
           <Panel>
             <PanelHeader>

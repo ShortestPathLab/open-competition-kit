@@ -27,6 +27,8 @@ import {
   SubmissionWindowSummary,
   useWindowState,
 } from "*/components/submission-window";
+import { SurfaceSlot } from "*/components/surface-slot";
+import { surface } from "@open-competition-kit/sdk/surface";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -75,11 +77,10 @@ export function SubmissionCreator({
     setTrackId(defaultTrackId);
   }, [defaultTrackId]);
 
-  const SubmissionForm = useKitComponent(
-    "form.ui",
-    { competitions: { tracks: trackId } },
-    { enabled: !!trackId },
-  );
+  const { Component: SubmissionForm } = useKitComponent("form.ui", {
+    accessor: { competitions: { tracks: trackId } },
+    query: { enabled: !!trackId },
+  });
 
   const selectedTrack = tracks.find((track) => track.id === trackId);
   // Drives the schedule panel only. Whether the form opens is the server's call,
@@ -260,6 +261,18 @@ export function SubmissionCreator({
                     Open track
                   </Button>
                 }
+              />
+
+              {/* Above the form rather than beside it: how to prepare a
+                  submission is worth reading before filling one in, and the rail
+                  on the right belongs to the track's rules. */}
+              <SurfaceSlot
+                surface={surface.std.submissionNew}
+                subject={{
+                  competition: competition.id,
+                  track: selectedTrack.id,
+                }}
+                layout="inline"
               />
 
               {session?.user && isEnrolled && gateLoading ? (

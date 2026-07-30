@@ -9,9 +9,11 @@ import {
 } from "*/components/ui/empty";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
 import { ListSkeleton } from "*/components/skeletons";
+import { SurfaceSlot } from "*/components/surface-slot";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Lock, Plus } from "lucide-react";
 import BoringAvatar from "boring-avatars";
+import { surface } from "@open-competition-kit/sdk/surface";
 import type { CompetitionStandings } from "src/lib/leaderboard-fn";
 
 function Box({ label, value }: { label: string; value: React.ReactNode }) {
@@ -137,6 +139,18 @@ export function YourCompetitionPanel({
             <ArrowRight />
           </Button>
         }
+
+        {/* Under the action, not above it: whatever an integration has to say
+            here is about how the reader works on their entry, which only matters
+            once they have decided to make one. */}
+        <SurfaceSlot
+          surface={surface.std.competitionYou}
+          subject={{ competition: competitionId }}
+          // The rule belongs to the caller rather than to the slot: it is what
+          // separates the panel's own rows from a package's, and it draws only
+          // because the slot renders nothing at all when no package contributed.
+          className="border-t border-border pt-3.5"
+        />
       </div>
     );
   };

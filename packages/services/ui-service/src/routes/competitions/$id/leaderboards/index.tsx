@@ -147,8 +147,8 @@ function LeaderboardSection({
   // Resolve the renderer against *this* leaderboard, not the root config: a
   // board's own `with:` is applied last and so overrides the inherited default,
   // which is what lets one competition mix a table, cards, and a chart.
-  const Leaderboard = useKitComponent("leaderboard.ui", {
-    competitions: { leaderboards: leaderboard.id },
+  const { Component: Leaderboard } = useKitComponent("leaderboard.ui", {
+    accessor: { competitions: { leaderboards: leaderboard.id } },
   });
 
   const headingId = `leaderboard-${leaderboard.id}`;

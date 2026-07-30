@@ -30,12 +30,6 @@ interface MePageHeaderProps {
   crumb?: string;
   /** Steps between the personal area and this page. Usually zero or one. */
   trail?: MeCrumb[];
-  /**
-   * The overview page. Its breadcrumb is the area itself, since there is no
-   * personal-area index above it to link back to, and its title names the page
-   * the way every section's does.
-   */
-  root?: boolean;
   description?: ReactNode;
   /** Right-aligned controls. Header buttons are `size="lg"` with `h-10 px-5`. */
   actions?: ReactNode;
@@ -66,7 +60,6 @@ export function MePageHeader({
   title,
   crumb,
   trail = [],
-  root = false,
   description,
   actions,
   meta,
@@ -74,8 +67,7 @@ export function MePageHeader({
   tabs = false,
   className,
 }: MePageHeaderProps) {
-  const current =
-    root ? undefined : (crumb ?? (typeof title === "string" ? title : undefined));
+  const current = crumb ?? (typeof title === "string" ? title : undefined);
 
   return (
     <PageHeaderBand
@@ -89,12 +81,9 @@ export function MePageHeader({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              {root ?
-                <BreadcrumbPage>Your competitions</BreadcrumbPage>
-              : <BreadcrumbLink render={<Link to="/me" />}>
-                  Your competitions
-                </BreadcrumbLink>
-              }
+              <BreadcrumbLink render={<Link to="/me" />}>
+                Your competitions
+              </BreadcrumbLink>
             </BreadcrumbItem>
             {trail.map((step) => (
               <Fragment key={step.section}>
