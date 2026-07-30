@@ -14,7 +14,12 @@ import type {
   SerialisableValue,
 } from "../serialisable";
 import type { GateRequest, Refusal } from "../gate";
-import { componentSource } from "./component";
+import type {
+  SurfaceItem,
+  SurfaceRequest,
+  SurfaceViewProps,
+} from "../surface";
+import { componentSource, type Source } from "./component";
 import { db } from "./db";
 import { hook } from "./hook";
 
@@ -168,6 +173,47 @@ export const Hooks = S.Struct({
     run: hook<{ job: string }, { status: string }>(),
     setup: hook<{ job: string }, { status: string }>(),
     teardown: hook<{ job: string }, { status: string }>(),
+  }),
+  /**
+   * What a package has to say inside the product.
+   *
+   * The counterpart to `submissions.gate`: that one refuses and explains why,
+   * this one tells a competitor something useful without standing in their way.
+   * An integration that creates a repository during enrolment has no other way
+   * to mention it, and the pages it would appear on cannot be expected to know
+   * what a repository is.
+   */
+  surface: S.Struct({
+    /**
+     * Every contribution to one region, for one reader, about one subject.
+     *
+     * Chained and additive, threaded exactly like the gate chain:
+     *
+     *     content: async (request, next) => {
+     *       const items = [...request.items, ...mine]
+     *       return (await next?.({ ...request, items })) ?? items
+     *     }
+     *
+     * Returning your own list rather than what `next` gave back throws away
+     * every contribution beneath you, which is the one mistake here that reads
+     * as correct. `surfaces()` in the SDK writes this for you.
+     *
+     * Called while a page renders, so an implementation has to be cheap. The
+     * host caches per region, subject and reader, and a package that needs a
+     * remote lookup should memoise it rather than make the panel wait.
+     */
+    content: hook<SurfaceRequest, readonly SurfaceItem[]>(),
+    /**
+     * The renderer for one `kind: "component"` item.
+     *
+     * A chained lookup rather than a `componentSource`, because those do not
+     * compose: the merge hands the later package's function the earlier one as
+     * an argument it ignores, so the last package listed would quietly take the
+     * whole region. Here each package answers for its own view ids and passes
+     * anything else inward. Asking per id also keeps the wire honest, since only
+     * the bundle a page actually renders crosses it.
+     */
+    view: hook<{ view: string }, Source<SurfaceViewProps> | undefined>(),
   }),
 });
 

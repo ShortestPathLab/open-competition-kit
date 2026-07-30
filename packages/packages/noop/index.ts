@@ -23,4 +23,5 @@ export default {
   track: { enrol: {} },
   leaderboard: { ui: noop, loader: noop },
   enrolments: { enrol: noop },
+  surface: { content: noop, view: noop },
 } satisfies DeepRequired<Package>;

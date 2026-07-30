@@ -29,3 +29,11 @@ export * from "./result";
 export * from "./kit";
 
 export * from "./ui";
+
+export { surfaces, views } from "./surface";
+export type {
+  SurfaceContributor,
+  SurfaceContributors,
+  SurfaceRequestFor,
+  SurfaceViews,
+} from "./surface";

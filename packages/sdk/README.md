@@ -10,6 +10,12 @@ Most projects use the SDK from TypeScript code rather than adding it to a `with`
 import { kit, submissions, type Package } from "@open-competition-kit/sdk";
 ```
 
+A package that wants to say something inside the product contributes content to a named region with `surfaces()`, and registers a renderer with `views()` for the rare case where data is not enough. Both are on `@open-competition-kit/sdk/surface`, which is safe to import from a browser component, along with the region ids and the item types:
+
+```ts
+import { surface, surfaces } from "@open-competition-kit/sdk/surface";
+```
+
 Runtime behavior still comes from packages listed in `competition.config.yaml`:
 
 ```yaml

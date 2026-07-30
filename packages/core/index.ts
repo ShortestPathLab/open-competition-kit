@@ -66,6 +66,27 @@ export {
   type Refusal,
 } from "./gate";
 
+export {
+  audienceOf,
+  orderItems,
+  organiserOnly,
+  region,
+  type Audience,
+  type Subject,
+  type SurfaceAction,
+  type SurfaceContentHook,
+  type SurfaceContext,
+  type SurfaceId,
+  type SurfaceItem,
+  type SurfaceNote,
+  type SurfaceRequest,
+  type Surfaces,
+  type SurfaceViewHook,
+  type SurfaceViewProps,
+} from "./surface";
+
+export * as surface from "./surface";
+
 export * as hook from "./hook";
 
 export * as reference from "./tag";
