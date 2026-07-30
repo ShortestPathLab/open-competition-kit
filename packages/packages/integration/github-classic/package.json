@@ -11,9 +11,11 @@
     "@types/bun": "latest"
   },
   "dependencies": {
+    "@open-competition-kit/sdk": "workspace:*",
+    "@types/react": "^19.2.14",
     "es-toolkit": "^1.46.1",
     "octokit": "^5.0.5",
-    "@open-competition-kit/sdk": "workspace:*",
+    "react": "^19.2.5",
     "zod": "^4.4.3"
   },
   "peerDependencies": {

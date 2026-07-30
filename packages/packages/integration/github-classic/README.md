@@ -2,6 +2,8 @@
 
 `@open-competition-kit/integration-github-classic` connects Open Competition Kit to GitHub repositories. It creates or verifies a participant repository during enrolment, grants the participant push access, populates GitHub branch choices in submission forms, and prepares runner jobs by downloading the selected repository ref as a zip archive.
 
+It also tells competitors that any of this happened. The package contributes content to the UI's named regions, so the competition rail carries a card listing the repository and its branches, enrolling says that the repository is ready and how to clone it, a submission's page links to the exact ref its archive came from, and the organiser dashboard names the GitHub organisation. Nothing in the UI is GitHub-aware; see `docs/ui-surfaces.md`.
+
 Open Competition Kit is a modular toolkit for running programming competitions. A competition is described in `competition.config.yaml`, then extended with packages that provide storage, submission forms, enrolment behavior, runners, integrations, and leaderboards.
 
 To use the GitHub integration, add it to your `competition.config.yaml`:
