@@ -13,12 +13,86 @@ export type LeaderboardSummary = {
   competitionName: string;
 };
 
+type Cell = string | number | boolean | null;
+
+/**
+ * The columns a board puts a competitor's identity in.
+ *
+ * `groupBy: user` writes `user`; boards written by hand have been seen using
+ * `userId`. Neither name is reserved, so both are read and the first one that
+ * answers wins.
+ */
+const PARTICIPANT_KEYS = ["user", "userId"] as const;
+
+const participantIdOf = (row: Record<string, Cell>): string | undefined => {
+  for (const key of PARTICIPANT_KEYS) {
+    const value = row[key];
+    if (value !== null && value !== undefined) return String(value);
+  }
+  return undefined;
+};
+
+/**
+ * What to call each competitor, instead of what the kit files them under.
+ *
+ * `resolveId` keys a user by their email address, so a board grouped by user
+ * arrives holding a column of them, and a public leaderboard is the last place
+ * an email belongs. `users` carries the name the entrant signed up with.
+ *
+ * A user with no name keeps their id, which is what the row already said. That
+ * only happens for someone who has never signed in through the app that upserts
+ * the name, so it is rare rather than routine.
+ */
+async function participantNames(
+  rows: Record<string, Cell>[],
+): Promise<Map<string, string>> {
+  // Asked for by id rather than by listing everyone: a board is capped at its
+  // own `limit`, where the user table grows with the whole cohort.
+  const ids = [...new Set(rows.flatMap((row) => participantIdOf(row) ?? []))];
+
+  const named = await Promise.all(
+    ids.map(async (id) => {
+      const user = await unsafe(sdk.users.get(id)).catch(() => undefined);
+      return [id, user?.name] as const;
+    }),
+  );
+
+  return new Map(
+    named.flatMap(([id, name]) =>
+      name ? [[id, name] as [string, string]] : [],
+    ),
+  );
+}
+
+/** A row with its competitor named rather than identified. */
+function nameParticipant(
+  row: Record<string, Cell>,
+  names: Map<string, string>,
+): Record<string, Cell> {
+  const named = { ...row };
+  for (const key of PARTICIPANT_KEYS) {
+    const value = named[key];
+    if (value === null || value === undefined) continue;
+    named[key] = names.get(String(value)) ?? value;
+  }
+  return named;
+}
+
 export const getLoadedLeaderboard = createServerFn({ method: "GET" })
   .inputValidator(z.string())
   .handler(async ({ data: leaderboardId }) => {
-    return (await unsafe(
-      sdk.leaderboards.load(leaderboardId),
-    )) as (typeof $props.leaderboard.ui)["def"];
+    const def = await unsafe(sdk.leaderboards.load(leaderboardId));
+    const items = def.items as Record<string, Cell>[] | undefined;
+    if (!items?.length) return def as (typeof $props.leaderboard.ui)["def"];
+
+    // Renamed here rather than in the renderer, so every board gets it whatever
+    // package draws it, and so no competitor's email crosses the wire.
+    const names = await participantNames(items);
+
+    return {
+      ...def,
+      items: items.map((row) => nameParticipant(row, names)),
+    } as (typeof $props.leaderboard.ui)["def"];
   });
 
 export const getCompetitionLeaderboards = createServerFn({ method: "GET" })
@@ -61,8 +135,6 @@ export function useCompetitionLeaderboards(competitionId?: string) {
 }
 
 // ─── Standings ───────────────────────────────────────────────────────────────
-
-type Cell = string | number | boolean | null;
 
 export type StandingsEntry = {
   rank: number;
@@ -149,20 +221,30 @@ export const getCompetitionStandings = createServerFn({ method: "GET" })
       // so position in this array is position on the board.
       const rows = (def.items ?? []) as Array<Record<string, Cell>>;
 
-      const toEntry = (row: Record<string, Cell>, index: number) => ({
-        // `rank` is only materialised as a column when the board's `shape` asks
-        // for it. Falling back to the index is safe because the rows arrive
-        // ordered.
-        rank: Number(row.rank) || index + 1,
-        competitor: String(row.user ?? row.userId ?? "Unknown"),
-        score: row[field] ?? null,
-        isYou: !!viewer && String(row.userId) === viewer,
-      });
+      const names = await participantNames(rows);
 
+      const toEntry = (row: Record<string, Cell>, index: number) => {
+        const participant = participantIdOf(row);
+
+        return {
+          // `rank` is only materialised as a column when the board's `shape`
+          // asks for it. Falling back to the index is safe because the rows
+          // arrive ordered.
+          rank: Number(row.rank) || index + 1,
+          competitor:
+            participant ?
+              (names.get(participant) ?? participant)
+            : "Unknown",
+          score: row[field] ?? null,
+          isYou: !!viewer && participant === viewer,
+        };
+      };
+
+      // Both halves read the participant the same way. Matching on `userId`
+      // alone missed every board that writes the column `groupBy: user` gives
+      // it, which is all of them, so nobody was ever shown their own row.
       const yourIndex =
-        viewer ?
-          rows.findIndex((row) => String(row.userId) === viewer)
-        : -1;
+        viewer ? rows.findIndex((row) => participantIdOf(row) === viewer) : -1;
 
       const trackName =
         board.from?.track ?

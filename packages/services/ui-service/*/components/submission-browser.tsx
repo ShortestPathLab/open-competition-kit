@@ -7,7 +7,7 @@ import { Skeleton } from "*/components/ui/skeleton";
 import { cn } from "*/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import type {
   SubmissionBrowserItem,
   SubmissionOutcome,
@@ -17,6 +17,7 @@ import {
   formatScore,
   readResult,
   summariseBody,
+  type BodySummary,
 } from "src/lib/submission-readout";
 
 interface SubmissionBrowserProps {
@@ -100,6 +101,52 @@ function ResultCell({
   );
 }
 
+/**
+ * What the entrant submitted, in the one line a row has under the id.
+ *
+ * Each answer shrinks on its own rather than the line truncating as a whole, so
+ * a long repository name gives up its middle before a short branch name is lost
+ * altogether. The branch is usually the only thing that differs between two
+ * submissions to the same track, which is what makes this line worth the space.
+ */
+function BodySummaryLine({ summary }: { summary: BodySummary }) {
+  const { file, facts } = summary;
+
+  if (!file && facts.length === 0) {
+    return (
+      <span className="mt-0.5 block text-sm text-muted-foreground">
+        No answers recorded
+      </span>
+    );
+  }
+
+  // A single answer is named by being the only one, so its label is furniture.
+  const labelled = facts.length > 1;
+
+  return (
+    <span className="mt-0.5 flex items-baseline gap-x-2 text-sm text-muted-foreground">
+      {file ? (
+        <span className="min-w-0 truncate font-mono text-foreground">
+          {file}
+        </span>
+      ) : null}
+      {facts.map((fact, index) => (
+        <Fragment key={`${fact.label}-${index}`}>
+          {file || index > 0 ? (
+            <span aria-hidden className="shrink-0">
+              ·
+            </span>
+          ) : null}
+          <span className="min-w-0 truncate">
+            {labelled && fact.label ? `${fact.label} ` : null}
+            <span className="text-foreground">{fact.value}</span>
+          </span>
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
 function SubmissionRow({
   submission,
   outcome,
@@ -120,19 +167,16 @@ function SubmissionRow({
       className={cn(ROW_COLUMNS, "px-4 py-3 transition-colors hover:bg-muted")}
     >
       <span className="min-w-0">
-        <span className="block font-mono text-sm font-medium">
-          {submission.id}
+        {/* The attempt number rather than the cuid. Two submissions to one
+            track are told apart by which came first, which is what a competitor
+            counts anyway, and the id is on the submission's own page for
+            anybody who needs to quote it. */}
+        <span className="block text-sm font-medium">
+          Submission {submission.number}
         </span>
-        {/* The body is `JSON.stringify` of the form values, so the row reads
-            the file and the first written answer out of it rather than
-            clamping three lines of punctuation. */}
-        <span className="mt-0.5 block truncate text-sm text-muted-foreground">
-          {summary.file ? (
-            <span className="font-mono text-foreground">{summary.file}</span>
-          ) : null}
-          {summary.file && summary.text ? " · " : null}
-          {summary.text}
-        </span>
+        {/* The body is `JSON.stringify` of the form values, so the row reads the
+            answers out of it rather than clamping three lines of punctuation. */}
+        <BodySummaryLine summary={summary} />
       </span>
 
       <span className="hidden min-w-0 text-sm sm:block">
@@ -169,7 +213,9 @@ export function SubmissionBrowser({
   isLoading,
   outcomes,
   outcomesLoading = false,
-  searchPlaceholder = "Search by submission ID, track, or content",
+  // The id no longer leads the row, but it is still what somebody pastes in
+  // from a support thread, so it stays searchable and stays named last.
+  searchPlaceholder = "Search by track, content, or submission ID",
   emptyTitle = "No submissions yet",
   emptyDescription = "Create a submission to start building your history.",
   noResultsTitle = "No submissions match your filters",

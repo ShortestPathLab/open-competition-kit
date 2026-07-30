@@ -160,15 +160,21 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
   .inputValidator(submissionDetailInput)
   .middleware([authMiddleware])
   .handler(async ({ data, context: { session } }): Promise<SubmissionDetail> => {
+    const userId = resolveId(session.user);
     const submission = await unsafe(submissions.get(data.submissionId));
 
-    if (submission.user !== resolveId(session.user)) {
+    if (submission.user !== userId) {
       throw new Error("Unauthorized");
     }
 
-    const [track, submissionJobs] = await Promise.all([
+    // The whole track's attempts, only so this one can say which it was. The
+    // page names it "Submission 3" and the list calls it the same thing, which
+    // it will only keep doing while both count the same way: creation order,
+    // within the track.
+    const [track, submissionJobs, trackSubmissions] = await Promise.all([
       unsafe(tracks.get(submission.track)),
       unsafe(jobs.list({ submission: submission.id })),
+      unsafe(submissions.list({ user: userId })),
     ]);
     const submissionCompetition = await unsafe(
       competitions.get(track.competition),
@@ -179,6 +185,10 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
     return {
       id: submission.id,
       body: submission.body,
+      number:
+        trackSubmissions
+          .filter((entry) => entry.track === submission.track)
+          .findIndex((entry) => entry.id === submission.id) + 1,
       trackId: track.id,
       trackName: track.name ?? track.id,
       competitionId: submissionCompetition.id,

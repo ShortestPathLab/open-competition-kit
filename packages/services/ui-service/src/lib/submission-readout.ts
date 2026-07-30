@@ -60,6 +60,70 @@ export function describeJobStatus(status: string | undefined): JobStatus {
   };
 }
 
+// ─── Values ──────────────────────────────────────────────────────────────────
+
+/** Deep enough for anything a form or a runner has written so far. */
+const MAX_DECODE_DEPTH = 8;
+
+/**
+ * A value read back as far as it was encoded.
+ *
+ * A form control with more than one thing to say has nowhere to put it. A
+ * submission body is an object of answers and an answer is whatever the control
+ * wrote, so a control carrying structure encodes it as JSON and stores the
+ * string: `github:ref-select` writes `{"owner","repo","ref"}` that way. Printing
+ * the string back is how a page ends up showing somebody their own braces.
+ *
+ * Only objects and arrays are unwrapped. Reading the string `"true"` back as a
+ * boolean would change the answer somebody gave, where reading `"{...}"` back as
+ * its object only stops the page from showing the transport it arrived in.
+ */
+export function decodeValue(value: JsonValue, depth = 0): JsonValue {
+  if (depth >= MAX_DECODE_DEPTH) return value;
+
+  if (typeof value === "string") {
+    // Parsing every string would also turn the answer "42" into a number, which
+    // is a different answer from the one that was typed.
+    const trimmed = value.trim();
+    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return value;
+
+    try {
+      const parsed = JSON.parse(trimmed) as JsonValue;
+      if (parsed !== null && typeof parsed === "object") {
+        return decodeValue(parsed, depth + 1);
+      }
+    } catch {
+      // A string that opens with a brace and is not JSON. Leave it as written.
+    }
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => decodeValue(entry, depth + 1));
+  }
+
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [
+        key,
+        decodeValue(entry, depth + 1),
+      ]),
+    );
+  }
+
+  return value;
+}
+
+/**
+ * A key as a heading.
+ *
+ * `score1` keeps its shape because "Score 1" is not what the runner called it,
+ * and a column of "Score 1, Score 2" reads as prose where the runner meant
+ * identifiers.
+ */
+export const labelForKey = (key: string) =>
+  /^[a-z0-9_]+\d$/i.test(key) ? key : startCase(key);
+
 // ─── Results ─────────────────────────────────────────────────────────────────
 
 export type ResultEntry = { key: string; label: string; value: JsonValue };
@@ -90,9 +154,6 @@ const EMPTY_READOUT: ResultReadout = {
   present: false,
 };
 
-const labelFor = (key: string) =>
-  /^[a-z0-9_]+\d$/i.test(key) ? key : startCase(key);
-
 /**
  * Keys that describe the run rather than score it.
  *
@@ -122,15 +183,20 @@ const DIAGNOSTIC_KEYS = new Set([
  * array. Anything that is not an object of scalars falls through to the nested
  * bucket rather than being flattened into a shape it never had.
  */
-export function readResult(value: JsonValue | null | undefined): ResultReadout {
-  if (value === null || value === undefined) return EMPTY_READOUT;
+export function readResult(raw: JsonValue | null | undefined): ResultReadout {
+  if (raw === null || raw === undefined) return EMPTY_READOUT;
+
+  // A runner that stringified its own output gets read the same way a form
+  // control that did is, rather than landing in the nested bucket as one long
+  // unscored string.
+  const value = decodeValue(raw);
 
   if (typeof value === "number") {
     const only = { key: "result", label: "Result", value };
     return { headline: only, scores: [], meta: [], nested: [], present: true };
   }
 
-  if (typeof value !== "object" || Array.isArray(value)) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return {
       ...EMPTY_READOUT,
       present: true,
@@ -143,7 +209,7 @@ export function readResult(value: JsonValue | null | undefined): ResultReadout {
   const nested: ResultEntry[] = [];
 
   for (const [key, entry] of Object.entries(value)) {
-    const label = labelFor(key);
+    const label = labelForKey(key);
     const isDiagnostic = DIAGNOSTIC_KEYS.has(key.toLowerCase());
 
     if (entry !== null && typeof entry === "object") {
@@ -229,10 +295,14 @@ export type BodyField = {
 
 export type BodyReadout = {
   /**
-   * The body parsed as the form values it was submitted as. Null when the body
-   * is not a JSON object, e.g. a track whose form posts plain text.
+   * The body read back as the answers it was submitted as.
+   *
+   * A body that is not an object of answers, e.g. a track whose form posts
+   * plain text, still gets one field holding whatever was written. Every page
+   * then has the same shape to draw, and none of them needs a raw fallback for
+   * the case where a track's form does not look like the others.
    */
-  fields: BodyField[] | null;
+  fields: BodyField[];
   /** The body as written, which the page keeps offering under the fields. */
   raw: string;
 };
@@ -257,59 +327,113 @@ function asFile(value: JsonValue): SubmittedFile | undefined {
  * object of answers rather than prose. Showing it as one clamped blob was the
  * single worst thing on the submissions list.
  */
+/** The key given to a body that is not an object of named answers. */
+const WHOLE_BODY_KEY = "body";
+
+/** A body with no name of its own, since the panel around it is already named. */
+const wholeBody = (value: JsonValue, raw: string): BodyReadout => ({
+  fields: [{ key: WHOLE_BODY_KEY, label: "", value, file: asFile(value) }],
+  raw,
+});
+
 export function readBody(body: string): BodyReadout {
   let parsed: unknown;
   try {
     parsed = JSON.parse(body);
   } catch {
-    return { fields: null, raw: body };
+    // Not JSON at all, so the body is the answer.
+    return wholeBody(body, body);
   }
 
   if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return { fields: null, raw: body };
+    return wholeBody(decodeValue(parsed as JsonValue), body);
   }
 
   const fields = Object.entries(parsed as Record<string, JsonValue>).map(
-    ([key, value]) => ({
-      key,
-      // TODO(forms): the track's form definition holds the real field labels.
-      // Until the submission endpoints carry it, a title-cased key is the best
-      // name available, which reads fine for `teamName` and poorly for `q1a`.
-      label: startCase(key),
-      value,
-      file: asFile(value),
-    }),
+    ([key, value]) => {
+      const decoded = decodeValue(value);
+      return {
+        key,
+        // TODO(forms): the track's form definition holds the real field labels.
+        // Until the submission endpoints carry it, a title-cased key is the best
+        // name available, which reads fine for `teamName` and poorly for `q1a`.
+        label: labelForKey(key),
+        value: decoded,
+        file: asFile(decoded),
+      };
+    },
   );
 
   return { fields, raw: body };
 }
 
+export type BodyFact = {
+  /** The answer's own name. Empty for a body that holds a single unnamed one. */
+  label: string;
+  value: string;
+};
+
 export type BodySummary = {
   /** The uploaded file, when the form took one. */
   file?: string;
-  /** The first piece of text the entrant wrote, trimmed to one line. */
-  text?: string;
+  /**
+   * The answers as a row can carry them: the scalars at the bottom of whatever
+   * was submitted, in the order the entrant wrote them.
+   */
+  facts: BodyFact[];
 };
 
-/** One line describing a submission, for a row that has no room for more. */
-export function summariseBody(body: string): BodySummary {
-  const { fields, raw } = readBody(body);
+/** More than a row has width for, whatever the window is doing. */
+const MAX_SUMMARY_FACTS = 6;
+const MAX_SUMMARY_TEXT = 90;
 
-  if (!fields) {
-    const line = raw.trim().split("\n")[0] ?? "";
-    return { text: line.length > 90 ? `${line.slice(0, 90)}...` : line };
+function collectFacts(label: string, value: JsonValue, into: BodyFact[]): void {
+  if (into.length >= MAX_SUMMARY_FACTS) return;
+  if (value === null) return;
+
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) =>
+      collectFacts(`${label} ${index + 1}`.trim(), entry, into),
+    );
+    return;
   }
 
-  const file = fields.find((field) => field.file)?.file?.name;
-  const text = fields
-    .filter((field) => !field.file && typeof field.value === "string")
-    .map((field) => (field.value as string).trim())
-    .find((value) => value.length > 0);
+  if (typeof value === "object") {
+    // The inner name wins. A `github:ref` holding an owner, a repo and a ref is
+    // three answers, and prefixing each of them with the outer name says nothing
+    // the row has room to say.
+    for (const [key, entry] of Object.entries(value)) {
+      collectFacts(labelForKey(key), entry, into);
+    }
+    return;
+  }
 
-  return {
-    file,
-    text: text && text.length > 90 ? `${text.slice(0, 90)}...` : text,
-  };
+  const text = formatResultValue(value).trim();
+  if (!text) return;
+
+  into.push({
+    label,
+    value:
+      text.length > MAX_SUMMARY_TEXT ?
+        `${text.slice(0, MAX_SUMMARY_TEXT)}...`
+      : text,
+  });
+}
+
+/** What a submission says about itself, for a row that has one line for it. */
+export function summariseBody(body: string): BodySummary {
+  const facts: BodyFact[] = [];
+  let file: string | undefined;
+
+  for (const field of readBody(body).fields) {
+    if (field.file) {
+      file ??= field.file.name;
+      continue;
+    }
+    collectFacts(field.label, field.value, facts);
+  }
+
+  return { file, facts };
 }
 
 export function formatBytes(bytes: number): string {

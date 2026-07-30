@@ -42,7 +42,19 @@ export type CompetitionSummary = {
   visibility?: string;
 };
 
-export type SubmissionSummary = { id: string; body: string };
+export type SubmissionSummary = {
+  id: string;
+  body: string;
+  /**
+   * Which attempt at this track it was, counting from one.
+   *
+   * The id is a cuid, which tells a competitor nothing and is unpleasant to say
+   * out loud. Numbering runs per track because that is the unit a competitor is
+   * given: `maxSubmissions` and `rateLimit` are both counted per track, so
+   * "submission 3" is the same 3 the quota is talking about.
+   */
+  number: number;
+};
 
 export type UserSubmissionSummary = SubmissionSummary & {
   trackId: string;
@@ -194,6 +206,32 @@ export async function countCompetitionEnrolments(competitionId: string) {
   return competitionEnrolments.length;
 }
 
+/**
+ * How many submissions one track has taken, across everybody who entered it.
+ *
+ * The competition-wide figure sums these, but a track page cannot be served from
+ * that sum, and asking for the whole competition to read one of its parts means
+ * a query per sibling track for a number the page never shows.
+ */
+export async function countTrackSubmissions(trackId: string) {
+  await ensureTrackAvailable(trackId);
+  const trackSubmissions = await unsafe(submissions.list({ track: trackId }));
+  return trackSubmissions.length;
+}
+
+/**
+ * How many entrants a track holds.
+ *
+ * Behind `ensureTrackAvailable` for the same reason the competition counts go
+ * through `getCompetitionSummary`: a server function is a public HTTP endpoint,
+ * and a draft that leaks the size of its field has still leaked.
+ */
+export async function countTrackEnrolments(trackId: string) {
+  await ensureTrackAvailable(trackId);
+  const trackEnrolments = await unsafe(enrolments.list({ track: trackId }));
+  return trackEnrolments.length;
+}
+
 export async function getTrackSummary(trackId: string) {
   const track = await unsafe(tracks.get(trackId));
   const competition = await getCompetitionSummary(track.competition);
@@ -228,9 +266,15 @@ export async function listUserEnrolments(
         id: enrolment.id,
         track,
         competition,
+        // `submissions.list` answers in creation order, so position in this
+        // filtered array is the attempt number.
         submissions: userSubmissions
           .filter((submission) => submission.track === enrolment.track)
-          .map((submission) => ({ id: submission.id, body: submission.body })),
+          .map((submission, index) => ({
+            id: submission.id,
+            body: submission.body,
+            number: index + 1,
+          })),
       },
     ];
   });
