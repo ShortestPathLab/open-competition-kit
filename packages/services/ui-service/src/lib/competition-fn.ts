@@ -1,6 +1,7 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import {
+  countCompetitionEnrolments,
   countCompetitionSubmissions,
   getCompetitionSummary,
 } from "./competition-data";
@@ -16,6 +17,12 @@ const getCompetitionSubmissionCount = createServerFn({ method: "GET" })
   .inputValidator(z.string())
   .handler(async ({ data: id }) => {
     return await countCompetitionSubmissions(id);
+  });
+
+const getCompetitionEnrolmentCount = createServerFn({ method: "GET" })
+  .inputValidator(z.string())
+  .handler(async ({ data: id }) => {
+    return await countCompetitionEnrolments(id);
   });
 
 export function useCompetition(id?: string) {
@@ -38,6 +45,15 @@ export function useCompetitionSubmissionCount(id?: string) {
   const getCount = useServerFn(getCompetitionSubmissionCount);
   return useQuery({
     queryKey: ["competition-submission-count", id],
+    queryFn: id ? () => getCount({ data: id }) : skipToken,
+  });
+}
+
+/** How many entries the competition has taken, for the same reasons as above. */
+export function useCompetitionEnrolmentCount(id?: string) {
+  const getCount = useServerFn(getCompetitionEnrolmentCount);
+  return useQuery({
+    queryKey: ["competition-enrolment-count", id],
     queryFn: id ? () => getCount({ data: id }) : skipToken,
   });
 }

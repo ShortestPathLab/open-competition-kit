@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { HeaderMeta, PageBody } from "*/components/page-header-band";
+import { HeaderStats, PageBody } from "*/components/page-header-band";
+import { Stat } from "*/components/stat-strip";
 import { PageSkeleton } from "*/components/skeletons";
 import {
   Panel,
@@ -36,15 +37,10 @@ function CompetitionRulesPage() {
         title="Rules"
         description="What applies across the whole competition, and what each track adds on top."
         meta={
-          tracksWithRules.length ? (
-            <HeaderMeta>
-              <span>
-                <b>{tracksWithRules.length}</b>{" "}
-                {tracksWithRules.length === 1 ? "track adds" : "tracks add"}{" "}
-                rules of their own
-              </span>
-            </HeaderMeta>
-          ) : undefined
+          <HeaderStats>
+            <Stat label="Tracks" value={competition.tracks.length} />
+            <Stat label="With their own rules" value={tracksWithRules.length} />
+          </HeaderStats>
         }
         tabs
       />

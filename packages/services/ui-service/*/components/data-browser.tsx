@@ -28,7 +28,14 @@ interface DataBrowserProps<T> {
   isSessionLoading: boolean;
   isSignedIn: boolean;
   isLoading: boolean;
+  /** Pass `false` for a list short enough that a search box is furniture. */
+  searchable?: boolean;
   searchPlaceholder: string;
+  /**
+   * Chips that narrow the list. An empty array renders no chip row at all,
+   * including the "All tracks" one: a filter with nothing to filter by is a
+   * control that cannot do anything.
+   */
   filterOptions: DataBrowserFilterOption[];
   getFilterValue: (item: T) => string;
   matchesSearch: (item: T, query: string) => boolean;
@@ -47,6 +54,7 @@ export function DataBrowser<T>({
   isSessionLoading,
   isSignedIn,
   isLoading,
+  searchable = true,
   searchPlaceholder,
   filterOptions,
   getFilterValue,
@@ -74,43 +82,49 @@ export function DataBrowser<T>({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-3">
-        <SearchInput
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={searchPlaceholder}
-          className="w-full"
-        />
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setFilter("all")}
-            className={cn(
-              filterChipClassName,
-              filter === "all"
-                ? "border-primary bg-primary/8 text-foreground"
-                : "border-border text-muted-foreground",
-            )}
-          >
-            All tracks
-          </button>
-          {filterOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setFilter(option.value)}
-              className={cn(
-                filterChipClassName,
-                filter === option.value
-                  ? "border-primary bg-primary/8 text-foreground"
-                  : "border-border text-muted-foreground",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+      {searchable || filterOptions.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          {searchable ? (
+            <SearchInput
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={searchPlaceholder}
+              className="w-full"
+            />
+          ) : null}
+          {filterOptions.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setFilter("all")}
+                className={cn(
+                  filterChipClassName,
+                  filter === "all"
+                    ? "border-primary bg-primary/8 text-foreground"
+                    : "border-border text-muted-foreground",
+                )}
+              >
+                All tracks
+              </button>
+              {filterOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFilter(option.value)}
+                  className={cn(
+                    filterChipClassName,
+                    filter === option.value
+                      ? "border-primary bg-primary/8 text-foreground"
+                      : "border-border text-muted-foreground",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       {isSessionLoading ? (
         <ListSkeleton aria-label="Loading your account details..." />

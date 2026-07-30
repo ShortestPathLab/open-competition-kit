@@ -26,19 +26,42 @@ export function StatStrip({
   );
 }
 
+/**
+ * Cells that are also a verdict. A run's score is the one number on a page that
+ * carries good or bad news, so the whole cell says which.
+ */
+const TONE_SURFACES = {
+  success: "bg-success/10",
+  destructive: "bg-destructive/10",
+} as const;
+
+const TONE_VALUES = {
+  success: "text-success",
+  destructive: "text-destructive",
+} as const;
+
 interface StatProps {
   label: React.ReactNode;
   value: React.ReactNode;
   /** Tint the value with the brand/primary colour. */
   emphasis?: boolean;
+  /** Tint the whole cell, for a stat that reports an outcome. */
+  tone?: keyof typeof TONE_SURFACES;
   className?: string;
 }
 
-export function Stat({ label, value, emphasis = false, className }: StatProps) {
+export function Stat({
+  label,
+  value,
+  emphasis = false,
+  tone,
+  className,
+}: StatProps) {
   return (
     <div
       className={cn(
-        "border-l border-border px-5 py-4 first:border-l-0",
+        "rounded-md px-5 py-4",
+        tone ? TONE_SURFACES[tone] : "bg-accent",
         className,
       )}
     >
@@ -48,7 +71,9 @@ export function Stat({ label, value, emphasis = false, className }: StatProps) {
       <div
         className={cn(
           "mt-1.5 font-mono text-xl font-semibold tracking-tight tabular-nums",
-          emphasis ? "text-primary" : "text-foreground",
+          tone ? TONE_VALUES[tone]
+          : emphasis ? "text-primary"
+          : "text-foreground",
         )}
       >
         {value}

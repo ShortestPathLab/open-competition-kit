@@ -171,6 +171,21 @@ export type Remaining = {
   seconds: number;
 };
 
+/**
+ * A duration as the one unit worth reading: "3 days", "5 hours", "40 minutes".
+ *
+ * A list of tracks needs the distance to a deadline, not the deadline itself,
+ * and it needs it short enough to sit in a column. The exact instant stays
+ * beside it for anyone who wants to check.
+ */
+export function describeDuration(ms: number): string {
+  const { days, hours, minutes } = splitRemaining(ms);
+  if (days >= 1) return `${days} day${days === 1 ? "" : "s"}`;
+  if (hours >= 1) return `${hours} hour${hours === 1 ? "" : "s"}`;
+  if (minutes >= 1) return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  return "under a minute";
+}
+
 export function splitRemaining(ms: number): Remaining {
   const total = Math.max(0, Math.floor(ms / 1000));
   return {

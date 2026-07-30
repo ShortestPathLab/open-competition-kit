@@ -26,12 +26,13 @@ import {
 } from "*/components/ui/popover";
 import { DeadlinePanel } from "*/components/deadline-panel";
 import {
-  HeaderMeta,
+  HeaderStats,
   PageBody,
   PageHeaderBand,
 } from "*/components/page-header-band";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
 import { StandingsPanel } from "*/components/standings-panel";
+import { Stat } from "*/components/stat-strip";
 import { TrackCard } from "*/components/track-card";
 import { YourCompetitionPanel } from "*/components/your-competition-panel";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
@@ -47,6 +48,7 @@ import BoringAvatar from "boring-avatars";
 import { useState } from "react";
 import {
   useCompetition,
+  useCompetitionEnrolmentCount,
   useCompetitionSubmissionCount,
 } from "src/lib/competition-fn";
 import {
@@ -78,6 +80,7 @@ function CompetitionOverviewPage() {
     useUserEnrolments(userId);
   const { data: leaderboards } = useCompetitionLeaderboards(id);
   const { data: submissionCount } = useCompetitionSubmissionCount(id);
+  const { data: enrolmentCount } = useCompetitionEnrolmentCount(id);
   const { data: standings, isPending: standingsLoading } =
     useCompetitionStandings(id, userId);
 
@@ -110,7 +113,7 @@ function CompetitionOverviewPage() {
           </Breadcrumb>
         }
         media={
-          <div className="hidden size-11 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:block">
+          <div className="hidden size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-muted sm:block">
             <BoringAvatar
               name={competition.name}
               square
@@ -143,7 +146,9 @@ function CompetitionOverviewPage() {
         actions={
           <>
             <Popover open={trackPickerOpen} onOpenChange={setTrackPickerOpen}>
-              <PopoverTrigger render={<Button />}>
+              <PopoverTrigger
+                render={<Button size="lg" className="h-10 px-5" />}
+              >
                 Enter a track
                 <ArrowRight />
               </PopoverTrigger>
@@ -180,6 +185,8 @@ function CompetitionOverviewPage() {
               </PopoverContent>
             </Popover>
             <Button
+              size="lg"
+              className="h-10 px-5"
               variant="outline"
               render={<Link to="/competitions/$id/rules" params={{ id }} />}
             >
@@ -187,24 +194,18 @@ function CompetitionOverviewPage() {
             </Button>
           </>
         }
-        // A meta row rather than the full-width stat strip that used to sit
-        // here. Three numbers do not need three panels, and the strip was
-        // taller than the title it was supposed to be supporting.
+        // Panels rather than the inline meta row the section pages use. This is
+        // the competition's front page, and these are the three numbers that
+        // describe it, so they get the room to be read at a glance.
         meta={
-          <HeaderMeta>
-            <span>
-              <b>{competition.tracks.length}</b>{" "}
-              {competition.tracks.length === 1 ? "track" : "tracks"}
-            </span>
-            <span>
-              <b>{leaderboards?.length ?? 0}</b>{" "}
-              {leaderboards?.length === 1 ? "leaderboard" : "leaderboards"}
-            </span>
-            <span>
-              <b>{submissionCount ?? 0}</b>{" "}
-              {submissionCount === 1 ? "submission" : "submissions"}
-            </span>
-          </HeaderMeta>
+          <HeaderStats>
+            {/* What the competition offers first, then what has happened in it,
+                in the order it happens: you enter, then you submit. */}
+            <Stat label="Tracks" value={competition.tracks.length} />
+            <Stat label="Leaderboards" value={leaderboards?.length ?? 0} />
+            <Stat label="Enrolments" value={enrolmentCount ?? 0} />
+            <Stat label="Submissions" value={submissionCount ?? 0} />
+          </HeaderStats>
         }
         nav={<CompetitionTabs competitionId={id} />}
       />

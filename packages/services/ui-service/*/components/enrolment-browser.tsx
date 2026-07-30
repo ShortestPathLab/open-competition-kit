@@ -1,48 +1,159 @@
-import { Button } from "*/components/ui/button";
-import { DataBrowser, type DataBrowserFilterOption } from "*/components/data-browser";
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemHeader,
-  ItemTitle,
-} from "*/components/ui/item";
+  DataBrowser,
+  type DataBrowserFilterOption,
+} from "*/components/data-browser";
+import { Panel, PanelHeader, PanelTitle } from "*/components/panel";
+import { phaseOf, WindowStatus } from "*/components/submission-window";
+import { Button } from "*/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { windowStateAt } from "@open-competition-kit/sdk/window";
 import { ArrowUpRight } from "lucide-react";
+import BoringAvatar from "boring-avatars";
 import type { EnrolmentSummary } from "src/lib/competition-data";
+import { formatScore } from "src/lib/submission-readout";
 import { useMemo } from "react";
+
+/** The newest result for a track, when the outcomes query has produced one. */
+export type EnrolmentResult = { label: string; value: number };
 
 interface EnrolmentBrowserProps {
   enrolments: EnrolmentSummary[];
   isSessionLoading: boolean;
   isSignedIn: boolean;
   isLoading: boolean;
+  /** Keyed by track id. A missing entry just shows the submission count. */
+  results?: Record<string, EnrolmentResult | undefined>;
 }
 
-function deriveTrackOptions(
-  enrolments: EnrolmentSummary[],
-): DataBrowserFilterOption[] {
-  const byId = new Map<string, DataBrowserFilterOption>();
-  enrolments.forEach((enrolment) => {
-    if (!byId.has(enrolment.track.id)) {
-      byId.set(enrolment.track.id, {
-        value: enrolment.track.id,
-        label: `${enrolment.competition.name} / ${enrolment.track.name}`,
+type Group = {
+  competition: EnrolmentSummary["competition"];
+  enrolments: EnrolmentSummary[];
+  submissions: number;
+};
+
+/**
+ * Enrolments gathered under the competition each one belongs to.
+ *
+ * An enrolment is a track inside a competition, so the list nests the way the
+ * data does. Flattened, the competition's name appeared in every row and the
+ * whole page read as one long repeated string.
+ */
+function groupByCompetition(enrolments: EnrolmentSummary[]): Group[] {
+  const groups = new Map<string, Group>();
+
+  for (const enrolment of enrolments) {
+    const existing = groups.get(enrolment.competition.id);
+    if (existing) {
+      existing.enrolments.push(enrolment);
+      existing.submissions += enrolment.submissions.length;
+    } else {
+      groups.set(enrolment.competition.id, {
+        competition: enrolment.competition,
+        enrolments: [enrolment],
+        submissions: enrolment.submissions.length,
       });
     }
-  });
-  return [...byId.values()];
+  }
+
+  return [...groups.values()];
 }
+
+function EnrolmentRow({
+  enrolment,
+  result,
+}: {
+  enrolment: EnrolmentSummary;
+  result?: EnrolmentResult;
+}) {
+  const { track, competition } = enrolment;
+  const now = Date.now();
+  const phase = phaseOf(track, windowStateAt(track, now), now);
+
+  return (
+    <div className="grid gap-4 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_11rem_8rem_auto] sm:items-center">
+      <div className="min-w-0">
+        <Link
+          to="/competitions/$id/tracks/$trackId"
+          params={{ id: competition.id, trackId: track.id }}
+          className="text-sm font-semibold hover:text-primary"
+        >
+          {track.name}
+        </Link>
+        <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
+          {track.description}
+        </p>
+      </div>
+
+      <WindowStatus window={track} />
+
+      <div className="text-sm text-muted-foreground">
+        {result ? result.label : "Submissions"}
+        <b className="mt-0.5 block font-mono text-base font-semibold text-foreground tabular-nums">
+          {result ? formatScore(result.value) : enrolment.submissions.length}
+        </b>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {phase === "closed" ?
+          // The button stays and says why rather than vanishing, which would
+          // leave a closed row looking broken.
+          <Button variant="outline" size="sm" disabled>
+            Closed
+          </Button>
+        : phase === "upcoming" ?
+          <Button size="sm" disabled>
+            Not open yet
+          </Button>
+        : <Button
+            size="sm"
+            render={
+              <Link
+                to="/competitions/$id/submissions/new"
+                params={{ id: competition.id }}
+                search={{ trackId: track.id }}
+              />
+            }
+          >
+            {enrolment.submissions.length === 0 ?
+              "First submission"
+            : "New submission"}
+          </Button>
+        }
+        <Button
+          variant="outline"
+          size="sm"
+          render={
+            <Link
+              to="/competitions/$id/tracks/$trackId"
+              params={{ id: competition.id, trackId: track.id }}
+            />
+          }
+        >
+          Open track
+          <ArrowUpRight className="size-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * No chips. They were derived from the enrolled tracks themselves, so each one
+ * narrowed the list to exactly one row. Grouping by competition does the work
+ * they were pretending to do.
+ */
+const NO_FILTERS: DataBrowserFilterOption[] = [];
 
 export function EnrolmentBrowser({
   enrolments,
   isSessionLoading,
   isSignedIn,
   isLoading,
+  results,
 }: EnrolmentBrowserProps) {
-  const trackOptions = useMemo(() => deriveTrackOptions(enrolments), [enrolments]);
+  // Search earns its place once the list is longer than a screen.
+  const searchable = enrolments.length > 6;
+  const groups = useMemo(() => groupByCompetition(enrolments), [enrolments]);
 
   return (
     <DataBrowser
@@ -50,8 +161,9 @@ export function EnrolmentBrowser({
       isSessionLoading={isSessionLoading}
       isSignedIn={isSignedIn}
       isLoading={isLoading}
+      searchable={searchable}
       searchPlaceholder="Search by track, competition, or description"
-      filterOptions={trackOptions}
+      filterOptions={NO_FILTERS}
       getFilterValue={(enrolment) => enrolment.track.id}
       matchesSearch={(enrolment, query) =>
         [
@@ -66,62 +178,56 @@ export function EnrolmentBrowser({
       signInTitle="Sign in to see enrolments"
       signInDescription="Your competition participation is attached to your account."
       loadingLabel="Loading enrolments..."
-      emptyTitle="No enrolments yet"
-      emptyDescription="Pick a competition track to start participating."
-      noResultsTitle="No enrolments match your filters"
-      noResultsDescription="Try a different search term or switch back to all tracks."
-      renderResults={(filteredEnrolments) => (
-        <ItemGroup>
-          {filteredEnrolments.map((enrolment) => (
-            <Item key={enrolment.id} variant="outline">
-              <ItemContent>
-                <ItemHeader>
-                  <div className="min-w-0">
-                    <ItemTitle>
-                      {enrolment.track.name} - {enrolment.competition.name}
-                    </ItemTitle>
-                    <p className="text-xs text-muted-foreground">
-                      {enrolment.submissions.length} submission
-                      {enrolment.submissions.length === 1 ? "" : "s"}
-                    </p>
-                  </div>
-                </ItemHeader>
-                <ItemDescription>{enrolment.track.description}</ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
+      emptyTitle="You have not entered a track yet"
+      emptyDescription="Entering a track is what puts a competition on this page."
+      noResultsTitle="No enrolments match your search"
+      noResultsDescription="Try a different track or competition name."
+      renderResults={(filtered) => (
+        <div className="flex flex-col gap-4">
+          {(searchable ? groupByCompetition(filtered) : groups).map((group) => (
+            <Panel key={group.competition.id}>
+              <PanelHeader className="flex-nowrap gap-3">
+                <div className="size-8 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  <BoringAvatar
+                    name={group.competition.name}
+                    square
+                    preserveAspectRatio="none"
+                    className="h-full w-full"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <PanelTitle>
                     <Link
-                      to="/competitions/$id/submissions/new"
-                      params={{ id: enrolment.competition.id }}
-                      search={{ trackId: enrolment.track.id }}
-                    />
-                  }
-                >
-                  Make submission
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  render={
-                    <Link
-                      to="/competitions/$id/tracks/$trackId"
-                      params={{
-                        id: enrolment.competition.id,
-                        trackId: enrolment.track.id,
-                      }}
-                    />
-                  }
-                >
-                  Open track
-                  <ArrowUpRight className="h-4 w-4" />
-                </Button>
-              </ItemActions>
-            </Item>
+                      to="/competitions/$id"
+                      params={{ id: group.competition.id }}
+                      className="hover:text-primary"
+                    >
+                      {group.competition.name}
+                    </Link>
+                  </PanelTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {group.competition.organiser}
+                  </p>
+                </div>
+                <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                  {group.enrolments.length}{" "}
+                  {group.enrolments.length === 1 ? "track" : "tracks"} &middot;{" "}
+                  {group.submissions}{" "}
+                  {group.submissions === 1 ? "submission" : "submissions"}
+                </span>
+              </PanelHeader>
+              <div className="divide-y divide-border">
+                {group.enrolments.map((enrolment) => (
+                  <EnrolmentRow
+                    key={enrolment.id}
+                    enrolment={enrolment}
+                    result={results?.[enrolment.track.id]}
+                  />
+                ))}
+              </div>
+            </Panel>
           ))}
-        </ItemGroup>
+        </div>
       )}
     />
   );

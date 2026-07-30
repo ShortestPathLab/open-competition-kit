@@ -4,6 +4,7 @@ import sdk, {
   context,
   competitions,
   jobs,
+  reference,
   submissions,
   tracks,
   unsafe,
@@ -37,20 +38,101 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
-export type SubmissionDetail = SubmissionBrowserItem & {
-  jobs: Array<{
-    id: string;
-    status: string;
-    logs: string;
-    outputs: Array<{
-      id: string;
-      job: string;
-      // A JSON value: string, number, boolean, null, object, or array.
-      value: JsonValue;
-      reference: string;
-    }>;
-  }>;
+export type JobOutput = {
+  id: string;
+  job: string;
+  // A JSON value: string, number, boolean, null, object, or array.
+  value: JsonValue;
+  reference: string;
 };
+
+export type SubmissionJob = {
+  id: string;
+  status: string;
+  /**
+   * The lines the runner logged, read off the `tag/logs` output rather than
+   * invented here. Empty for a runner that writes none, which the page renders
+   * as an empty state instead of a sentence claiming logs do not exist.
+   */
+  logs: string[];
+  /**
+   * The value under `reference.std.output`: whatever the runner wants ranked,
+   * which is also what a leaderboard reads. `null` when the job wrote none, as
+   * a failed job usually has.
+   */
+  result: JsonValue | null;
+  /** Everything else the job wrote, minus the two references read above. */
+  outputs: JobOutput[];
+};
+
+export type SubmissionDetail = SubmissionBrowserItem & {
+  jobs: SubmissionJob[];
+};
+
+/** What a list row can say about a submission without opening it. */
+export type SubmissionOutcome = {
+  runs: number;
+  /** The status of the newest job, absent when nothing has run. */
+  status?: string;
+  /** The newest job's result, so a row can show what the run produced. */
+  result: JsonValue | null;
+};
+
+/**
+ * The reference a runner writes its log lines to.
+ *
+ * `reference.std` names the default output and the submission source but not
+ * this one, so the literal is spelled out here the same way the example
+ * runner spells it. Worth promoting to `std` in the kit, at which point both
+ * ends can stop writing it by hand.
+ */
+const LOGS_REFERENCE = `${reference.stem}/logs`;
+
+/** Log values arrive as an array of lines, or as one blob to be split. */
+function readLogLines(value: JsonValue | undefined): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value === "string") return value.split("\n");
+  return [];
+}
+
+/**
+ * One job, with the two references the UI reads pulled out of the pile.
+ *
+ * Every output lives in the same namespace and is told apart by its reference,
+ * so the split has to happen somewhere. Here, rather than in the browser, keeps
+ * the reference strings on the server that already imports them.
+ */
+async function readJob(job: { id: string; status: string }): Promise<SubmissionJob> {
+  const outputContexts = await unsafe(
+    context.list({
+      owner: job.id,
+      namespace: "open-competition-kit/namespace/job/output",
+    }),
+  );
+
+  const outputs: JobOutput[] = outputContexts.map((output) => ({
+    id: output.id,
+    job: output.owner,
+    value: (output.value ?? null) as JsonValue,
+    reference: output.reference,
+  }));
+
+  return {
+    id: job.id,
+    status: job.status,
+    result:
+      outputs.find((output) => output.reference === reference.std.output)
+        ?.value ?? null,
+    logs: readLogLines(
+      outputs.find((output) => output.reference === LOGS_REFERENCE)?.value,
+    ),
+    outputs: outputs.filter(
+      (output) =>
+        output.reference !== reference.std.output &&
+        output.reference !== LOGS_REFERENCE,
+    ),
+  };
+}
 
 /**
  * Every one of these reads is scoped to the caller, so the user id comes from
@@ -92,27 +174,7 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
       competitions.get(track.competition),
     );
 
-    const jobsWithOutputs = await Promise.all(
-      submissionJobs.map(async (job) => {
-        const outputContexts = await unsafe(
-          context.list({
-            owner: job.id,
-            namespace: "open-competition-kit/namespace/job/output",
-          }),
-        );
-        return {
-          id: job.id,
-          status: job.status,
-          outputs: outputContexts.map((output) => ({
-            id: output.id,
-            job: output.owner,
-            value: (output.value ?? null) as JsonValue,
-            reference: output.reference,
-          })),
-          logs: "Logs are not available in the current runner implementation yet.",
-        };
-      }),
-    );
+    const jobsWithOutputs = await Promise.all(submissionJobs.map(readJob));
 
     return {
       id: submission.id,
@@ -124,6 +186,46 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
       jobs: jobsWithOutputs,
     };
   });
+
+/**
+ * What each of the caller's submissions produced, keyed by submission id.
+ *
+ * Separate from the list itself, and fetched as its own query, because it costs
+ * a job read and an output read per submission while the list costs one call.
+ * The rows paint from the cheap query and fill in their result column when this
+ * one lands, rather than the whole page waiting on the slowest part of it.
+ */
+const getUserSubmissionOutcomes = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(
+    async ({
+      context: { session },
+    }): Promise<Record<string, SubmissionOutcome>> => {
+      const userSubmissions = await listUserSubmissions(
+        resolveId(session.user),
+      );
+
+      const entries = await Promise.all(
+        userSubmissions.map(async (submission) => {
+          const submissionJobs = await unsafe(
+            jobs.list({ submission: submission.id }),
+          );
+          const newest = submissionJobs.at(-1);
+
+          return [
+            submission.id,
+            {
+              runs: submissionJobs.length,
+              status: newest?.status,
+              result: newest ? (await readJob(newest)).result : null,
+            },
+          ] as const;
+        }),
+      );
+
+      return Object.fromEntries(entries);
+    },
+  );
 
 /**
  * `sessionUserId` never reaches the server. It separates one signed-in user's
@@ -149,6 +251,20 @@ export function useUserSubmissions(sessionUserId?: string) {
   return useQuery({
     queryKey: ["userSubmissions", sessionUserId],
     queryFn: sessionUserId ? () => getUserSubmissionsFn() : skipToken,
+  });
+}
+
+export function useUserSubmissionOutcomes(sessionUserId?: string) {
+  const getUserSubmissionOutcomesFn = useServerFn(getUserSubmissionOutcomes);
+  return useQuery({
+    queryKey: ["userSubmissionOutcomes", sessionUserId],
+    queryFn:
+      sessionUserId
+        ? () =>
+            getUserSubmissionOutcomesFn() as Promise<
+              Record<string, SubmissionOutcome>
+            >
+        : skipToken,
   });
 }
 

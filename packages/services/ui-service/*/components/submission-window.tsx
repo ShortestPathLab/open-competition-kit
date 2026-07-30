@@ -1,6 +1,9 @@
+import { StatusPill, type PillTone } from "*/components/status-pill";
 import { Badge } from "*/components/ui/badge";
+import { cn } from "*/lib/utils";
 import { CalendarClock, CircleCheck, LockKeyhole } from "lucide-react";
 import { useEffect, useState } from "react";
+import { describeDuration } from "src/lib/competition-window";
 import {
   formatInstant,
   windowStateAt,
@@ -56,6 +59,97 @@ export function SubmissionWindowBadge({ state }: { state: WindowState }) {
         </Badge>
       );
   }
+}
+
+/** Inside this much of the deadline, a track reads as closing rather than open. */
+export const CLOSING_SOON_MS = 3 * 24 * 60 * 60 * 1000;
+
+export type WindowPhase = "open" | "closing" | "upcoming" | "closed";
+
+/**
+ * The window as one word, which is what a list can sort and section by.
+ *
+ * "Closing" is not a state the kit has: a window is open until it is not. It
+ * exists here because a track with two days left and a track with two months
+ * left are otherwise the same colour, and only one of them needs you today.
+ *
+ * Takes the window as well as its state because `WindowState` carries only the
+ * bound that decided it, and an open window's `closesAt` is the one this needs.
+ */
+export function phaseOf(
+  window: SubmissionWindow,
+  state: WindowState,
+  now = Date.now(),
+): WindowPhase {
+  if (state.status === "upcoming") return "upcoming";
+  if (state.status === "closed") return "closed";
+  if (window.closesAt && Date.parse(window.closesAt) - now <= CLOSING_SOON_MS) {
+    return "closing";
+  }
+  return "open";
+}
+
+const PHASE_TONES: Record<WindowPhase, PillTone> = {
+  open: "success",
+  closing: "pending",
+  upcoming: "unknown",
+  closed: "unknown",
+};
+
+const PHASE_LABELS: Record<WindowPhase, string> = {
+  open: "Open",
+  closing: "Closes soon",
+  upcoming: "Upcoming",
+  closed: "Closed",
+};
+
+/**
+ * A track's window in the space a list column has: a pill, how far away the
+ * next bound is, and the instant itself underneath in the reader's timezone.
+ *
+ * A track with neither bound has always been open and always will be, so it
+ * says so rather than counting down to nothing.
+ */
+export function WindowStatus({
+  window,
+  className,
+}: {
+  window: SubmissionWindow;
+  className?: string;
+}) {
+  const state = useWindowState(window);
+  const now = Date.now();
+  const phase = phaseOf(window, state, now);
+
+  const bound = phase === "upcoming" ? window.opensAt : window.closesAt;
+
+  const distance =
+    bound && phase !== "closed" ?
+      describeDuration(Math.abs(Date.parse(bound) - now))
+    : undefined;
+
+  const summary =
+    phase === "upcoming" && distance ? `opens in ${distance}`
+    : phase === "closed" ? "no longer accepting submissions"
+    : distance ? `closes in ${distance}`
+    : "no closing date";
+
+  return (
+    <div className={cn("min-w-0", className)}>
+      <StatusPill tone={PHASE_TONES[phase]} pulse={phase === "closing"}>
+        {PHASE_LABELS[phase]}
+      </StatusPill>
+      <p className="mt-1.5 text-xs text-muted-foreground">{summary}</p>
+      {bound ? (
+        <time
+          dateTime={bound}
+          className="mt-0.5 block font-mono text-[11px] text-muted-foreground/80"
+        >
+          {formatInstant(bound)}
+        </time>
+      ) : null}
+    </div>
+  );
 }
 
 /**

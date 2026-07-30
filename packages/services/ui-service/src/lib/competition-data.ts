@@ -175,6 +175,25 @@ export async function countCompetitionSubmissions(competitionId: string) {
   }, 0);
 }
 
+/**
+ * How many enrolments a competition holds, across all of its tracks.
+ *
+ * Rows rather than people: somebody who entered three tracks counts three
+ * times, which is what the word on the label means and what an organiser
+ * counting entries is after. Unlike a submission, an enrolment records the
+ * competition it belongs to, so this is one query instead of one per track.
+ *
+ * Routed through `getCompetitionSummary` for its visibility check, so a draft
+ * cannot leak its size through a count that skipped the guard.
+ */
+export async function countCompetitionEnrolments(competitionId: string) {
+  await getCompetitionSummary(competitionId);
+  const competitionEnrolments = await unsafe(
+    enrolments.list({ competition: competitionId }),
+  );
+  return competitionEnrolments.length;
+}
+
 export async function getTrackSummary(trackId: string) {
   const track = await unsafe(tracks.get(trackId));
   const competition = await getCompetitionSummary(track.competition);

@@ -1,6 +1,7 @@
 import { Button } from "*/components/ui/button";
 import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { HeaderMeta, PageBody } from "*/components/page-header-band";
+import { HeaderStats, PageBody } from "*/components/page-header-band";
+import { Stat } from "*/components/stat-strip";
 import {
   Empty,
   EmptyContent,
@@ -90,12 +91,9 @@ function LeaderboardsPage() {
         description="Public standings, rebuilt from every submission that has been scored."
         meta={
           leaderboards.length ? (
-            <HeaderMeta>
-              <span>
-                <b>{leaderboards.length}</b>{" "}
-                {leaderboards.length === 1 ? "board" : "boards"}
-              </span>
-            </HeaderMeta>
+            <HeaderStats>
+              <Stat label="Boards" value={leaderboards.length} />
+            </HeaderStats>
           ) : undefined
         }
         tabs

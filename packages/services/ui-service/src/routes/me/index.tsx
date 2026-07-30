@@ -1,6 +1,9 @@
+import { MePageHeader } from "*/components/me-page-header";
+import { HeaderStats, PageBody } from "*/components/page-header-band";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
-import { PageSkeleton } from "*/components/skeletons";
-import { Stat, StatStrip } from "*/components/stat-strip";
+import { ListSkeleton } from "*/components/skeletons";
+import { Stat } from "*/components/stat-strip";
+import { phaseOf } from "*/components/submission-window";
 import { Button } from "*/components/ui/button";
 import {
   Empty,
@@ -11,7 +14,9 @@ import {
   EmptyTitle,
 } from "*/components/ui/empty";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardList, Layers3, Lock } from "lucide-react";
+import { windowStateAt } from "@open-competition-kit/sdk/window";
+import { ArrowRight, ClipboardList, Layers3, Lock } from "lucide-react";
+import { useMemo } from "react";
 import { authClient } from "src/lib/auth-client";
 import { useUserEnrolments } from "src/lib/enrolment-fn";
 import { useUserSubmissions } from "src/lib/submission-fn";
@@ -27,171 +32,220 @@ function MeIndexPage() {
   const { data: submissions = [], isLoading: submissionsLoading } =
     useUserSubmissions(session?.user?.id);
 
-  if (sessionLoading) return <PageSkeleton />;
+  const signedIn = Boolean(session?.user);
+  const loading =
+    sessionLoading || (signedIn && (enrolmentsLoading || submissionsLoading));
 
-  if (!session?.user) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Your competitions
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            Sign in to track your enrolments, submissions, and progress across
-            every competition.
-          </p>
-        </div>
-
-        <Empty className="rounded-xl border border-dashed border-border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Lock />
-            </EmptyMedia>
-            <EmptyTitle>Sign in to view your dashboard</EmptyTitle>
-            <EmptyDescription>
-              Your competition activity is connected to your account.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button render={<Link to="/sign-in" />}>Sign in</Button>
-          </EmptyContent>
-        </Empty>
-      </div>
-    );
-  }
-
-  if (enrolmentsLoading || submissionsLoading) return <PageSkeleton />;
+  const stats = useMemo(() => {
+    const now = Date.now();
+    return {
+      competitions: new Set(
+        enrolments.map((enrolment) => enrolment.competition.id),
+      ).size,
+      tracks: enrolments.length,
+      submissions: submissions.length,
+      closing: enrolments.filter(
+        (enrolment) =>
+          phaseOf(
+            enrolment.track,
+            windowStateAt(enrolment.track, now),
+            now,
+          ) === "closing",
+      ).length,
+    };
+  }, [enrolments, submissions]);
 
   return (
-    <div className="space-y-6">
-      <StatStrip>
-        <Stat label="Enrolments" value={enrolments.length} />
-        <Stat label="Submissions" value={submissions.length} />
-      </StatStrip>
+    <>
+      <MePageHeader
+        root
+        // The area is named in the breadcrumb, so the title names the page, the
+        // way every section under it does. Titling this one "Your competitions"
+        // as well made the two lines say the same thing twice.
+        title="Overview"
+        description="Everything you have entered, in one place."
+        actions={
+          <Button
+            size="lg"
+            className="h-10 px-5"
+            render={<Link to="/competitions" />}
+          >
+            Browse competitions
+            <ArrowRight />
+          </Button>
+        }
+        // Only once there is a signed-in reader for these to be about. Signed
+        // out, a strip of zeroes reads as an empty account rather than as a
+        // prompt to sign in.
+        meta={
+          signedIn && !loading ?
+            <HeaderStats>
+              <Stat label="Competitions" value={stats.competitions} />
+              <Stat label="Enrolled tracks" value={stats.tracks} />
+              <Stat label="Submissions" value={stats.submissions} />
+              <Stat
+                label="Closing soon"
+                value={stats.closing}
+                emphasis={stats.closing > 0}
+              />
+            </HeaderStats>
+          : undefined
+        }
+        tabs
+      />
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Panel>
-          <PanelHeader>
-            <PanelTitle>Enrolments</PanelTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              render={<Link to="/me/enrolments" />}
-            >
-              See all
-            </Button>
-          </PanelHeader>
-          <PanelBody>
-            {enrolments.length === 0 ? (
-              <Empty className="rounded-xl border border-dashed border-border">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Layers3 />
-                  </EmptyMedia>
-                  <EmptyTitle>No enrolments yet</EmptyTitle>
-                  <EmptyDescription>
-                    Browse competitions to join your first track.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              <div className="space-y-3">
-                {enrolments.slice(0, 4).map((enrolment) => (
-                  <div
-                    key={enrolment.id}
-                    className="rounded-xl border border-border bg-card p-4"
-                  >
-                    <p className="font-semibold">{enrolment.track.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {enrolment.competition.name}
-                    </p>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                      {enrolment.track.description}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        render={
-                          <Link
-                            to="/competitions/$id/tracks/$trackId"
-                            params={{
-                              id: enrolment.competition.id,
-                              trackId: enrolment.track.id,
-                            }}
-                          />
-                        }
+      <PageBody>
+        {loading ?
+          <ListSkeleton aria-label="Loading your competitions..." />
+        : !signedIn ?
+          <Empty className="rounded-xl border border-dashed border-border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Lock />
+              </EmptyMedia>
+              <EmptyTitle>Sign in to view your dashboard</EmptyTitle>
+              <EmptyDescription>
+                Your competition activity is connected to your account.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button
+                size="lg"
+                className="h-10 px-5"
+                render={<Link to="/sign-in" />}
+              >
+                Sign in
+              </Button>
+            </EmptyContent>
+          </Empty>
+        : <div className="grid gap-6 xl:grid-cols-2">
+            <Panel>
+              <PanelHeader>
+                <PanelTitle>Enrolments</PanelTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link to="/me/enrolments" />}
+                >
+                  See all
+                </Button>
+              </PanelHeader>
+              <PanelBody>
+                {enrolments.length === 0 ?
+                  <Empty className="rounded-xl border border-dashed border-border">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Layers3 />
+                      </EmptyMedia>
+                      <EmptyTitle>No enrolments yet</EmptyTitle>
+                      <EmptyDescription>
+                        Browse competitions to join your first track.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                : <div className="space-y-3">
+                    {enrolments.slice(0, 4).map((enrolment) => (
+                      <div
+                        key={enrolment.id}
+                        className="rounded-xl border border-border bg-card p-4"
                       >
-                        Open track
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        render={
-                          <Link
-                            to="/competitions/$id/submissions/new"
-                            params={{ id: enrolment.competition.id }}
-                            search={{ trackId: enrolment.track.id }}
-                          />
-                        }
-                      >
-                        Make submission
-                      </Button>
-                    </div>
+                        <p className="font-semibold">{enrolment.track.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {enrolment.competition.name}
+                        </p>
+                        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                          {enrolment.track.description}
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            render={
+                              <Link
+                                to="/competitions/$id/tracks/$trackId"
+                                params={{
+                                  id: enrolment.competition.id,
+                                  trackId: enrolment.track.id,
+                                }}
+                              />
+                            }
+                          >
+                            Open track
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            render={
+                              <Link
+                                to="/competitions/$id/submissions/new"
+                                params={{ id: enrolment.competition.id }}
+                                search={{ trackId: enrolment.track.id }}
+                              />
+                            }
+                          >
+                            Make submission
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </PanelBody>
-        </Panel>
+                }
+              </PanelBody>
+            </Panel>
 
-        <Panel>
-          <PanelHeader>
-            <PanelTitle>Submissions</PanelTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              render={<Link to="/me/submissions" />}
-            >
-              See all
-            </Button>
-          </PanelHeader>
-          <PanelBody>
-            {submissions.length === 0 ? (
-              <Empty className="rounded-xl border border-dashed border-border">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <ClipboardList />
-                  </EmptyMedia>
-                  <EmptyTitle>No submissions yet</EmptyTitle>
-                  <EmptyDescription>
-                    Once you submit to a track, they will show up here.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              <div className="space-y-3">
-                {submissions.slice(0, 5).map((submission) => (
-                  <Link
-                    key={submission.id}
-                    to="/me/submissions/$submissionId"
-                    params={{ submissionId: submission.id }}
-                    className="block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/40"
-                  >
-                    <p className="font-semibold">{submission.trackName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {submission.competitionName}
-                    </p>
-                    <p className="mt-2 font-mono text-xs text-muted-foreground">
-                      {submission.id}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </PanelBody>
-        </Panel>
-      </div>
-    </div>
+            <Panel>
+              <PanelHeader>
+                <PanelTitle>Submissions</PanelTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link to="/me/submissions" />}
+                >
+                  See all
+                </Button>
+              </PanelHeader>
+              <PanelBody>
+                {submissions.length === 0 ?
+                  <Empty className="rounded-xl border border-dashed border-border">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <ClipboardList />
+                      </EmptyMedia>
+                      <EmptyTitle>No submissions yet</EmptyTitle>
+                      <EmptyDescription>
+                        Once you submit to a track, they will show up here.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                : <div className="space-y-3">
+                    {[...submissions]
+                      .reverse()
+                      .slice(0, 5)
+                      .map((submission) => (
+                        <Link
+                          key={submission.id}
+                          to="/me/submissions/$submissionId"
+                          params={{ submissionId: submission.id }}
+                          className="block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/40"
+                        >
+                          <p className="font-semibold">
+                            {submission.trackName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {submission.competitionName}
+                          </p>
+                          <p className="mt-2 font-mono text-xs text-muted-foreground">
+                            {submission.id}
+                          </p>
+                        </Link>
+                      ))}
+                  </div>
+                }
+              </PanelBody>
+            </Panel>
+          </div>
+        }
+      </PageBody>
+    </>
   );
 }

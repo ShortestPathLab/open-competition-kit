@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { StatStrip } from "*/components/stat-strip";
 import { cn } from "*/lib/utils";
 
 interface PageHeaderBandProps {
@@ -20,7 +21,7 @@ interface PageHeaderBandProps {
   description?: ReactNode;
   /** Right-aligned controls (a switcher, a primary action, a search field). */
   actions?: ReactNode;
-  /** Facts about what the page is showing, under the title row. See `HeaderMeta`. */
+  /** Facts about what the page is showing, under the title row. See `HeaderStats`. */
   meta?: ReactNode;
   /** Extra content along the bottom edge. */
   children?: ReactNode;
@@ -51,73 +52,74 @@ export function PageHeaderBand({
   className,
 }: PageHeaderBandProps) {
   return (
-    <div className={cn("border-b border-border bg-card", className)}>
-      <div
-        className={cn(
-          "mx-auto max-w-7xl px-6 pt-4",
-          children ? "pb-0" : "pb-5",
-        )}
-      >
-        {breadcrumb}
-        {nav ? (
-          // Its own rule, since the band's bottom border no longer sits under
-          // the strip to close it off. Pulled out to the container edges so the
-          // line runs the full width rather than stopping at the last tab.
-          <div className="-mx-6 mt-2.5 border-b border-border px-6">{nav}</div>
-        ) : null}
+    <div
+      className={cn(
+        "border-b border-border bg-card [view-transition-name:page-header]",
+        className,
+      )}
+    >
+      <div className={cn("", children ? "pb-0" : "pb-6")}>
+        {breadcrumb ?
+          <div className="mx-auto max-w-7xl px-6 pt-6">{breadcrumb}</div>
+        : null}
+        {nav ?
+          <div className="mx-auto max-w-7xl px-6 min-h-max pt-4 pb-0 sm:pb-2">
+            {nav}
+          </div>
+        : null}
         <div
           className={cn(
-            "flex flex-wrap items-start justify-between gap-x-4 gap-y-3",
+            "mx-auto max-w-7xl px-6 pt-0 flex flex-wrap items-start justify-between gap-4",
             (breadcrumb || nav) && "mt-4",
           )}
         >
-          <div className="flex min-w-0 items-start gap-3.5">
+          <div className="flex min-w-0 items-start gap-4 sm:gap-5">
             {media}
             <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight text-balance sm:text-2xl">
+              <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
                 {title}
               </h1>
-              {description ? (
-                <div className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              {description ?
+                <div className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                   {description}
                 </div>
-              ) : null}
+              : null}
             </div>
           </div>
-          {actions ? (
+          {actions ?
             <div className="flex shrink-0 flex-wrap items-center gap-2">
               {actions}
             </div>
-          ) : null}
+          : null}
         </div>
-        {meta ? <div className="mt-3">{meta}</div> : null}
+        {meta ?
+          <div className="mt-5">{meta}</div>
+        : null}
       </div>
-      {children ? (
-        <div className="mx-auto max-w-7xl px-6 pt-3">{children}</div>
-      ) : null}
+      {children ?
+        <div className="mx-auto max-w-7xl px-6 pt-4">{children}</div>
+      : null}
     </div>
   );
 }
 
 /**
- * The facts row under a page title: what the page is showing, and how much of
- * it. Numbers inside are set in mono, so a count reads as a count.
+ * What the `meta` slot takes: a strip of stat panels, lined up with the rest of
+ * the band and pulled down onto its bottom border, so the strip closes the
+ * header off rather than floating inside it.
  *
- * Takes plain children rather than label/value pairs, because most of these read
- * as short sentences ("Ranked by Total, highest first") rather than as a table
- * of two-part stats. Wrap the numbers in `<b>` and the styling follows.
+ * Carries its own container because the band gives each row its own, and the
+ * `-mb-6` only makes sense against the band's bottom padding. Fill it with
+ * `Stat`.
  */
-export function HeaderMeta({
+export function HeaderStats({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<typeof StatStrip>) {
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground",
-        "[&_b]:font-mono [&_b]:font-semibold [&_b]:tabular-nums [&_b]:text-foreground",
-        className,
-      )}
+    <StatStrip
+      surface={false}
+      className={cn("mx-auto max-w-7xl px-6 gap-2", className)}
       {...props}
     />
   );
