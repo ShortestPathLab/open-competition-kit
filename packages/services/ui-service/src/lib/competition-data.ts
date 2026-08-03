@@ -15,6 +15,8 @@ export type TrackSummary = {
   description: string;
   overview: string;
   rules: string;
+  /** The organiser's picture for this track, when they set one. */
+  icon?: string;
   competitionId: string;
 };
 
@@ -25,6 +27,8 @@ export type CompetitionSummary = {
   description: string;
   overview: string;
   rules: string;
+  /** The organiser's picture for this competition, when they set one. */
+  icon?: string;
   tracks: TrackSummary[];
   /**
    * Only ever `"draft"` for an organiser, since nobody else is handed a draft in
@@ -102,11 +106,18 @@ export async function getCompetitionSummary(
     description: track.description ?? "No description",
     overview: track.overview ?? "",
     rules: track.rules ?? "",
+    icon: track.icon,
     competitionId: id,
   }));
 
+  // Field by field rather than by spreading the config node. What is spread is
+  // the whole of a competition as configured — its runner, its leaderboards,
+  // every form it declares and every field an installed package contributed —
+  // and all of it was being handed to the browser on every page that names a
+  // competition, including the index, which names all of them at once. The
+  // banner made that expensive enough to notice: it is a picture, and it is the
+  // one field here that can be a quarter of a megabyte on its own.
   return {
-    ...competition,
     id,
     name: competitionName,
     organiser: competition.organiser || "OpenCompetitionKit",
@@ -115,8 +126,37 @@ export async function getCompetitionSummary(
       makeCompetitionDescription(competitionName, trackSummaries.length),
     overview: competition.overview ?? "",
     rules: competition.rules ?? "",
+    icon: competition.icon,
+    visibility: competition.visibility,
     tracks: trackSummaries,
   };
+}
+
+/**
+ * The competition's banner, on its own.
+ *
+ * Kept out of the summary because of its size and how rarely it is wanted. A
+ * banner is a picture, an inlined one runs to hundreds of kilobytes, and the
+ * summary is fetched for every card on the index — which would mean shipping
+ * every competition's banner to draw a page that paints none of them. Only the
+ * pages inside a competition ask, and they ask once.
+ *
+ * Behind the same visibility check as everything else here, so a draft does not
+ * leak its existence through a picture.
+ */
+export async function getCompetitionBanner(
+  id: string,
+): Promise<string | undefined> {
+  const [competition, admin] = await Promise.all([
+    unsafe(competitions.get(id)),
+    adminStatus(),
+  ]);
+
+  if (!isVisibleTo(competition, admin.isAdmin)) {
+    throw new CompetitionNotFoundError(id);
+  }
+
+  return competition.banner;
 }
 
 export async function listCompetitionSummaries(): Promise<

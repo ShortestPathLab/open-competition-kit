@@ -25,6 +25,29 @@ interface PageHeaderBandProps {
   meta?: ReactNode;
   /** Extra content along the bottom edge. */
   children?: ReactNode;
+  /**
+   * Paint the band as banner chrome, continuous with the navbar above it.
+   *
+   * The band takes up the shell's banner image from the navbar's bottom edge
+   * down, and the navbar paints the slice above that, so the two together show
+   * one picture with no seam between them. This also retunes the borders and
+   * fills inside the band, which were drawn for a flat card and go missing on a
+   * photograph. See `.banner-chrome` in `styles.css`.
+   */
+  banner?: boolean;
+  /**
+   * Anything but a `view-transition-name`.
+   *
+   * The band already carries one, and `cn` settles two of them by keeping the
+   * caller's, so a page that names its own band quietly stops sharing a name
+   * with every other page's. A view transition pairs the outgoing and incoming
+   * element by name. Paired, the two bands go into one image pair, which the
+   * browser isolates and cross-fades with `plus-lighter` so the total stays
+   * opaque and the band appears to morph. Unpaired, they become two groups that
+   * each fade against whatever is behind them, and halfway through the
+   * navigation the page's own background shows through both. Over a banner that
+   * reads as a white flash across the header.
+   */
   className?: string;
 }
 
@@ -49,12 +72,14 @@ export function PageHeaderBand({
   actions,
   meta,
   children,
+  banner,
   className,
 }: PageHeaderBandProps) {
   return (
     <div
       className={cn(
-        "border-b border-border bg-card [view-transition-name:page-header]",
+        "border-b border-border [view-transition-name:page-header]",
+        banner ? "banner-chrome banner-chrome-band" : "bg-card",
         className,
       )}
     >

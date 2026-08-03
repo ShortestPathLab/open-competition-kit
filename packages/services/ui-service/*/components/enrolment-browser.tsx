@@ -2,12 +2,12 @@ import {
   DataBrowser,
   type DataBrowserFilterOption,
 } from "*/components/data-browser";
+import { CompetitionIcon } from "*/components/entity-icon";
 import { Panel, PanelHeader, PanelTitle } from "*/components/panel";
 import { phaseOf, WindowStatus } from "*/components/submission-window";
 import { Button } from "*/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
-import BoringAvatar from "boring-avatars";
 import type { EnrolmentSummary } from "src/lib/competition-data";
 import type { GateReport } from "@open-competition-kit/sdk/gate";
 import { formatScore } from "src/lib/submission-readout";
@@ -199,14 +199,11 @@ export function EnrolmentBrowser({
           {(searchable ? groupByCompetition(filtered) : groups).map((group) => (
             <Panel key={group.competition.id}>
               <PanelHeader className="flex-nowrap gap-3">
-                <div className="size-8 shrink-0 overflow-hidden rounded-lg bg-muted">
-                  <BoringAvatar
-                    name={group.competition.name}
-                    square
-                    preserveAspectRatio="none"
-                    className="h-full w-full"
-                  />
-                </div>
+                <CompetitionIcon
+                  name={group.competition.name}
+                  icon={group.competition.icon}
+                  className="size-8 rounded-lg"
+                />
                 <div className="min-w-0 flex-1">
                   <PanelTitle>
                     <Link

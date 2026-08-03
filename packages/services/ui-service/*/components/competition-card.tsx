@@ -1,6 +1,6 @@
 import { Badge } from "*/components/ui/badge";
+import { CompetitionIcon } from "*/components/entity-icon";
 import { Link } from "@tanstack/react-router";
-import BoringAvatar from "boring-avatars";
 import { PencilRuler } from "lucide-react";
 
 interface CompetitionCardProps {
@@ -8,7 +8,8 @@ interface CompetitionCardProps {
   name: string;
   organiser: string;
   trackCount?: number;
-  imageUrl?: string;
+  /** The organiser's picture for this competition, when they configured one. */
+  icon?: string;
   /** Drafts only ever reach an organiser, so the marker is for their benefit. */
   isDraft?: boolean;
 }
@@ -18,7 +19,7 @@ export function CompetitionCard({
   name,
   organiser,
   trackCount,
-  imageUrl,
+  icon,
   isDraft,
 }: CompetitionCardProps) {
   return (
@@ -27,22 +28,16 @@ export function CompetitionCard({
       params={{ id }}
       className="group block overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-ring"
     >
-      <div className="aspect-4/3 bg-muted">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <BoringAvatar
-            name={name}
-            square
-            preserveAspectRatio="none"
-            className="h-full w-full"
-          />
-        )}
-      </div>
+      {/* The only slot here that is not square, and the only one that contains
+          rather than covers. Cropping a square logo to 4:3 takes a bite out of
+          its top and bottom; letterboxed against the muted fill it reads as
+          deliberate instead. */}
+      <CompetitionIcon
+        name={name}
+        icon={icon}
+        fit="contain"
+        className="aspect-4/3 w-full"
+      />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <p className="font-semibold tracking-tight group-hover:underline">

@@ -1,4 +1,5 @@
 import { CompetitionPageHeader } from "*/components/competition-page-header";
+import { CompetitionIcon, TrackIcon } from "*/components/entity-icon";
 import { NotFoundPage } from "*/components/not-found-page";
 import { HeaderStats, PageBody } from "*/components/page-header-band";
 import { PageSkeleton } from "*/components/skeletons";
@@ -14,7 +15,6 @@ import { nextInstant } from "@open-competition-kit/sdk/gate";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import BoringAvatar from "boring-avatars";
 import { ArrowRight } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -163,16 +163,12 @@ function TrackDetailsPage() {
         competitionName={competition?.name}
         trail={[{ label: "Tracks", section: "tracks" }]}
         media={
-          <div className="hidden size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-muted sm:block">
-            <BoringAvatar
-              // The same seed the track's card uses, so the avatar a reader
-              // clicked on is the avatar that greets them here.
-              name={`${competitionId}.${trackId}`}
-              square
-              preserveAspectRatio="none"
-              className="h-full w-full"
-            />
-          </div>
+          <TrackIcon
+            competitionId={competitionId}
+            trackId={trackId}
+            icon={track.icon}
+            className="hidden size-16 rounded-xl border border-border sm:block"
+          />
         }
         title={track.name}
         description={
@@ -185,19 +181,16 @@ function TrackDetailsPage() {
               params={{ id: competitionId }}
               className="flex w-fit items-center gap-2 font-medium text-foreground hover:text-primary"
             >
-              <span className="size-5 shrink-0 overflow-hidden rounded bg-muted">
-                {/* Held empty until the name arrives rather than seeded with a
-                    placeholder, which would draw one avatar and then replace it
-                    with a different one. */}
-                {competition ? (
-                  <BoringAvatar
-                    name={competition.name}
-                    square
-                    preserveAspectRatio="none"
-                    className="h-full w-full"
-                  />
-                ) : null}
-              </span>
+              {/* Held empty until the name arrives rather than seeded with a
+                  placeholder, which would draw one avatar and then replace it
+                  with a different one. */}
+              {competition ?
+                <CompetitionIcon
+                  name={competition.name}
+                  icon={competition.icon}
+                  className="size-5 rounded"
+                />
+              : <span className="size-5 shrink-0 rounded bg-muted" />}
               {competition?.name}
             </Link>
             <span className="mt-1.5 block">{track.description}</span>

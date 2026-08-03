@@ -30,7 +30,15 @@ code {
     source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-:root {
+/*
+ * The two palettes, each answering to a second selector so that a region of the
+ * page can be held to one of them against the page's own setting. That is what
+ * a banner does: the header stands on a photograph, and whether its ink should
+ * be light or dark is decided by the photograph rather than by the theme the
+ * reader chose. See `.banner-chrome` below.
+ */
+:root,
+[data-banner-tone="light"] .banner-chrome {
   /* Palette mapped from the competition redesign mockup (indigo on cool slate). */
   --background: oklch(0.9792 0.0041 271.37); /* ground #f7f8fb */
   --foreground: oklch(0.1858 0.0294 271.15); /* ink #0e1220 */
@@ -68,6 +76,10 @@ code {
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
   --radius: 0.625rem;
+  /* The navbar's height, which `h-14` sets on both the desktop and the mobile
+     bar. Anything that has to line up across the navbar's bottom edge measures
+     from here rather than repeating the number. */
+  --nav-h: 3.5rem;
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.1858 0.0294 271.15);
   --sidebar-primary: oklch(0.5106 0.2301 276.97);
@@ -78,7 +90,8 @@ code {
   --sidebar-ring: oklch(0.5106 0.2301 276.97);
 }
 
-.dark {
+.dark,
+[data-banner-tone="dark"] .banner-chrome {
   /* Dark palette mapped from the redesign mockup. */
   --background: oklch(0.161 0.012 273.45); /* ground, desaturated */
   --foreground: oklch(0.9646 0.0096 273.36); /* ink #f1f3fa */
@@ -121,6 +134,186 @@ code {
   --sidebar-accent-foreground: oklch(0.9646 0.0096 273.36);
   --sidebar-border: oklch(1 0 0 / 9%);
   --sidebar-ring: oklch(0.6801 0.1583 276.93);
+}
+
+/*
+ * A competition's banner, painted across the navbar and the header band as one
+ * image.
+ *
+ * Neither element can contain the other: the navbar belongs to the root shell
+ * and the header band belongs to the route. What makes them read as a single
+ * surface is a shared coordinate system. Both scale the image against their own
+ * width, which is the same width because both run edge to edge, and the band
+ * shifts its copy up by the height of the navbar. The join lands exactly on the
+ * navbar's bottom edge and disappears.
+ *
+ * One rule keeps the join invisible: the *image* layer's `background-size` must
+ * never depend on an element's own height. `100% auto` and `auto <length>` are
+ * safe. `cover`, `contain` and percentage heights are not, because the two
+ * halves are different heights and would each scale the image differently.
+ *
+ * The veil over it plays by different rules, and deliberately. It has to reach
+ * full opacity at the bottom of the band, wherever that falls, so each half
+ * sizes its piece of the ramp to its own height and the two meet at a named
+ * value. Agreeing at the boundary is all continuity needs; they do not have to
+ * agree on slope, and at these heights the slopes come out close enough that
+ * the ramp reads as one.
+ *
+ * These rules sit outside `@layer` on purpose, alongside `.dark` above. Both
+ * define the same tokens, and unlayered rules are decided by source order, so
+ * being written after `.dark` is what lets the banner's borders and fills
+ * replace the theme's.
+ */
+.banner-chrome {
+  /* How far down the shared image this element begins. */
+  --banner-y: 0px;
+  /* The image's height on narrow screens, where height has to lead. See the
+     media query below. */
+  --banner-h: 27rem;
+  /* Roughly how tall the header runs. Only the crop uses it, and only to find
+     the middle, so it wants to be about right rather than exact: being 50px out
+     moves the crop by 25px across a picture some 800px tall. Measuring the
+     header instead would cost an observer and a reflow to buy back nothing
+     anyone can see. */
+  --banner-crop: 25rem;
+  /* Where in the picture the header's crop sits, expressed as how far past its
+     top edge to start. Half the picture's height less half the header's leaves
+     the crop centred, which is the only choice that needs nothing to be known
+     about what the picture contains.
+
+     The picture is drawn as wide as the viewport, so its height is the
+     viewport's width over its aspect ratio, and every distance inside it scales
+     with `vw` in the same way. The ratio is measured when the picture is, and
+     published by the shell.
+
+     Read here under the names the shell publishes and re-declared under another
+     one. A `--banner-focus` written on both sides would not work: a declaration
+     on an element beats what that element inherits, so the published value
+     would never arrive. */
+  --banner-focus: calc(
+    50vw / var(--banner-ratio, 1.6) - var(--banner-crop) / 2
+  );
+  /* Shows through anywhere the image does not reach. The page's own background,
+     so that a banner which runs short reads as one that ended rather than as a
+     grey plate someone forgot to fill. */
+  --banner-tint: var(--card);
+  /* The three points the veil passes through, and between them the whole of how
+     loud the banner reads. The picture is never quite at full strength: even at
+     the top it sits under `--banner-fade-start`, which is what keeps it a
+     texture behind the brand rather than a picture the brand is standing on.
+
+     Raise all three together to make a banner quieter. Raise only the start to
+     calm the navbar, which is the one strip where a photograph competes with a
+     wordmark and a sign-in button. */
+  --banner-fade-start: color-mix(in oklab, var(--card) 48%, transparent);
+  /* Where the navbar's share of the ramp ends and the band's begins. Both name
+     this, which is what makes the two pieces read as one gradient. */
+  --banner-fade-join: color-mix(in oklab, var(--card) 74%, transparent);
+  /* The navbar's share. Mixed out of the page's own surface colour, so one
+     definition covers a light theme and a dark one. */
+  --banner-veil: linear-gradient(
+    to bottom,
+    var(--banner-fade-start) 0%,
+    var(--banner-fade-join) 100%
+  );
+
+  /* Re-asserted rather than left to inherit. The palette above redefines
+     `--foreground` for this subtree, but `color` was already resolved to an
+     absolute value back at `body` and inherits down as that, so a header held
+     to the opposite tone would otherwise draw its title in the page's ink on
+     the picture's ground. */
+  color: var(--foreground);
+
+  background-color: var(--banner-tint);
+  background-image: var(--banner-veil), var(--banner-image, none);
+  background-repeat: no-repeat;
+  /* The band's bottom border is part of the box the veil has to cover. Left at
+     the default, the veil stops one pixel short and the picture bleeds through
+     the border as a line of colour. */
+  background-origin: border-box;
+  /* Only the image is shifted. The veil is each element's own share of the
+     ramp, so it starts at that element's top edge. */
+  background-position:
+    center 0,
+    center calc(var(--banner-y) - var(--banner-focus));
+  background-size:
+    100% 100%,
+    100% auto;
+}
+
+/* Borders and fills tuned against a flat card go missing on a photograph.
+   Retuning the tokens rather than restyling the controls means a button, a
+   badge or a breadcrumb in here needs no special case: each reads the same name
+   it always did and gets an answer that suits the surface it landed on. Mixed
+   against the theme's own ink, so this holds in light and dark.
+
+   Scoped to what is inside the chrome rather than to the chrome itself, because
+   the band draws its own bottom edge down where the veil has already gone
+   opaque. That line sits on the page, not on the picture, and should be the
+   same hairline every other header ends with.
+
+   `--card` goes translucent here for a reason worth knowing. Tailwind's `dark:`
+   variant answers to the class on `<html>`, not to the tone this header was
+   given, so inside a header held to the opposite palette those utilities fire
+   the wrong way. Rather than teach the variant about banners, the tokens they
+   reach for are made to suit either answer: an outline button reads as glass
+   whether it takes `bg-card` or `dark:bg-input/30`. */
+.banner-chrome > * {
+  --border: color-mix(in oklab, var(--foreground) 24%, transparent);
+  --input: color-mix(in oklab, var(--foreground) 30%, transparent);
+  --accent: color-mix(in oklab, var(--foreground) 9%, transparent);
+  --card: color-mix(in oklab, var(--foreground) 10%, transparent);
+  /* Mixed towards the surface this text is actually sitting on, which is the
+     chrome's own ground. Named through `--banner-tint` rather than `--card`
+     because the line above has already shadowed `--card` with a translucent
+     value for the controls, and mixing ink towards it would make the ink
+     translucent too. */
+  --muted-foreground: color-mix(
+    in oklab,
+    var(--foreground) 82%,
+    var(--banner-tint)
+  );
+}
+
+/* Below this width, height leads and the sides crop.
+
+   A landscape image scaled to the width of the viewport gets shorter as the
+   viewport narrows, while the header it has to fill gets taller, because the
+   title and the description wrap onto more lines. They cross well before phone
+   widths: a 16:9 image is already too short at around 800px, where it runs out
+   partway down the band and leaves a hard edge across the header. Past that
+   point the image is sized by height instead and overflows sideways, which
+   costs some of the picture and keeps the surface whole.
+
+   Both halves still resolve to the same size against the same centre, which is
+   all the join asks for. If a very wide, short banner still runs out on a
+   mid-size window, this threshold and `--banner-h` are the two numbers to
+   raise. */
+@media (width < 60rem) {
+  .banner-chrome {
+    --banner-h: 44rem;
+    /* Height leads, so the picture no longer scales with the viewport and the
+       crop is centred against a fixed number instead. */
+    --banner-focus: calc((var(--banner-h) - var(--banner-crop)) / 2);
+    /* Only the image's size changes. The veil stays sized to the element, which
+       is what lets it reach full opacity at the band's bottom edge. */
+    background-size:
+      100% 100%,
+      auto var(--banner-h);
+  }
+}
+
+/* The band picks the image up where the navbar put it down, and carries the
+   fade the rest of the way. It ends on the page's own background, so the
+   picture is gone by the time the header is, and the band's bottom border is a
+   line between two flat surfaces rather than a cut through a photograph. */
+.banner-chrome-band {
+  --banner-y: calc(-1 * var(--nav-h));
+  --banner-veil: linear-gradient(
+    to bottom,
+    var(--banner-fade-join) 0%,
+    var(--card) 100%
+  );
 }
 
 @theme inline {

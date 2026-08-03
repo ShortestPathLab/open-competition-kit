@@ -10,6 +10,7 @@ import { CompetitionTabs } from "*/components/competition-tabs";
 import { PageHeaderBand } from "*/components/page-header-band";
 import { Link } from "@tanstack/react-router";
 import { Fragment, type ReactNode } from "react";
+import { useHasBanner } from "src/lib/banner";
 
 /** One step between the competition and the page you are on. */
 export type Crumb = {
@@ -77,9 +78,14 @@ export function CompetitionPageHeader({
   className,
 }: CompetitionPageHeaderProps) {
   const current = crumb ?? (typeof title === "string" ? title : undefined);
+  // The navbar asks the router the same question and gets the same answer, so
+  // the two halves of the chrome always agree without anything passing between
+  // them. The image itself comes from the shell, which both inherit.
+  const banner = useHasBanner();
 
   return (
     <PageHeaderBand
+      banner={banner}
       className={className}
       title={title}
       description={description}

@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "*/components/ui/popover";
 import { DeadlinePanel } from "*/components/deadline-panel";
+import { CompetitionIcon } from "*/components/entity-icon";
 import { HeaderStats, PageBody } from "*/components/page-header-band";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
 import { StandingsPanel } from "*/components/standings-panel";
@@ -34,7 +35,6 @@ import {
   PencilRuler,
   Trophy,
 } from "lucide-react";
-import BoringAvatar from "boring-avatars";
 import { useState } from "react";
 import {
   useCompetition,
@@ -98,19 +98,15 @@ function CompetitionOverviewPage() {
           The breadcrumb still ends on "Overview", so this page names itself
           there the way each of its siblings does. */}
       <CompetitionPageHeader
-        className="[view-transition-name:competition-header]"
         competitionId={id}
         competitionName={competition.name}
         crumb="Overview"
         media={
-          <div className="hidden size-16 shrink-0 overflow-hidden rounded-xl bg-muted sm:block">
-            <BoringAvatar
-              name={competition.name}
-              square
-              preserveAspectRatio="none"
-              className="h-full w-full"
-            />
-          </div>
+          <CompetitionIcon
+            name={competition.name}
+            icon={competition.icon}
+            className="hidden size-16 rounded-xl sm:block"
+          />
         }
         title={
           <span className="flex flex-wrap items-center gap-3">
@@ -231,6 +227,7 @@ function CompetitionOverviewPage() {
                       competitionId={id}
                       name={track.name}
                       description={track.description}
+                      icon={track.icon}
                     />
                   ))}
                 </div>

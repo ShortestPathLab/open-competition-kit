@@ -3,6 +3,7 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { Navbar } from "*/components/navbar";
+import { bannerVars, useBanner } from "src/lib/banner";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import sdk from "@open-competition-kit/sdk";
@@ -44,8 +45,19 @@ function Shell({ children }: { children: React.ReactNode }) {
     queryFn: () => fetchAppConfig(),
   });
 
+  // A competition's banner is painted across the navbar and the header band,
+  // which are siblings below this point and cannot see each other. This is the
+  // one element above both, so the picture and its tone are published here and
+  // picked up by whichever of them is painting. Deciding it twice is how the
+  // two halves end up disagreeing. See `.banner-chrome` in `styles.css`.
+  const banner = useBanner();
+
   return (
-    <div className="min-h-screen [view-transition-name:main-content]">
+    <div
+      className="min-h-screen [view-transition-name:main-content]"
+      data-banner-tone={banner?.tone}
+      style={bannerVars(banner)}
+    >
       <Navbar appName={config?.name} />
       {children}
     </div>

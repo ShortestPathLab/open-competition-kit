@@ -96,6 +96,7 @@ function CompetitionsPage() {
                 id={comp.id}
                 name={comp.name}
                 organiser={comp.organiser}
+                icon={comp.icon}
                 trackCount={comp.tracks.length}
                 isDraft={isDraft(comp)}
               />

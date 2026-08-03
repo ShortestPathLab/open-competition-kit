@@ -99,9 +99,32 @@ export const LeaderboardNode = S.Struct({
  */
 export const RunnerNode = S.Struct({ ...Extendable.fields });
 
+/**
+ * A picture, written as anything an `<img src>` accepts.
+ *
+ * An ordinary `https://` URL works, and so does `dataUrl("./assets/icon.png")`,
+ * which reads the file next to the config and inlines it. Inlining is the one
+ * worth reaching for first: the picture is then versioned with the competition
+ * that uses it and survives whatever happens to the host it came from.
+ *
+ * Unvalidated beyond being a string, because there is nothing useful to check.
+ * A URL that resolves to nothing and a URL that resolves to a photograph of
+ * somebody's lunch are both well-formed, and neither can be told apart from a
+ * good one without fetching it.
+ */
+const Picture = S.String;
+
 export const TrackNode = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
+  /**
+   * The track's own picture, shown wherever the track is named beside one: its
+   * card in a list, and the header of its page.
+   *
+   * Absent, the track keeps the pattern generated from its id, which is stable
+   * and distinct without an organiser having to draw anything.
+   */
+  icon: S.optional(Picture),
   description: S.optional(S.String),
   overview: S.optional(S.String),
   rules: S.optional(S.String),
@@ -126,6 +149,29 @@ export const CompetitionConfig = S.Struct({
    */
   visibility: S.optional(S.Literal("draft", "published")),
   organiser: S.optional(S.String),
+  /**
+   * The competition's picture, shown wherever it is named beside one: its card
+   * on the index, its own header, and the competitions somebody has entered.
+   *
+   * Absent, it keeps the pattern generated from its name.
+   */
+  icon: S.optional(Picture),
+  /**
+   * The picture painted behind the top of every page in this competition, from
+   * the navigation bar down through the header.
+   *
+   * Wide rather than square: what is shown is a horizontal band through the
+   * middle of it, as wide as the window, so anything that has to be seen belongs
+   * near the centre. Whether the header takes light or dark ink is worked out
+   * from the picture rather than from the reader's theme, so a dark banner keeps
+   * its light text on a site somebody is reading in daylight.
+   *
+   * A banner given as a remote URL is drawn but may not be readable: working the
+   * ink out means reading the pixels back, which a host that sends no
+   * `access-control-allow-origin` forbids, and the header falls back to light
+   * ink on the assumption the picture is dark. `dataUrl()` has no such problem.
+   */
+  banner: S.optional(Picture),
   description: S.optional(S.String),
   overview: S.optional(S.String),
   rules: S.optional(S.String),

@@ -60,7 +60,7 @@ export function Stat({
   return (
     <div
       className={cn(
-        "rounded-md px-5 py-4",
+        "rounded-md px-5 py-4 backdrop-blur-md",
         tone ? TONE_SURFACES[tone] : "bg-accent",
         className,
       )}

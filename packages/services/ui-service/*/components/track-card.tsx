@@ -1,9 +1,9 @@
 import { WindowStatus } from "*/components/submission-window";
+import { TrackIcon } from "*/components/entity-icon";
 import { cn } from "*/lib/utils";
 import { Link } from "@tanstack/react-router";
 import type { GateReport } from "@open-competition-kit/sdk/gate";
 import { ArrowRight, Check } from "lucide-react";
-import BoringAvatar from "boring-avatars";
 import type { ReactNode } from "react";
 
 interface TrackCardProps {
@@ -11,7 +11,8 @@ interface TrackCardProps {
   competitionId: string;
   name: string;
   description: string;
-  imageUrl?: string;
+  /** The organiser's picture for this track, when they configured one. */
+  icon?: string;
   /**
    * What the installed gates say about this track. Given a non-empty list, the
    * card grows a column saying whether it is open and when that changes.
@@ -39,33 +40,6 @@ interface TrackCardProps {
   className?: string;
 }
 
-function TrackMedia({
-  competitionId,
-  id,
-  name,
-  imageUrl,
-  dim,
-}: Pick<TrackCardProps, "competitionId" | "id" | "name" | "imageUrl" | "dim">) {
-  return (
-    <div
-      className={cn(
-        "size-14 shrink-0 overflow-hidden rounded-lg bg-muted",
-        dim && "opacity-60",
-      )}
-    >
-      {imageUrl ?
-        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
-      : <BoringAvatar
-          name={`${competitionId}.${id}`}
-          square
-          preserveAspectRatio="none"
-          className="h-full w-full"
-        />
-      }
-    </div>
-  );
-}
-
 /**
  * A track, as a card in a grid or as a row in a list.
  *
@@ -79,7 +53,7 @@ export function TrackCard({
   competitionId,
   name,
   description,
-  imageUrl,
+  icon,
   reports,
   submissions,
   showEnrolment = false,
@@ -89,12 +63,11 @@ export function TrackCard({
 }: TrackCardProps) {
   const body = (
     <>
-      <TrackMedia
+      <TrackIcon
         competitionId={competitionId}
-        id={id}
-        name={name}
-        imageUrl={imageUrl}
-        dim={dim}
+        trackId={id}
+        icon={icon}
+        className={cn("size-14 rounded-lg", dim && "opacity-60")}
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">

@@ -8,7 +8,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "*/components/ui/breadcrumb";
-import { cn } from "*/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { Fragment, type ReactNode } from "react";
 
@@ -71,7 +70,7 @@ export function MePageHeader({
 
   return (
     <PageHeaderBand
-      className={cn("[view-transition-name:me-header]", className)}
+      className={className}
       title={title}
       description={description}
       actions={actions}

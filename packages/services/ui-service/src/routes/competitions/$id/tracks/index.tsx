@@ -368,6 +368,7 @@ function TracksPage() {
                     competitionId={id}
                     name={track.name}
                     description={track.description}
+                    icon={track.icon}
                     reports={track.reports}
                     submissions={submissions}
                     showEnrolment={Boolean(session?.user)}

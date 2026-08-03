@@ -13,6 +13,7 @@ import { Bell, Menu } from "lucide-react";
 import Avatar from "boring-avatars";
 import { authClient } from "@/lib/auth-client";
 import { getAdminStatus } from "src/lib/admin";
+import { useHasBanner } from "src/lib/banner";
 import { getAuthConfig } from "src/lib/get-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -31,11 +32,27 @@ interface DesktopNavbarProps {
   brand: ReactNode;
   navLinks: ReactNode;
   actions: ReactNode;
+  /**
+   * Whether the reader is inside a competition that carries a banner. The bar
+   * then drops its own fill and border and paints the top slice of the shell's
+   * image instead, so that it and the header band below it read as one surface.
+   */
+  banner?: boolean;
 }
 
-function DesktopNavbar({ brand, navLinks, actions }: DesktopNavbarProps) {
+function DesktopNavbar({
+  brand,
+  navLinks,
+  actions,
+  banner,
+}: DesktopNavbarProps) {
   return (
-    <header className="bg-card hidden h-14 items-center justify-between border-b border-border px-6 py-3 [view-transition-name:header] md:flex">
+    <header
+      className={cn(
+        "hidden h-14 items-center justify-between px-6 py-3 [view-transition-name:header] md:flex",
+        banner ? "banner-chrome" : "bg-card border-b border-border",
+      )}
+    >
       <div className="flex min-w-0 items-center gap-6">
         {brand}
         <nav className="flex items-center gap-4">{navLinks}</nav>
@@ -49,11 +66,17 @@ interface MobileNavbarProps {
   brand: ReactNode;
   navLinks: ReactNode;
   actions: ReactNode;
+  banner?: boolean;
 }
 
-function MobileNavbar({ brand, navLinks, actions }: MobileNavbarProps) {
+function MobileNavbar({ brand, navLinks, actions, banner }: MobileNavbarProps) {
   return (
-    <header className="bg-card flex h-14 items-center justify-between border-b border-border px-4 py-3 [view-transition-name:header] md:hidden">
+    <header
+      className={cn(
+        "flex h-14 items-center justify-between px-4 py-3 [view-transition-name:header] md:hidden",
+        banner ? "banner-chrome" : "bg-card border-b border-border",
+      )}
+    >
       {brand}
       <div className="flex items-center gap-1">
         <ThemeToggle />
@@ -77,6 +100,7 @@ function MobileNavbar({ brand, navLinks, actions }: MobileNavbarProps) {
 export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
   const match = useMatchRoute();
   const router = useRouter();
+  const banner = useHasBanner();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
 
   const fetchAuthConfig = useServerFn(getAuthConfig);
@@ -266,6 +290,7 @@ export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
       <DesktopNavbar
         brand={brand}
         navLinks={navLinks}
+        banner={banner}
         actions={
           <>
             <ThemeToggle />
@@ -277,6 +302,7 @@ export function Navbar({ appName = "Open Competition Kit" }: NavbarProps) {
         brand={brand}
         navLinks={mobileNavLinks}
         actions={mobileActions}
+        banner={banner}
       />
     </>
   );
