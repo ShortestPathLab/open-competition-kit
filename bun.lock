@@ -201,6 +201,20 @@
         "typescript": "^5",
       },
     },
+    "packages/packages/runner/script": {
+      "name": "@open-competition-kit/runner-script",
+      "version": "0.0.10",
+      "dependencies": {
+        "@open-competition-kit/sdk": "workspace:*",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/packages/sandbox/docker": {
       "name": "@open-competition-kit/sandbox-docker",
       "version": "0.0.10",
@@ -242,6 +256,7 @@
         "effect": "^3.18.4",
         "es-toolkit": "^1.44.0",
         "esbuild": "^0.28.0",
+        "jszip": "^3.10.1",
         "p-memoize": "^8.0.0",
         "proxy-deep": "^4.0.1",
         "youch": "^4.1.0-beta.14",
@@ -706,6 +721,8 @@
     "@open-competition-kit/leaderboard-chart": ["@open-competition-kit/leaderboard-chart@workspace:packages/packages/leaderboard/chart"],
 
     "@open-competition-kit/noop": ["@open-competition-kit/noop@workspace:packages/packages/noop"],
+
+    "@open-competition-kit/runner-script": ["@open-competition-kit/runner-script@workspace:packages/packages/runner/script"],
 
     "@open-competition-kit/sandbox-docker": ["@open-competition-kit/sandbox-docker@workspace:packages/packages/sandbox/docker"],
 
