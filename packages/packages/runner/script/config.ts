@@ -13,6 +13,7 @@
  */
 import type { ConfigExtensions } from "@open-competition-kit/sdk";
 import { z } from "zod";
+import { RUNTIME_NAMES, type RuntimeName } from "./runtime";
 
 /**
  * The config with `with:` taken back out of it.
@@ -93,6 +94,32 @@ const shape = z
      */
     program: z.string().min(1).optional(),
     /**
+     * Which language the program is written in.
+     *
+     * Picks the shim that turns the file protocol into functions, so a program
+     * is three plain functions rather than an argument parser. Required
+     * alongside `program`, and deliberately not guessed: the program arrives as
+     * text with no filename to read an extension off, and sniffing a shebang
+     * would be a rule that works until the day it does not.
+     *
+     * A language with no shim is not shut out. `command:` below speaks the same
+     * protocol directly, and a shim is a convenience rather than the interface.
+     */
+    runtime: z.enum(RUNTIME_NAMES as [RuntimeName, ...RuntimeName[]]).optional(),
+    /**
+     * Run this instead of a shim, and speak the protocol yourself.
+     *
+     * The escape hatch, and the reason this package does not need to know any
+     * particular language: a compiled binary, a shell script, or a runtime
+     * nobody has written a shim for reads one JSON file and writes another. The
+     * request names both paths, so nothing has to be hardcoded on that side
+     * either.
+     *
+     * Run from the work directory, so `["./run.sh"]` finds a file placed by
+     * `include:`. Mutually exclusive with `runtime:`.
+     */
+    command: z.array(z.string().min(1)).min(1).optional(),
+    /**
      * Files placed beside the program in every phase, keyed by relative path.
      *
      * Opaque. This package copies bytes and never looks inside them, which is
@@ -139,6 +166,22 @@ const shape = z
   .refine((c) => !(c.image || c.build) || c.program, {
     message: "an image with no program: has nothing to run",
     path: ["program"],
+  })
+  // Which of the two ways in was meant. Both is ambiguous rather than additive:
+  // a shim replaces the command, so honouring one would silently discard the
+  // other, and neither choice is obviously the right one to make on somebody's
+  // behalf.
+  .refine((c) => !(c.runtime && c.command), {
+    message:
+      "runtime: and command: are two ways to start the same program. Use runtime: " +
+      "for a language with a shim, or command: to speak the protocol yourself.",
+    path: ["command"],
+  })
+  .refine((c) => !c.program || c.runtime || c.command, {
+    message:
+      `a program needs a runtime: (one of ${RUNTIME_NAMES.join(", ")}) so the kit ` +
+      "knows how to start it, or a command: if it speaks the protocol itself",
+    path: ["runtime"],
   });
 
 export const script = z.preprocess(prune, shape);
@@ -160,6 +203,19 @@ export const config = {
         kind: "code",
         description:
           "The evaluation program, inlined. Define evaluate(), and optionally plan() and reduce(). Written as ${{ text(\"./evaluate.py\") }} so the file stays a file.",
+      },
+      {
+        id: "runtime",
+        label: "Language",
+        kind: "text",
+        description: `Which language the program is written in: ${RUNTIME_NAMES.join(", ")}. Picks the shim that turns the file protocol into functions.`,
+      },
+      {
+        id: "command",
+        label: "Command",
+        kind: "object",
+        description:
+          "Run this instead of a shim, for a language with none. It reads the request file the kit writes and writes the reply file the kit reads back. Run from the work directory.",
       },
       {
         id: "image",

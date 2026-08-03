@@ -13,8 +13,8 @@ import { config, script, type ScriptRunner } from "./config";
 import {
   PROGRAM,
   PROTOCOL,
+  REPLY,
   REQUEST,
-  SHIM,
   SUBMISSION,
   WORK,
   type Phase,
@@ -22,7 +22,7 @@ import {
   type Request,
 } from "./protocol";
 import { row, type Scalar } from "./row";
-import shim from "./shim.py" with { type: "text" };
+import { RUNTIMES, pathsFor } from "./runtime";
 
 /**
  * Evaluating a competition with a program instead of a package.
@@ -103,11 +103,47 @@ const image = async (runner: ScriptRunner): Promise<string> => {
   return runner.image;
 };
 
-/** The organiser's files, at the paths the shim expects them. */
-const payload = (runner: ScriptRunner, request: Request) => {
+/**
+ * How the program is started, and where it and its shim are placed.
+ *
+ * The only part of this package that knows any language exists, and it knows
+ * because a `runtime:` named one. A `command:` skips it entirely: the program
+ * goes down at an extensionless path, the command is run from the work
+ * directory, and what happens next is between the config and the image.
+ */
+const invocation = (
+  runner: ScriptRunner,
+): {
+  command: readonly string[];
+  files: Record<string, string>;
+  program: string;
+} => {
+  if (runner.runtime) {
+    const { shim, program } = pathsFor(runner.runtime);
+    return {
+      command: RUNTIMES[runner.runtime].command(shim),
+      files: {
+        [shim]: RUNTIMES[runner.runtime].source,
+        [program]: runner.program ?? "",
+      },
+      program,
+    };
+  }
+  return {
+    command: runner.command ?? [],
+    files: { [PROGRAM]: runner.program ?? "" },
+    program: PROGRAM,
+  };
+};
+
+/** Everything the program needs on disk, at the paths the request names. */
+const payload = (
+  runner: ScriptRunner,
+  request: Request,
+  starting: ReturnType<typeof invocation>,
+) => {
   const files: Record<string, Uint8Array | string> = {
-    [SHIM]: shim,
-    [PROGRAM]: runner.program ?? "",
+    ...starting.files,
     [REQUEST]: JSON.stringify(request),
   };
   for (const [path, body] of Object.entries(runner.include ?? {})) {
@@ -117,33 +153,41 @@ const payload = (runner: ScriptRunner, request: Request) => {
 };
 
 /**
- * Run one phase and read the reply off standard output.
+ * Run one phase and read the reply back out of the container.
  *
- * Standard error is the log and standard output is the answer, and the shim is
- * the only thing that can write to the second. An empty standard output means
- * the container died before replying, which is the case worth naming: it is what
- * a timeout, an OOM kill and an image with no `python3` all look like from here.
+ * Both streams are the log and the answer arrives as a file, so a program is
+ * free to print whatever its harness printed without any of it being mistaken
+ * for a result. No reply file means the program never got to write one, which is
+ * the case worth naming: a wall-clock kill, an OOM kill and an image whose
+ * interpreter is not there all look like this from here.
  */
 const invoke = async (
   runner: ScriptRunner,
   built: string,
-  request: Request,
+  // Without the two paths, which the caller cannot know: where the program ends
+  // up depends on the runtime, and both are filled in below.
+  request: Omit<Request, "program" | "reply">,
   submission?: Readonly<Record<string, Uint8Array>>,
 ): Promise<{ value: unknown; log: string }> => {
+  const starting = invocation(runner);
+
   // The paths go into the request as well as into the container, because a
   // program is handed a `Submission` and not a directory to go looking through.
   // It is the difference between `submission.copy_into("/runner")` and every
   // program writing its own directory walk, and the walk would find whatever
   // else happened to be under that path.
-  const described: Request =
-    submission ?
+  const described: Request = {
+    ...request,
+    program: starting.program,
+    reply: REPLY,
+    ...(submission ?
       {
-        ...request,
         submission: { root: SUBMISSION, files: Object.keys(submission) },
       }
-    : request;
+    : {}),
+  };
 
-  const files = payload(runner, described);
+  const files = payload(runner, described, starting);
   for (const [path, body] of Object.entries(submission ?? {})) {
     files[`${SUBMISSION}/${path.replace(/^\/+/, "")}`] = body;
   }
@@ -151,33 +195,36 @@ const invoke = async (
   const result = await unsafe(
     sandbox.run({
       image: built,
-      command: ["python3", SHIM],
+      command: starting.command,
       files,
       cwd: WORK,
+      collect: [REPLY],
       timeoutMs: runner.timeoutMs,
       limits: runner.limits,
     }),
   );
 
-  const log = result.stderr.trim();
+  const log = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
   const where = `${request.phase}${request.case === undefined ? "" : " of a case"}`;
 
-  if (!result.stdout.trim()) {
+  const written = result.files[REPLY];
+  if (!written?.length) {
     throw new Error(
       result.timedOut ?
         `The ${where} phase ran out of time after ${runner.timeoutMs ?? "the default"}ms.`
-      : `The ${where} phase exited with ${result.code} and said nothing. ` +
-        `That is what running out of memory looks like, and what an image ` +
-        `without python3 looks like. Its output was:\n${log}`,
+      : `The ${where} phase exited with ${result.code} and left no reply at ` +
+        `${REPLY}. That is what running out of memory looks like, and what an ` +
+        `image missing ${starting.command[0]} looks like. Its output was:\n${log}`,
     );
   }
 
   let reply: Reply;
   try {
-    reply = JSON.parse(result.stdout) as Reply;
+    reply = JSON.parse(new TextDecoder().decode(written)) as Reply;
   } catch {
     throw new Error(
-      `The ${where} phase did not reply with JSON. Its output was:\n${result.stdout.slice(0, 2000)}`,
+      `The ${where} phase did not write JSON to ${REPLY}. It wrote:\n` +
+        new TextDecoder().decode(written.slice(0, 2000)),
     );
   }
 

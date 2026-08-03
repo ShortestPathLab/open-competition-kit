@@ -42,6 +42,7 @@ export type SandboxRequest = {
   files?: Readonly<Record<string, Uint8Array | string>>;
   env?: Readonly<Record<string, string>>;
   cwd?: string;
+  collect?: readonly string[];
   timeoutMs?: number;
   limits?: {
     memoryMb?: number;

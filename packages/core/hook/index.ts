@@ -164,6 +164,19 @@ export const Hooks = S.Struct({
         env?: Readonly<Record<string, string>>;
         /** Where `command` runs. Defaults to the image's WORKDIR. */
         cwd?: string;
+        /**
+         * Files to take back out once it has finished, by absolute path.
+         *
+         * A container is destroyed after a run, so anything it produced is gone
+         * unless it was asked for. Without this the only way out is a stream,
+         * which means a result parsed out of whatever the run happened to print
+         * and a convention every language has to be talked into.
+         *
+         * A path that does not exist is absent from the result rather than an
+         * error: a run that failed to produce its output has already failed, and
+         * the caller has better words for that than a sandbox does.
+         */
+        collect?: readonly string[];
         /** Wall-clock limit. The sandbox is killed, not asked, when it passes. */
         timeoutMs?: number;
         limits?: {
@@ -184,6 +197,8 @@ export const Hooks = S.Struct({
         /** True when the wall-clock limit killed it, which `code` alone cannot tell you. */
         timedOut: boolean;
         elapsedMs: number;
+        /** Whatever `collect` asked for and the run actually produced. */
+        files: Readonly<Record<string, Uint8Array>>;
       }
     >(),
   }),

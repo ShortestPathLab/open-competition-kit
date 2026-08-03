@@ -11,3 +11,14 @@ declare module "*.py" {
   const source: string;
   export default source;
 }
+
+/**
+ * The JavaScript shim is text too, and `allowJs` is off in this package's
+ * tsconfig so that it stays that way. Left on, TypeScript resolves `./shim.mjs`
+ * to a module it can parse, type-checks it as source, and reports that it has no
+ * default export, which is true and beside the point.
+ */
+declare module "*.mjs" {
+  const source: string;
+  export default source;
+}

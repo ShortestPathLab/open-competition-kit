@@ -1,4 +1,4 @@
-"""The kit's half of the evaluation protocol.
+"""The Python half of the evaluation protocol.
 
 Injected beside the organiser's program and run instead of it, so that a
 competition's evaluation program is a file of plain functions with no argument
@@ -20,6 +20,9 @@ one submission. Without `plan` there is a single unnamed case, and without
 Arguments are passed by name, and a function is given only the ones it asks for.
 `def evaluate(case)` and `def evaluate(case, params, submission, job)` are both
 fine, and a name that is not on offer is an error naming the ones that are.
+
+Print whatever you like. Both streams are the job's log, and the answer travels
+by file, so nothing a program or a harness writes can be mistaken for it.
 """
 
 import importlib.util
@@ -30,32 +33,10 @@ import shutil
 import sys
 import traceback
 
-REQUEST = "/tmp/ock-request.json"
+REQUEST = "/ock/request.json"
+REPLY = "/tmp/ock-reply.json"
 WORK = "/ock/work"
 PROGRAM = os.path.join(WORK, "program.py")
-
-
-def reserve_stdout():
-    """Take fd 1 for the protocol, and give the program fd 2 in its place.
-
-    The container is destroyed the instant it exits, so a file written inside it
-    is unreadable by the time anyone could look, and the reply has to travel on a
-    stream. That makes the stream worth protecting: if the program shared it, an
-    evaluation would be parsing its answer out of whatever the harness happened
-    to print, and a submission that can get a line onto standard output could
-    report a score of its own.
-
-    Redirecting the descriptor rather than reassigning `sys.stdout` is what makes
-    it hold. A subprocess inherits descriptors, not Python objects, so a harness
-    started with `subprocess.run` writes to the redirected fd 1 without knowing
-    anything happened.
-    """
-    reply = os.dup(1)
-    os.dup2(2, 1)
-    # Python's own buffered wrapper still points at the old fd 1 it opened, so
-    # `print()` from here on has to be sent somewhere too.
-    sys.stdout = sys.stderr
-    return reply
 
 
 class Submission(object):
@@ -228,7 +209,7 @@ def run(request, program):
 
 
 def main():
-    reply = reserve_stdout()
+    reply_path = REPLY
 
     if os.path.isdir(WORK):
         # So that a program can import a module the organiser shipped alongside
@@ -239,6 +220,9 @@ def main():
     try:
         with open(REQUEST) as handle:
             request = json.load(handle)
+        # The host's path wins over the constant, so the two can disagree during
+        # an upgrade without the answer landing where nobody is looking.
+        reply_path = request.get("reply") or REPLY
         program = load_program(PROGRAM)
         value = run(request, program)
         payload = {"ok": True, "value": value}
@@ -253,7 +237,7 @@ def main():
     # `default=str` so that a program returning something JSON has no word for
     # fails as a readable value rather than as a traceback out of the shim. The
     # host checks the shape afterwards and says which key was wrong.
-    with os.fdopen(reply, "w") as out:
+    with open(reply_path, "w") as out:
         json.dump(payload, out, default=str)
 
     sys.exit(status)

@@ -42,6 +42,7 @@ type Run = Confinement & {
   files?: Readonly<Record<string, Uint8Array | string>>;
   env?: Readonly<Record<string, string>>;
   cwd?: string;
+  collect?: readonly string[];
 };
 
 /**
@@ -98,12 +99,51 @@ const isolation = (limits: Run["limits"], injecting: boolean) => {
   return flags;
 };
 
+/**
+ * Take the requested files back out, before the container is destroyed.
+ *
+ * Copied to a host path rather than read off `docker cp`'s tar stream, because
+ * `docker cp <id>:<path> <dir>` unpacks for us and the alternative is carrying a
+ * tar reader to fetch one small JSON file.
+ *
+ * Named by index on the way out. The container's paths are the container's, and
+ * joining one onto a host directory is how `..` in a path somebody else chose
+ * ends up writing outside it.
+ *
+ * A path that is not there is left out of the result. A run that did not produce
+ * its output has already gone wrong, and the caller knows what that means for
+ * its own protocol far better than this does.
+ */
+const collectFrom = async (
+  id: string,
+  paths: readonly string[],
+): Promise<Record<string, Uint8Array>> => {
+  const out: Record<string, Uint8Array> = {};
+  if (!paths.length) return out;
+
+  const staging = await mkdtemp(join(tmpdir(), "ock-collect-"));
+  try {
+    for (const [index, path] of paths.entries()) {
+      const local = join(staging, String(index));
+      const copied = await sh(["cp", `${id}:${path}`, local]);
+      if (copied.code !== 0) continue;
+      const file = Bun.file(local);
+      if (!(await file.exists())) continue;
+      out[path] = new Uint8Array(await file.arrayBuffer());
+    }
+  } finally {
+    await rm(staging, { recursive: true, force: true });
+  }
+  return out;
+};
+
 const run = async ({
   image,
   command,
   files,
   env,
   cwd,
+  collect,
   timeoutMs,
   limits,
 }: Run) => {
@@ -138,20 +178,50 @@ const run = async ({
         await writeFile(local, body as Uint8Array | string);
       }
 
-      // The whole tree in one call, rather than a `cp` per file. `docker cp`
-      // refuses a destination whose parent directory does not exist in the
-      // container, so file-at-a-time injection only ever worked for paths the
-      // image already had: `/runner/agents/x.py` into an image with a
-      // `/runner/agents`. Copying a directory creates what it needs on the way
-      // down, which is what lets a runner place its own files anywhere.
+      // One file at a time where the destination directory already exists, and
+      // the whole subtree only where it does not.
       //
-      // The trailing `/.` is what makes it copy the *contents* of the staging
-      // directory into `/` instead of the directory itself.
-      const copied = await sh(["cp", `${staging}/.`, `${id}:/`]);
-      if (copied.code !== 0) {
-        throw new Error(
-          `Could not place files into the sandbox: ${copied.stderr.trim()}`,
-        );
+      // Both halves are needed and neither is safe alone. `docker cp` refuses a
+      // destination whose parent is missing, so file-at-a-time injection only
+      // ever worked for paths the image already had; but copying a directory
+      // *replaces* the mode and owner of a destination directory that does
+      // exist, and the container runs with `--cap-drop=ALL`, which takes away
+      // root's power to ignore that. Copy `/tmp/x` as part of a tree and /tmp
+      // stops being world-writable. Copy `/runner/agents/x.py` that way and an
+      // image with a `USER` of its own can no longer write to its own harness.
+      //
+      // So: try the file, and let the failure say which parents are missing.
+      const missing = new Set<string>();
+      for (const path of Object.keys(files)) {
+        const relative = path.replace(/^\/+/, "");
+        const copied = await sh([
+          "cp",
+          join(staging, relative),
+          `${id}:${path}`,
+        ]);
+        if (copied.code === 0) continue;
+
+        // The first segment, because that is the largest thing we can create
+        // without touching anything the image already put there.
+        const root = relative.split("/")[0];
+        if (!root || root === relative) {
+          throw new Error(
+            `Could not place "${path}" into the sandbox: ${copied.stderr.trim()}`,
+          );
+        }
+        missing.add(root);
+      }
+
+      // Copied by name rather than with a trailing `/.`, so each one lands as a
+      // new directory under `/` instead of merging its contents into a `/` whose
+      // permissions we would then have rewritten.
+      for (const root of missing) {
+        const copied = await sh(["cp", join(staging, root), `${id}:/`]);
+        if (copied.code !== 0) {
+          throw new Error(
+            `Could not create "/${root}" in the sandbox: ${copied.stderr.trim()}`,
+          );
+        }
       }
     }
 
@@ -174,12 +244,19 @@ const run = async ({
       timedOut = finished.code === 137 && oom !== "true";
     }
 
+    // Before the `finally` below destroys it. A timed-out container is still
+    // running at this point, and taking a file off a container mid-run is fine:
+    // whatever is there is what it managed to write, which is exactly what the
+    // caller wants to see.
+    const produced = await collectFrom(id, collect ?? []);
+
     return {
       stdout: finished.stdout,
       stderr: finished.stderr,
       code: finished.code,
       timedOut,
       elapsedMs: Date.now() - started,
+      files: produced,
     };
   } finally {
     // -f because a timed-out container is still running, and this is the only

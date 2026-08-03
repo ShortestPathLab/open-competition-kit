@@ -14,6 +14,7 @@ competitions:
   - id: sorting
     runner:
       image: python:3.13-slim
+      runtime: python
       program: ${{ text("./evaluate.py") }}
 ```
 
@@ -23,6 +24,25 @@ def evaluate(submission):
 ```
 
 That is a working competition. Everything below is for competitions that need more.
+
+## Languages
+
+`runtime:` picks the shim that turns the protocol into functions. Two ship: `python` and `node`.
+
+```yaml
+runtime: node
+program: ${{ text("./evaluate.mjs") }}
+```
+
+```js
+export function evaluate({ submission }) {
+  return { score: submission.files.length };
+}
+```
+
+It is not guessed from the program, which arrives as text with no filename to read an extension off. Sniffing a shebang would be a rule that works until the day it does not.
+
+Neither shim is the interface. Both read one JSON file and write another, and `command:` below lets a program in any language do the same without one.
 
 ## The three functions
 
@@ -36,8 +56,6 @@ Each runs in its own container. `plan` once, `evaluate` once per case, `reduce` 
 
 Without `plan` there is a single case and `case` is `None`. Without `reduce` the numbers are added up and a `cases` count is added. So a competition that does not fan out writes one function and never thinks about the other two.
 
-Arguments are passed by name and each function is given only the ones it asks for. `def evaluate(case)` and `def evaluate(case, params, submission, job)` are both fine. Asking for a name that is not on offer fails with the list of names that are.
-
 | | `plan` | `evaluate` | `reduce` |
 |---|---|---|---|
 | `params` | yes | yes | yes |
@@ -46,6 +64,14 @@ Arguments are passed by name and each function is given only the ones it asks fo
 | `submission` | | yes | |
 | `results` | | | yes |
 | `cases` | | | yes |
+
+Python passes them by name, and gives each function only the ones it asks for. `def evaluate(case)` and `def evaluate(case, params, submission, job)` are both fine, and asking for a name that is not on offer fails with the list of names that are.
+
+JavaScript passes them as one object to destructure, because a function's parameter names are not reliably readable there. `case` is a reserved word, so it arrives as `case_`.
+
+```js
+export function evaluate({ case_, submission, params, job }) {}
+```
 
 ## Why a container per case
 
@@ -59,27 +85,29 @@ It also puts a boundary between cases where progress can be written. A container
 
 The permitted files, on disk. The rest of the archive was discarded before the container started.
 
-```python
-submission.root              # where they are
-submission.files             # the paths, relative to root
-submission.path("a.py")      # one absolute path
-submission.read("a.py")      # one file, as bytes
-submission.copy_into("/app") # lay them over a directory
-```
+| Python | JavaScript | |
+|---|---|---|
+| `submission.root` | `submission.root` | where they are |
+| `submission.files` | `submission.files` | the paths, relative to root |
+| `submission.path("a.py")` | `submission.path("a.py")` | one absolute path |
+| `submission.read("a.py")` | `submission.read("a.py")` | one file, as bytes |
+| `submission.copy_into("/app")` | `submission.copyInto("/app")` | lay them over a directory |
 
-`copy_into` is what a competition whose image holds a harness wants: the files land on top of this container's copy of it, and the container is thrown away afterwards.
+The last one is what a competition whose image holds a harness wants: the files land on top of this container's copy of it, and the container is thrown away afterwards.
 
 ## Returning results
 
-`evaluate` and `reduce` return a flat dict of scalars, because that is what a leaderboard row is. A board builds its columns from the top-level keys and stringifies anything else, so a nested dict arrives as JSON in a single cell with nothing to rank on. Returning one is an error naming the key rather than a quietly useless column.
+`evaluate` and `reduce` return a flat object of scalars, because that is what a leaderboard row is. A board builds its columns from the top-level keys and stringifies anything else, so a nested object arrives as JSON in a single cell with nothing to rank on. Returning one is an error naming the key rather than a quietly useless column.
 
-Print whatever you like. Standard output and standard error both become the job's log, including anything a subprocess wrote, so a harness's own words reach the competitor unedited. The result does not travel that way and cannot be forged by anything the program starts.
+Print whatever you like. Both streams become the job's log, including anything a subprocess wrote, so a harness's own words reach the competitor unedited. The answer travels by file and cannot be confused with any of it.
 
 ## Configuration
 
 | Key | |
 |---|---|
 | `program` | The program, inlined. `${{ text("./evaluate.py") }}` |
+| `runtime` | `python` or `node`. Required with `program`, unless `command` is given |
+| `command` | Run this instead of a shim, and speak the protocol yourself |
 | `image` | The image every phase runs in |
 | `build` | A `dockerfile:`, optional `context:` and `args:`, built on startup instead |
 | `include` | Files placed beside the program, keyed by relative path |
@@ -125,8 +153,23 @@ Everything else in the archive is dropped before any container starts. Leave it 
 
 Patterns match by suffix, so the directory a GitHub archive wraps everything in does not need naming. `*` stops at a separator, `**` crosses them. A named file that is absent fails the submission, and every missing one is reported at once. A glob that matches nothing is not an error.
 
+### Any other language
+
+`command:` runs your program directly, with no shim between. This is why the package does not need to know your language exists: the protocol is two JSON files.
+
+```yaml
+image: golang:1.23
+include:
+  run.sh: ${{ text("./run.sh") }}
+command: ["sh", "./run.sh"]
+```
+
+Read `/ock/request.json`, write the reply to the path its `reply` field names. The request carries `phase` (`plan`, `evaluate` or `reduce`), `params`, `case`, `submission`, `results`, `cases`, and `program`, which is where your program was placed. Answer with `{"ok": true, "value": ...}`, or `{"ok": false, "error": "..."}` to fail the phase with a message.
+
+The command runs from the work directory, so a relative path finds a file placed by `include:`. The defaults a shim supplies are yours to write: no `plan` means returning `[null]`, and no `reduce` means summing the numbers.
+
 ## Requirements
 
-The image needs `python3` on its PATH and a writable `/tmp`. Nothing else: the shim uses only the standard library.
+The image needs a writable `/tmp` and whatever runs your program: `python3` for the Python shim, `node` for the JavaScript one, the first word of your `command:` otherwise. Both shims use only their standard library.
 
 Install `sandbox/docker` alongside this, and mount the Docker socket into the runner service.
