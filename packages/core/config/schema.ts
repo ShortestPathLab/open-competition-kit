@@ -47,7 +47,27 @@ export const Timestamp = S.transformOrFail(
   },
 );
 
-export const Extendable = S.Struct({ with: S.Array(S.String) });
+/**
+ * A node packages can be installed on.
+ *
+ * `with` may be left out, and leaving it out is the common case: most nodes
+ * install nothing of their own and want whatever was listed above them, which
+ * `propagateExtendable` hands down regardless. Requiring it meant an organiser
+ * writing `with: []` on every competition, track, form, runner and leaderboard
+ * to say nothing at all.
+ *
+ * An absent list decodes to an empty one rather than to `undefined`, so
+ * everything downstream still reads `node.with` without asking whether anybody
+ * wrote it. `nullable` is on because a bare `with:` in YAML resolves to null,
+ * and somebody who left the key with nothing under it meant the same thing as
+ * somebody who left the key out.
+ */
+export const Extendable = S.Struct({
+  with: S.optionalWith(S.Array(S.String), {
+    default: () => [] as string[],
+    nullable: true,
+  }),
+});
 
 /**
  * One field on a submission form.

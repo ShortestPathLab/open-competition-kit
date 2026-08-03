@@ -118,6 +118,41 @@ describe("transform then decode", () => {
   });
 });
 
+describe("decode", () => {
+  test("fills in an absent `with`, so a node that installs nothing writes nothing", async () => {
+    const source = [
+      "appName: GPPC",
+      "appDescription: A competition",
+      "auth: {}",
+      "db: {}",
+      "competitions:",
+      "  - id: fit5047",
+      // Written with nothing under it, which js-yaml reads as null. Somebody who
+      // left the key empty meant what somebody who left it out meant.
+      "    with:",
+      "    runner: {}",
+      "    leaderboards: [{ id: board, shape: [] }]",
+      "    tracks:",
+      "      - id: main",
+      "        form: { shape: [] }",
+    ].join("\n");
+
+    const config = (await E.runPromise(decode(load(source)))) as Record<
+      string,
+      any
+    >;
+
+    // Every extendable node still carries a list afterwards, so nothing reading
+    // the decoded config has to ask whether the organiser wrote one.
+    expect(config.with).toEqual([]);
+    expect(config.competitions[0].with).toEqual([]);
+    expect(config.competitions[0].runner.with).toEqual([]);
+    expect(config.competitions[0].leaderboards[0].with).toEqual([]);
+    expect(config.competitions[0].tracks[0].with).toEqual([]);
+    expect(config.competitions[0].tracks[0].form.with).toEqual([]);
+  });
+});
+
 describe("propagateExtendable", () => {
   test("flows a parent's packages down into nested collections, parent-first", () => {
     const result = propagateExtendable({

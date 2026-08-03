@@ -28,7 +28,6 @@ db:
   url: postgres://postgres:postgres@db:5432/postgres
 competitions:
   - id: "fit5047"
-    with: []
     name: "FIT5047 Pacman Competition"
     organiser: "Monash University"
     description: >
@@ -76,11 +75,9 @@ competitions:
             dots and the number of times it gets caught by ghosts.
           - The competition will run for a specified duration, and all submissions
             must be made before the deadline.
-        with: []
         form:
-          with: []
+          shape: []
     runner:
-      with: []
       body: |
         ({
           ok: true,
