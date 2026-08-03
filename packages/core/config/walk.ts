@@ -56,7 +56,7 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
 
   for (const [key, kind] of [
     ["db", "db"],
-    ["largeFiles", "largeFiles"],
+    ["files", "files"],
     ["sandbox", "sandbox"],
   ] as const) {
     const block = config[key];

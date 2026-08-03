@@ -86,6 +86,11 @@ export type OpenCompetitionKitApi = {
     read: unknown;
     /** A presigned URL, when the backend supports one. */
     link: unknown;
+    /**
+     * The largest file the backend will take, in bytes, or undefined for no
+     * ceiling. Ask before uploading: a file turned away here costs nothing.
+     */
+    limit: unknown;
     delete: unknown;
     /** Find ownership rows by key, owner, or namespace. */
     list: unknown;
@@ -97,9 +102,11 @@ export type OpenCompetitionKitApi = {
   /**
    * Running untrusted code.
    *
-   * Goes to the package implementing the `sandbox` hooks. This layer applies the
-   * confinement defaults, so a runner cannot be handed something weaker than it
-   * expects.
+   * Goes to the package implementing the `sandbox` hooks. This layer fills in
+   * confinement the caller left out, so a runner that passes no limits still
+   * gets some. The organiser's maximum is a separate thing and lives with the
+   * package: it is written in the `sandbox:` block, declared by whichever
+   * package reads it, and enforced where the confining actually happens.
    */
   sandbox: {
     /** Run a command in an isolated environment and collect its output. */

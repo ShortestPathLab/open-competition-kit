@@ -10,14 +10,27 @@ import { createHash } from "node:crypto";
 import { mkdir, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import { config as extensions } from "./config";
+import { sizeOf, tooLarge } from "./size";
 
 const DEFAULT_ROOT = "/data/files";
 
-type LargeFilesConfig = { root?: string };
+type FilesConfig = { root?: string; maxBytes?: number };
+
+/**
+ * The size ceiling, or undefined for none.
+ *
+ * Read per call rather than memoised like `root`: `root` is a mounted volume
+ * that cannot change under a running process, while this is a number an
+ * organiser may want to lower without a restart.
+ */
+const maxBytes = async () => {
+  const c = await unsafe(config.get());
+  return (c.files as FilesConfig | undefined)?.maxBytes;
+};
 
 const root = once(async () => {
   const c = await unsafe(config.get());
-  const declared = (c.largeFiles as LargeFilesConfig | undefined)?.root;
+  const declared = (c.files as FilesConfig | undefined)?.root;
   const dir = resolve(declared ?? process.env.LARGE_FILES_ROOT ?? DEFAULT_ROOT);
 
   await mkdir(dir, { recursive: true });
@@ -95,12 +108,27 @@ export default {
   version: "0.0.6",
   files: {
     write: async ({ key, body, contentType }) => {
+      const limit = await maxBytes();
+      const declared = sizeOf(body);
+      if (limit && declared !== undefined && declared > limit) {
+        throw tooLarge(declared, limit);
+      }
+
       const path = await pathFor(key);
       await mkdir(dirname(path), { recursive: true });
 
       await store(path, body);
+      const meta = await metaFor(key, path);
 
-      return { ...(await metaFor(key, path)), contentType };
+      // A stream's size is only known once it has been written, so an oversized
+      // one does reach the disk. It does not stay there: leaving it would mean a
+      // caller could fill the volume with files it was told were refused.
+      if (limit && meta.size > limit) {
+        await rm(path, { force: true });
+        throw tooLarge(meta.size, limit);
+      }
+
+      return { ...meta, contentType };
     },
 
     read: async ({ key }) => {
@@ -127,5 +155,7 @@ export default {
     // The local filesystem has no URL a browser can reach, so the caller proxies
     // the bytes through the app. This is the reason the S3 backend exists.
     link: async () => undefined,
+
+    limit: maxBytes,
   },
 } satisfies Package;

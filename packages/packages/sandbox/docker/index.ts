@@ -1,7 +1,9 @@
-import { type Package } from "@open-competition-kit/sdk";
+import { config as kit, unsafe, type Package } from "@open-competition-kit/sdk";
 import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { config, sandbox, type SandboxCeiling } from "./config";
+import { clamp, type Confinement } from "./limits";
 
 /**
  * Runs untrusted code in a Docker container.
@@ -18,24 +20,27 @@ import { dirname, join } from "node:path";
  * `-v /tmp/job-1:/code` mounts an empty directory and the job fails with
  * something that reads like the submission's fault. Copying the files in is a
  * little slower and always correct, whoever is running it.
+ *
+ * ## The organiser's ceiling
+ *
+ * The `sandbox:` block in the config is declared by this package and applied
+ * here, in `limits.ts`. It belongs with the code that talks to the daemon, since
+ * that is the only place a limit turns into something the kernel enforces: a
+ * ceiling held anywhere else would be one that only this package could choose to
+ * honour.
  */
 
 const DOCKER = "docker";
 
-type Run = {
+// The confinement half comes from `limits.ts` rather than being written out
+// again here, so a limit this package learns to apply cannot be one the clamp
+// has never heard of.
+type Run = Confinement & {
   image: string;
   command: readonly string[];
   files?: Readonly<Record<string, Uint8Array | string>>;
   env?: Readonly<Record<string, string>>;
   cwd?: string;
-  timeoutMs?: number;
-  limits?: {
-    memoryMb?: number;
-    cpus?: number;
-    pids?: number;
-    network?: boolean;
-    writable?: boolean;
-  };
 };
 
 const sh = async (args: string[], timeoutMs?: number) => {
@@ -164,10 +169,37 @@ const run = async ({
   }
 };
 
+/**
+ * The organiser's ceiling, read fresh for each run.
+ *
+ * Not memoised, unlike the settings most packages read once: a config edited to
+ * tighten a limit should tighten the next run rather than the next restart. The
+ * read costs nothing next to starting a container.
+ *
+ * A `sandbox:` block that will not parse stops the run. Core checks it at boot
+ * against this same schema, so getting here means something changed underneath
+ * the process, and the safe reading of an unreadable ceiling is that there is
+ * one and we cannot see it.
+ */
+const ceiling = async (): Promise<SandboxCeiling> => {
+  const c = await unsafe(kit.get());
+  const read = sandbox.safeParse(c.sandbox ?? {});
+  if (!read.success) {
+    throw new Error(
+      `The sandbox: block in the config is not one this package can read, so no run can be confined to it: ${read.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`,
+    );
+  }
+  return read.data;
+};
+
 export default {
   name: "@open-competition-kit/sandbox-docker",
   description:
     "Runs untrusted code in Docker containers. Requires a Docker daemon on the host.",
   version: "0.0.8",
-  sandbox: { run },
+  config,
+  sandbox: {
+    run: async (request: Run) =>
+      run({ ...request, ...clamp(request, await ceiling()) }),
+  },
 } satisfies Package;

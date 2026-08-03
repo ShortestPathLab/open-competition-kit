@@ -29,12 +29,26 @@ type S3Config = {
   virtualHostedStyle?: boolean;
   /** How long a presigned URL stays valid. */
   expiresIn?: number;
+  /** Largest object this backend will accept. */
+  maxBytes?: number;
 };
 
 const settings = once(async (): Promise<S3Config> => {
   const c = await unsafe(config.get());
-  return ((c.largeFiles as S3Config | undefined) ?? {}) as S3Config;
+  return ((c.files as S3Config | undefined) ?? {}) as S3Config;
 });
+
+/**
+ * The size ceiling, or undefined for none.
+ *
+ * Read per call rather than through `settings`, which is memoised for the
+ * client's sake: credentials cannot change under a live connection, but this is
+ * a number an organiser may want to lower without a restart.
+ */
+const maxBytes = async () => {
+  const c = await unsafe(config.get());
+  return (c.files as S3Config | undefined)?.maxBytes;
+};
 
 const client = once(async () => {
   const s = await settings();
@@ -47,7 +61,7 @@ const client = once(async () => {
 
   if (!bucket) {
     throw new Error(
-      "The S3 large-file backend needs a bucket. Set `largeFiles.bucket` in the " +
+      "The S3 large-file backend needs a bucket. Set `files.bucket` in the " +
         "config, or S3_BUCKET in the environment.",
     );
   }
@@ -72,6 +86,7 @@ export default {
   files: {
     write: async ({ key, body, contentType }) => {
       const s3 = await client();
+      const limit = await maxBytes();
 
       // A ReadableStream must be wrapped, not coerced: passed raw it stringifies
       // to "[object ReadableStream]" and silently stores 23 bytes.
@@ -79,6 +94,17 @@ export default {
         isStream(body) ? new Response(body) : body;
 
       const size = await s3.write(key, payload as Blob, { type: contentType });
+
+      // The object is already in the bucket by now, since `write` reports the
+      // size it stored rather than being asked in advance. Removing it is the
+      // difference between a refusal and a refusal that still bills the
+      // organiser every month.
+      if (limit && size > limit) {
+        await s3.delete(key).catch(() => undefined);
+        throw new Error(
+          `File is ${size} bytes, and this storage backend accepts at most ${limit}.`,
+        );
+      }
 
       // Deliberately no checksum. Computing sha256 would mean streaming the whole
       // object back out of the bucket, which defeats the point of storing it
@@ -136,5 +162,7 @@ export default {
         expiresIn: expiresIn ?? s.expiresIn ?? DEFAULT_EXPIRY_SECONDS,
       });
     },
+
+    limit: maxBytes,
   },
 } satisfies Package;

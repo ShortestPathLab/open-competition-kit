@@ -1,5 +1,5 @@
 /**
- * The `largeFiles:` fields this backend reads.
+ * The `files:` fields this backend reads.
  *
  * Every one of them falls back to the conventional environment variable, so
  * credentials can be injected by the platform instead of written into a file
@@ -10,7 +10,7 @@
 import type { ConfigExtensions } from "@open-competition-kit/sdk";
 import { z } from "zod";
 
-export const largeFiles = z.object({
+export const files = z.object({
   bucket: z.string().optional(),
   region: z.string().optional(),
   endpoint: z.string().optional(),
@@ -21,12 +21,17 @@ export const largeFiles = z.object({
   virtualHostedStyle: z.boolean().optional(),
   /** How long a presigned URL stays valid, in seconds. */
   expiresIn: z.number().positive().optional(),
+  /**
+   * Largest object this backend will accept, in bytes. Absent means no ceiling,
+   * which with a bucket means the bill is the ceiling.
+   */
+  maxBytes: z.number().positive().optional(),
 });
 
 export const config = {
-  largeFiles: {
-    schema: largeFiles,
-    group: { id: "largeFiles", label: "File storage" },
+  files: {
+    schema: files,
+    group: { id: "files", label: "File storage" },
     shape: [
       {
         id: "bucket",
@@ -60,6 +65,13 @@ export const config = {
         kind: "number",
         description:
           "Seconds a presigned upload or download URL stays valid. Long enough for a large file on a slow connection.",
+      },
+      {
+        id: "maxBytes",
+        label: "Largest file",
+        kind: "number",
+        description:
+          "Bytes. An object past this is refused and deleted from the bucket. A presigned upload goes straight to S3, so the check lands when the upload is sealed rather than when it starts.",
       },
       {
         id: "accessKeyId",

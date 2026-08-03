@@ -4,7 +4,7 @@ Stores large files on the local filesystem. The default backend, and the right
 one for a single-host deployment.
 
 Implements the `files` implementation point: `write`, `read`, `peek`, `delete`,
-and `link`.
+`link`, and `limit`.
 
 ## Using it
 
@@ -12,9 +12,16 @@ and `link`.
 with:
   - "@open-competition-kit/large-files-local"
 
-largeFiles:
+files:
   root: /data/files # default: /data/files, or $LARGE_FILES_ROOT
+  maxBytes: 536870912 # optional. Omit and the disk is the ceiling.
 ```
+
+The block was called `largeFiles:` up to 0.0.10. The old name still works and
+warns at startup.
+
+`maxBytes` is this package's, not core's. A file past it is refused, and one that
+reached the disk before its size was known is deleted rather than left there.
 
 ## The one thing to get right
 

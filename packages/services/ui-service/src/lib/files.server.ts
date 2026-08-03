@@ -8,10 +8,15 @@ export const UPLOAD_NAMESPACE = "open-competition-kit/namespace/user" as const;
 
 export const DEFAULT_MAX_BYTES = 512 * 1024 * 1024;
 
+/**
+ * What the storage backend will take, or our own figure if it names none.
+ *
+ * Asked of the kit rather than read out of the config: the ceiling belongs to
+ * whichever backend is installed, and a product that reaches into another
+ * package's settings to find it breaks the day someone swaps the backend.
+ */
 export const maxUploadBytes = createServerOnlyFn(async () => {
-  const config = await unsafe(sdk.config.get());
-  const limit = (config.largeFiles as { maxBytes?: number } | undefined)
-    ?.maxBytes;
+  const limit = await unsafe(sdk.files.limit());
   return typeof limit === "number" && limit > 0 ? limit : DEFAULT_MAX_BYTES;
 });
 

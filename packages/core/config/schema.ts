@@ -1,6 +1,10 @@
 import { ParseResult, Schema as S } from "effect";
-import { Meta, Shape } from "../hook";
-import { Item, Value } from "../common/shape";
+// Straight from where these are defined, not through the `../hook` barrel that
+// re-exports them. That barrel imports this package's own index, which imports
+// `validate`, which reads `Config.fields` at module scope: importing it from
+// here closes a cycle, and whichever module happens to load first crashes with
+// "Cannot access 'Config' before initialization".
+import { Item, Meta, Shape, Value } from "../common/shape";
 
 /**
  * An instant, written in config as an ISO 8601 string.
@@ -191,34 +195,38 @@ export const CompetitionConfig = S.Struct({
 export const DbNode = S.Struct({});
 
 /**
- * Where large files go, as far as core is concerned.
+ * Where files go, as far as core is concerned.
  *
- * Only the ceiling. Core rejects an upload past `maxBytes` before it reaches any
- * backend, so the field has to be readable without knowing which backend is
- * installed. Everything else about storage — a filesystem root, a bucket, a set
- * of credentials — belongs to whichever package moves the bytes.
+ * Nothing, which is the whole of what core knows about storage. A root
+ * directory, a bucket, a set of credentials and the size a backend is willing to
+ * accept are all the same kind of thing: settings for whichever package moves
+ * the bytes, and unreadable without knowing which package that is.
+ *
+ * Named for the hooks it configures, like every other block. It was `largeFiles`
+ * for as long as it held a ceiling that only large files ever met; the backend
+ * behind it stores a forty byte text file the same way it stores a model.
+ *
+ * The ceiling used to be declared here on the grounds that core is what refuses
+ * an oversized upload. It still refuses one, but it asks the backend for the
+ * figure rather than reading it, so the field can live with the rest of the
+ * backend's settings and be labelled and validated alongside them.
  */
-export const LargeFilesNode = S.Struct({
-  /** Largest upload core will accept, in bytes. */
-  maxBytes: S.optional(S.Number.pipe(S.positive())),
-});
+export const FilesNode = S.Struct({});
 
 /**
- * Confinement defaults for whichever package implements the `sandbox` hooks.
+ * Confinement settings for whichever package implements the `sandbox` hooks.
  *
- * An organiser's ceiling, not a runner's preference: a runner may ask for less
- * than this but never for more, so one careless package cannot hand a stranger
- * the whole machine. Core applies these itself before calling the hook, which is
- * the reason they are declared here rather than left to the sandbox package: a
- * package cannot be trusted to enforce the limit that exists to contain it.
+ * Declared by that package, not here. Core hands numbers to a sandbox and has no
+ * way to check that any of them were applied, so a ceiling held in core would be
+ * a ceiling only the sandbox package could choose to honour. The package that
+ * does the confining is the one that declares what it can be told, and the one
+ * that clamps a greedy runner against it.
+ *
+ * The gain from moving it is that an ignored setting stops being silent: write
+ * `memoryMb` with a sandbox package that does not declare it and the app refuses
+ * to start, naming the packages that were asked.
  */
-export const SandboxNode = S.Struct({
-  /** Wall-clock limit per run. */
-  timeoutMs: S.optional(S.Number.pipe(S.positive())),
-  memoryMb: S.optional(S.Number.pipe(S.positive())),
-  /** Process cap. Without one, a fork bomb takes the host down. */
-  pids: S.optional(S.Number.pipe(S.int(), S.positive())),
-});
+export const SandboxNode = S.Struct({});
 
 export const Config = S.Struct({
   appName: S.String,
@@ -234,7 +242,7 @@ export const Config = S.Struct({
    * surface is worse than an unreachable one.
    */
   admins: S.optional(S.Array(S.String)),
-  largeFiles: S.optional(LargeFilesNode),
+  files: S.optional(FilesNode),
   sandbox: S.optional(SandboxNode),
   ...Extendable.fields,
 });

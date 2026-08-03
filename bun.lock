@@ -206,6 +206,7 @@
       "version": "0.0.10",
       "dependencies": {
         "@open-competition-kit/sdk": "workspace:*",
+        "zod": "^4.4.3",
       },
       "devDependencies": {
         "@types/bun": "latest",

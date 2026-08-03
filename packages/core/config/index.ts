@@ -12,6 +12,7 @@ import { load as _load, YAMLException } from "js-yaml";
 import { mapValues, uniq } from "lodash-es";
 import { createPackageResolver } from "../resolve";
 import { describeConfig } from "./describe";
+import { migrate } from "./migrate";
 import { decode, Extendable } from "./schema";
 import { transform } from "./transform";
 import { validateConfig } from "./validate";
@@ -94,6 +95,9 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
       const raw = pipe(
         fs.readFileString(path),
         E.andThen(load),
+        // Straight after parsing, so a block we renamed is under its current
+        // name before anything else looks at it.
+        E.andThen(migrate),
         E.andThen(decode),
         E.andThen((config) => transform(cwd, config)),
       );

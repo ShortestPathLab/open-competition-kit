@@ -60,6 +60,17 @@ export const Hooks = S.Struct({
     peek: hook<{ key: string }, FileMeta | undefined>(),
     delete: hook<{ key: string }, void>(),
     /**
+     * The largest file this backend will take, in bytes, or undefined for no
+     * ceiling.
+     *
+     * A backend answers from its own settings, because the number is one of
+     * them: a filesystem with a quota and a bucket with a billing limit do not
+     * have the same answer, and neither of them is core's to know. Core asks
+     * when it seals an upload, and a UI asks so it can turn a file away in the
+     * browser rather than after it has been sent.
+     */
+    limit: hook<void, number | undefined>(),
+    /**
      * A URL the browser can use directly, so a large upload or download never
      * passes through the app server. Backends that cannot presign return
      * undefined, and the caller proxies instead — every backend stays usable,

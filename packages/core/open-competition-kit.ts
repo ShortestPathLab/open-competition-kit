@@ -543,13 +543,26 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
        * key, and recording who the file belongs to so it can be found and
        * reclaimed later.
        */
-      const maxBytes = () => {
-        const limit = (config.largeFiles as { maxBytes?: number } | undefined)
-          ?.maxBytes;
-        return typeof limit === "number" && limit > 0 ? limit : undefined;
-      };
+      /**
+       * The largest file the installed backend will take, in bytes.
+       *
+       * Undefined means it named no ceiling. Read from the backend rather than
+       * from the config, because the figure is one of the backend's own settings
+       * and core has no business knowing what the block it lives in looks like.
+       */
+      const limit = () => hooks.do((h) => h.files.limit());
 
       const files = {
+        /**
+         * What the backend will accept, for a caller that wants to know before
+         * it starts.
+         *
+         * Worth exposing because knowing early is what saves the upload: a
+         * browser handed this number turns a file away locally, and the round
+         * trip that would have thrown the bytes out at the end never happens.
+         */
+        limit,
+
         /**
          * Claim a key for a file that does not exist yet.
          *
@@ -613,7 +626,13 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
          *
          * A client that uploaded straight to the bucket says "done"; the server
          * must not take its word for it. This asks the backend what is actually
-         * there, and rejects — and deletes — anything absent or over the limit.
+         * there, and rejects, and deletes, anything absent or over the limit.
+         *
+         * The ceiling is the backend's and so is the decision behind it; what
+         * happens next is core's, and is the reason this step exists. A presigned
+         * upload goes to the bucket without passing through any hook, so the
+         * first server-side moment is here, and by then there is an object to
+         * remove and an ownership row to take back.
          */
         commit: (key: string) =>
           E.gen(function* () {
@@ -624,14 +643,14 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
               return yield* E.fail(new MissingFileError({ key }));
             }
 
-            const limit = maxBytes();
-            if (limit && meta.size > limit) {
+            const ceiling = yield* limit();
+            if (ceiling && meta.size > ceiling) {
               yield* hooks
                 .do((h) => h.files.delete({ key }))
                 .pipe(E.catchAll(() => E.void));
               if (row) yield* instance.files.delete(row.id);
               return yield* E.fail(
-                new FileTooLargeError({ key, size: meta.size, limit }),
+                new FileTooLargeError({ key, size: meta.size, limit: ceiling }),
               );
             }
 
@@ -748,28 +767,27 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
       /**
        * Running untrusted code.
        *
-       * A thin pass-through: unlike `files`, there is no state here to protect —
-       * no key to derive, no ownership row to write. What this layer does own is
-       * the confinement policy, so that a sandbox package cannot quietly ship a
-       * weaker default than the one every caller is entitled to assume.
+       * A thin pass-through: unlike `files`, there is no state here to protect,
+       * no key to derive and no ownership row to write. What this layer supplies
+       * is a floor of confinement for a caller that asked for none, so a runner
+       * that forgets to pass limits still gets some.
+       *
+       * It is a default and not a ceiling, and the difference matters. An
+       * organiser's maximum lives in the `sandbox:` block, which belongs to
+       * whichever package implements these hooks, and is applied there: core can
+       * hand a sandbox a number but cannot verify the sandbox used it, so a
+       * clamp here would protect against nothing a clamp there does not.
        */
       const sandbox = {
         run: (request: SandboxRequest) =>
           E.gen(function* () {
-            const settings = (config.sandbox ?? {}) as {
-              timeoutMs?: number;
-              memoryMb?: number;
-              pids?: number;
-            };
-
             return yield* hooks.do((h) =>
               h.sandbox.run({
                 ...request,
-                timeoutMs:
-                  request.timeoutMs ?? settings.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+                timeoutMs: request.timeoutMs ?? DEFAULT_TIMEOUT_MS,
                 limits: {
-                  memoryMb: settings.memoryMb ?? DEFAULT_MEMORY_MB,
-                  pids: settings.pids ?? DEFAULT_PIDS,
+                  memoryMb: DEFAULT_MEMORY_MB,
+                  pids: DEFAULT_PIDS,
                   ...request.limits,
                 },
               }),

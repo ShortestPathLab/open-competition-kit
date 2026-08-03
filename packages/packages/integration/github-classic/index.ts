@@ -28,10 +28,14 @@ const GITHUB_WEB = "https://github.com";
 /** The renderer registered under `surface.view`, and the item that asks for it. */
 const REPOSITORY_CARD = "github/repository-card";
 
+/**
+ * The archive has to fit wherever it is about to be stored, so the figure comes
+ * from the storage backend rather than from this package's own idea of large.
+ * Asking through the kit is also what keeps this package out of another one's
+ * config block, which it has no way to keep up with.
+ */
 const maxArchiveBytes = once(async () => {
-  const config = await unsafe(kit.config.get());
-  const limit = (config.largeFiles as { maxBytes?: number } | undefined)
-    ?.maxBytes;
+  const limit = await unsafe(kit.files.limit());
   return typeof limit === "number" && limit > 0 ?
       limit
     : DEFAULT_MAX_SUBMISSION_ARCHIVE_BYTES;

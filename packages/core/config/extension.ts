@@ -58,7 +58,7 @@ export const isStandardSchema = (value: unknown): value is StandardSchemaV1 =>
  * through `competitions[].tracks[]`. The mapping from path to kind is core's
  * business and lives in `NODES` below.
  *
- * The three leaf kinds (`db`, `largeFiles`, `sandbox`) are whole config blocks
+ * The three leaf kinds (`db`, `files`, `sandbox`) are whole config blocks
  * that core declares the existence of and nothing about the contents of. Before
  * this existed they were typed as "a record of anything", which is a comment
  * about validation being skipped rather than a description of a shape.
@@ -76,7 +76,7 @@ export type NodeKind =
   | "leaderboard"
   | "runner"
   | "db"
-  | "largeFiles"
+  | "files"
   | "sandbox";
 
 /**
