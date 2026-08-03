@@ -90,42 +90,43 @@ function LeaderboardsPage() {
         title="Leaderboards"
         description="Public standings, rebuilt from every submission that has been scored."
         meta={
-          leaderboards.length ? (
+          leaderboards.length ?
             <HeaderStats>
               <Stat label="Boards" value={leaderboards.length} />
             </HeaderStats>
-          ) : undefined
+          : undefined
         }
         tabs
       />
       <PageBody>
-        {!leaderboards.length ? (
-          <Empty className="rounded-2xl border border-dashed border-border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Trophy />
-              </EmptyMedia>
-              <EmptyTitle>No leaderboards yet</EmptyTitle>
-              <EmptyDescription>
-                No leaderboards have been configured for this competition yet.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          // Every board on one page. A competition's boards are usually the
-          // same standings cut different ways: a table, a podium, a chart.
-          // Reading one against another used to cost a page load each, behind a
-          // picker that presented them as alternatives. Stacked, comparing them
-          // is scrolling.
-          <div className="space-y-14">
-            {leaderboards.map((leaderboard) => (
-              <LeaderboardSection
-                key={leaderboard.id}
-                leaderboard={leaderboard}
-              />
-            ))}
-          </div>
-        )}
+        {
+          !leaderboards.length ?
+            <Empty className="rounded-2xl border border-dashed border-border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Trophy />
+                </EmptyMedia>
+                <EmptyTitle>No leaderboards yet</EmptyTitle>
+                <EmptyDescription>
+                  No leaderboards have been configured for this competition yet.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+            // Every board on one page. A competition's boards are usually the
+            // same standings cut different ways: a table, a podium, a chart.
+            // Reading one against another used to cost a page load each, behind a
+            // picker that presented them as alternatives. Stacked, comparing them
+            // is scrolling.
+          : <div className="space-y-14">
+              {leaderboards.map((leaderboard) => (
+                <LeaderboardSection
+                  key={leaderboard.id}
+                  leaderboard={leaderboard}
+                />
+              ))}
+            </div>
+
+        }
       </PageBody>
     </>
   );
@@ -165,23 +166,23 @@ function LeaderboardSection({
         <h2 id={headingId} className="text-lg font-semibold tracking-tight">
           {leaderboard.name}
         </h2>
-        {leaderboard.description ? (
+        {leaderboard.description ?
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             {leaderboard.description}
           </p>
-        ) : null}
+        : null}
       </div>
 
       {/* No panel around the renderer. Each one draws its own surface: the
           grid is a bordered table, the podium a row of cards. Wrapping that in
           another card made a card inside a card. */}
-      {isPending ? (
+      {isPending ?
         <Skeleton
           className="h-72 w-full rounded-xl"
           role="status"
           aria-label={`Loading ${leaderboard.name}`}
         />
-      ) : isError ? (
+      : isError ?
         <Empty className="rounded-xl border border-dashed border-border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -203,9 +204,7 @@ function LeaderboardSection({
             </Button>
           </EmptyContent>
         </Empty>
-      ) : (
-        <Leaderboard def={def} />
-      )}
+      : <Leaderboard def={def} />}
     </section>
   );
 }
