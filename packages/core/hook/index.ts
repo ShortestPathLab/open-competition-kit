@@ -93,9 +93,66 @@ export const Hooks = S.Struct({
    * run was written by someone the organiser has never met.
    */
   sandbox: S.Struct({
+    /**
+     * Make an image exist, from a recipe the organiser wrote.
+     *
+     * A sandbox does not build a *submission*, and that has not changed: the
+     * inputs here come from the config and from nowhere else. Job context and
+     * submitted bytes never reach this hook, which is what keeps a participant
+     * from choosing the image their own code is judged in.
+     *
+     * What has changed is who has to run `docker build` beforehand. An organiser
+     * whose evaluation image is a Dockerfile next to their config had to build it
+     * out of band and keep the tag in step by hand, and a stale tag fails as a
+     * bad score rather than as a bad deployment.
+     *
+     * A build has network access by definition, since a recipe that installs
+     * anything needs it. The `network: false` ceiling governs runs and cannot
+     * govern this, so the protection here is the provenance of the inputs rather
+     * than confinement.
+     *
+     * Implementations should be idempotent and cheap on the second call: the
+     * caller is expected to ask on every startup, and may ask again per job.
+     */
+    build: hook<
+      {
+        /** The recipe itself, not a path. Inlined from the config. */
+        dockerfile: string;
+        /**
+         * A directory the recipe may copy from, on the host running the build.
+         *
+         * Absent means an empty context, which is the common case: a recipe that
+         * installs packages and clones a repository copies nothing in.
+         */
+        context?: string;
+        /** Build arguments, e.g. a pinned ref for whatever gets cloned. */
+        args?: Readonly<Record<string, string>>;
+        /**
+         * What to call the result.
+         *
+         * Advisory. An implementation is free to derive its own tag, and the one
+         * it returns is the one to run.
+         */
+        tag?: string;
+      },
+      {
+        /** The image to pass to `run`. */
+        image: string;
+        /** False when the image already existed and nothing was built. */
+        built: boolean;
+        /** The build log, for an organiser working out why a recipe failed. */
+        log: string;
+      }
+    >(),
     run: hook<
       {
-        /** The image, already built. Sandboxes do not build. */
+        /**
+         * The image, already built.
+         *
+         * Either one the host already has, or whatever `build` handed back.
+         * Nothing is built here: by the time a submission is in the room, the
+         * image it runs in is settled.
+         */
         image: string;
         command: readonly string[];
         /**
@@ -208,6 +265,25 @@ export const Hooks = S.Struct({
   }),
   runner: S.Struct({
     ui: S.Unknown,
+    /**
+     * Work a runner needs doing once, before any job exists.
+     *
+     * Called per competition when a runner service starts, and it is the only
+     * hook with no job to point at. Building an evaluation image is the reason
+     * it exists: doing that lazily means the first submission of the day waits
+     * several minutes for `apt-get`, and a broken recipe is discovered as
+     * somebody's failed job rather than as a service that would not start.
+     *
+     * Expected to be idempotent, since a service restarts and every restart asks
+     * again. An implementation that has nothing to prepare should not implement
+     * this at all.
+     *
+     * Told which competition it is preparing, because the `with:` list it was
+     * resolved through is that competition's and the answer usually differs per
+     * competition. Without it an implementation would have to prepare all of
+     * them every time it was asked about one.
+     */
+    prepare: hook<{ competition: string }, void>(),
     run: hook<{ job: string }, { status: string }>(),
     setup: hook<{ job: string }, { status: string }>(),
     teardown: hook<{ job: string }, { status: string }>(),

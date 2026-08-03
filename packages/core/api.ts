@@ -109,6 +109,14 @@ export type OpenCompetitionKitApi = {
    * package reads it, and enforced where the confining actually happens.
    */
   sandbox: {
+    /**
+     * Make an image exist, from a recipe in the config.
+     *
+     * Idempotent and cheap on a second call, so a caller may ask at every
+     * startup. Inputs come from the config and never from a submission, which is
+     * what keeps a participant from choosing the image they are judged in.
+     */
+    build: unknown;
     /** Run a command in an isolated environment and collect its output. */
     run: unknown;
   };

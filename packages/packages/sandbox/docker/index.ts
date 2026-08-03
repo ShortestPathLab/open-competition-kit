@@ -2,6 +2,7 @@ import { config as kit, unsafe, type Package } from "@open-competition-kit/sdk";
 import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { ensure, type BuildRequest } from "./build";
 import { config, sandbox, type SandboxCeiling } from "./config";
 import { clamp, type Confinement } from "./limits";
 
@@ -43,6 +44,15 @@ type Run = Confinement & {
   cwd?: string;
 };
 
+/**
+ * Docker, with no wall-clock limit.
+ *
+ * A build has no business being timed out by the same figure that stops a
+ * runaway submission: installing a toolchain legitimately takes minutes, and the
+ * `sandbox:` ceiling is written with a single evaluation in mind. A recipe that
+ * hangs forever is an organiser's mistake and shows up as a service that will
+ * not finish starting, which is where it belongs.
+ */
 const sh = async (args: string[], timeoutMs?: number) => {
   const proc = Bun.spawn([DOCKER, ...args], {
     stdout: "pipe",
@@ -126,12 +136,22 @@ const run = async ({
         const local = join(staging, path.replace(/^\/+/, ""));
         await mkdir(dirname(local), { recursive: true });
         await writeFile(local, body as Uint8Array | string);
-        const copied = await sh(["cp", local, `${id}:${path}`]);
-        if (copied.code !== 0) {
-          throw new Error(
-            `Could not place "${path}" into the sandbox: ${copied.stderr.trim()}`,
-          );
-        }
+      }
+
+      // The whole tree in one call, rather than a `cp` per file. `docker cp`
+      // refuses a destination whose parent directory does not exist in the
+      // container, so file-at-a-time injection only ever worked for paths the
+      // image already had: `/runner/agents/x.py` into an image with a
+      // `/runner/agents`. Copying a directory creates what it needs on the way
+      // down, which is what lets a runner place its own files anywhere.
+      //
+      // The trailing `/.` is what makes it copy the *contents* of the staging
+      // directory into `/` instead of the directory itself.
+      const copied = await sh(["cp", `${staging}/.`, `${id}:/`]);
+      if (copied.code !== 0) {
+        throw new Error(
+          `Could not place files into the sandbox: ${copied.stderr.trim()}`,
+        );
       }
     }
 
@@ -199,6 +219,12 @@ export default {
   version: "0.0.8",
   config,
   sandbox: {
+    /**
+     * Not clamped, and deliberately so. The ceiling in the `sandbox:` block is
+     * about the code a competitor sends; a recipe came from the config beside it
+     * and needs the network the ceiling exists to deny.
+     */
+    build: async (request: BuildRequest) => ensure(sh, request),
     run: async (request: Run) =>
       run({ ...request, ...clamp(request, await ceiling()) }),
   },

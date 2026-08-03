@@ -779,6 +779,21 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
        * clamp here would protect against nothing a clamp there does not.
        */
       const sandbox = {
+        /**
+         * Make an image exist.
+         *
+         * Nothing to default and nothing to protect, so this is a pass-through
+         * with no floor of its own. The confinement defaults below are about the
+         * stranger's code that will eventually run; a build recipe came from the
+         * organiser's config, and confining it would only stop it installing the
+         * things it was written to install.
+         */
+        build: (request: {
+          dockerfile: string;
+          context?: string;
+          args?: Readonly<Record<string, string>>;
+          tag?: string;
+        }) => hooks.do((h) => h.sandbox.build(request)),
         run: (request: SandboxRequest) =>
           E.gen(function* () {
             return yield* hooks.do((h) =>
