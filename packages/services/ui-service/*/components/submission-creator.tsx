@@ -23,10 +23,7 @@ import {
   EmptyTitle,
 } from "*/components/ui/empty";
 import { FormSkeleton } from "*/components/skeletons";
-import {
-  SubmissionWindowSummary,
-  useWindowState,
-} from "*/components/submission-window";
+import { SubmissionWindowSummary } from "*/components/submission-window";
 import { SurfaceSlot } from "*/components/surface-slot";
 import { surface } from "@open-competition-kit/sdk/surface";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
@@ -44,6 +41,7 @@ import { queryClient } from "src/router";
 import { EnrolmentCard } from "./enrolment-card";
 import { getEnrollmentStatus } from "src/lib/enrolment-fn";
 import { getLoadedForm } from "src/lib/form-fn";
+import { useTrackReports } from "src/lib/gate-fn";
 import { createSubmission, useSubmissionGate } from "src/lib/submission-fn";
 
 interface SubmissionCreatorProps {
@@ -83,9 +81,10 @@ export function SubmissionCreator({
   });
 
   const selectedTrack = tracks.find((track) => track.id === trackId);
-  // Drives the schedule panel only. Whether the form opens is the server's call,
-  // since the deadline is one of several gates and the rest need the database.
-  const windowState = useWindowState(selectedTrack ?? {});
+  // Drives the summary above the form only. Whether the form opens is the
+  // server's call: `useSubmissionGate` below runs the same chain that decides a
+  // real submission, and these reports are the readable half of it.
+  const { reports } = useTrackReports(trackId, session?.user?.id);
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
@@ -200,12 +199,7 @@ export function SubmissionCreator({
                 {selectedTrack.description}
               </p>
             ) : null}
-            {selectedTrack ? (
-              <SubmissionWindowSummary
-                window={selectedTrack}
-                state={windowState}
-              />
-            ) : null}
+            {selectedTrack ? <SubmissionWindowSummary reports={reports} /> : null}
           </div>
 
           {!selectedTrack ? (

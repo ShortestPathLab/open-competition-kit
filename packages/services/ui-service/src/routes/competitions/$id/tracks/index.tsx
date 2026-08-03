@@ -5,7 +5,7 @@ import { CompetitionPageHeader } from "*/components/competition-page-header";
 import { HeaderStats, PageBody } from "*/components/page-header-band";
 import { SearchInput } from "*/components/search-input";
 import { Stat } from "*/components/stat-strip";
-import { phaseOf, type WindowPhase } from "*/components/submission-window";
+import { isActionable, phaseOf, type Phase } from "*/components/submission-window";
 import { useCompetition } from "src/lib/competition-fn";
 import { TrackCard } from "*/components/track-card";
 import { Button } from "*/components/ui/button";
@@ -18,7 +18,6 @@ import {
   EmptyTitle,
 } from "*/components/ui/empty";
 import { cn } from "*/lib/utils";
-import { windowStateAt } from "@open-competition-kit/sdk/window";
 import { Layers3, SearchX } from "lucide-react";
 import { useDeferredValue, useMemo, useState, type ReactNode } from "react";
 import { authClient } from "src/lib/auth-client";
@@ -27,6 +26,7 @@ import {
   type TrackSummary,
 } from "src/lib/competition-data";
 import { describeDuration } from "src/lib/competition-window";
+import { useTracksWithReports } from "src/lib/gate-fn";
 import { useUserEnrolments } from "src/lib/enrolment-fn";
 import { z } from "zod";
 
@@ -40,14 +40,20 @@ const getTracks = createServerFn({ method: "GET" })
     return (await getCompetitionSummary(id)).tracks;
   });
 
-/** The groups a list of tracks divides into, in the order they matter. */
+/**
+ * The groups a list of tracks divides into, in the order they matter.
+ *
+ * "Not open yet" rather than "Opens later", because a track can be blocked by
+ * something other than a start date. A competitor who has spent their hourly
+ * quota lands here too, and the card underneath says which it is.
+ */
 const SECTIONS: Array<{
   key: string;
   label: string;
-  phases: WindowPhase[];
+  phases: Phase[];
 }> = [
   { key: "now", label: "Open now", phases: ["closing", "open"] },
-  { key: "later", label: "Opens later", phases: ["upcoming"] },
+  { key: "later", label: "Not open yet", phases: ["upcoming"] },
   { key: "closed", label: "Closed", phases: ["closed"] },
 ];
 
@@ -96,7 +102,7 @@ function TrackAction({
 }: {
   competitionId: string;
   track: TrackSummary;
-  phase: WindowPhase;
+  phase: Phase;
   entered: boolean;
 }) {
   if (phase === "closed" || phase === "upcoming") {
@@ -162,6 +168,12 @@ function TracksPage() {
   // The reader's enrolments, asked for once for the whole list rather than once
   // per row. The track page already runs this query, so it is usually warm.
   const { data: enrolments = [] } = useUserEnrolments(session?.user?.id);
+  // What the installed gates say about each track: the pill, the sort order and
+  // the section a row lands in all come from here.
+  const withReports = useTracksWithReports(
+    tracks as TrackSummary[],
+    session?.user?.id,
+  );
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -175,42 +187,46 @@ function TracksPage() {
         .map((enrolment) => [enrolment.track.id, enrolment.submissions.length]),
     );
 
-    return (tracks as TrackSummary[]).map((track) => ({
+    return withReports.map((track) => ({
       track,
-      phase: phaseOf(track, windowStateAt(track, now), now),
+      phase: phaseOf(track.reports, now),
       // `undefined` is "not enrolled", which is not the same as having enrolled
       // and sent nothing.
       submissions: submissionsByTrack.get(track.id),
     }));
-  }, [enrolments, id, tracks]);
+  }, [enrolments, id, withReports]);
 
-  const openCount = rows.filter(
-    (row) => row.phase === "open" || row.phase === "closing",
-  ).length;
+  const openCount = rows.filter((row) => isActionable(row.phase)).length;
   const enteredCount = rows.filter(
     (row) => row.submissions !== undefined,
   ).length;
 
+  /**
+   * The soonest instant any actionable track is counting down to.
+   *
+   * Reads whatever the gates reported rather than a closing date specifically,
+   * so a competition whose tracks are paced by something else still gets a
+   * number in the header.
+   */
   const nextDeadline = useMemo(() => {
     const now = Date.now();
-    const deadlines = rows
-      .filter((row) => row.phase === "open" || row.phase === "closing")
-      .map((row) => row.track.closesAt)
+    const instants = rows
+      .filter((row) => isActionable(row.phase))
+      .flatMap((row) => row.track.reports)
+      .map((report) => report.at)
       .filter((at): at is string => Boolean(at))
       .map((at) => Date.parse(at))
       .filter((at) => at > now)
       .sort((a, b) => a - b);
 
-    return deadlines.length ? describeDuration(deadlines[0] - now) : undefined;
+    return instants.length ? describeDuration(instants[0]! - now) : undefined;
   }, [rows]);
 
   const visible = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
 
     return rows.filter((row) => {
-      if (filter === "open" && row.phase !== "open" && row.phase !== "closing") {
-        return false;
-      }
+      if (filter === "open" && !isActionable(row.phase)) return false;
       if (filter === "entered" && row.submissions === undefined) return false;
       if (!query) return true;
       return `${row.track.name} ${row.track.description}`
@@ -219,16 +235,22 @@ function TracksPage() {
     });
   }, [deferredSearch, filter, rows]);
 
+  /** The soonest instant a track reports, or nothing, which sorts last. */
+  const soonestOf = (reports: readonly { at?: string }[]) => {
+    const instants = reports
+      .map((report) => (report.at ? Date.parse(report.at) : undefined))
+      .filter((at): at is number => at !== undefined);
+    return instants.length ? Math.min(...instants) : Number.POSITIVE_INFINITY;
+  };
+
   const sections = SECTIONS.map((section) => ({
     ...section,
-    // Soonest bound first inside a section, so the track that needs you today
+    // Soonest date first inside a section, so the track that needs you today
     // sits at the top of the page.
     rows: visible
       .filter((row) => section.phases.includes(row.phase))
       .sort(
-        (a, b) =>
-          Date.parse(a.track.closesAt ?? a.track.opensAt ?? "9999-12-31") -
-          Date.parse(b.track.closesAt ?? b.track.opensAt ?? "9999-12-31"),
+        (a, b) => soonestOf(a.track.reports) - soonestOf(b.track.reports),
       ),
   })).filter((section) => section.rows.length > 0);
 
@@ -346,7 +368,7 @@ function TracksPage() {
                     competitionId={id}
                     name={track.name}
                     description={track.description}
-                    window={track}
+                    reports={track.reports}
                     submissions={submissions}
                     showEnrolment={Boolean(session?.user)}
                     dim={phase === "closed"}

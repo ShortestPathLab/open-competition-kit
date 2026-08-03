@@ -8,11 +8,11 @@ import { Stat } from "*/components/stat-strip";
 import { phaseOf } from "*/components/submission-window";
 import { Button } from "*/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { windowStateAt } from "@open-competition-kit/sdk/window";
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
 import { authClient } from "src/lib/auth-client";
 import { useUserEnrolments } from "src/lib/enrolment-fn";
+import { useGateReports } from "src/lib/gate-fn";
 import {
   useUserSubmissionOutcomes,
   type SubmissionOutcome,
@@ -59,11 +59,17 @@ function MeEnrolmentsPage() {
   // A second query rather than a heavier first one: the list paints from the
   // enrolments, and the result column fills in when this lands.
   const { data: outcomes } = useUserSubmissionOutcomes(session?.user?.id);
+  // Asked once for every track on the page, and shared with the browser below so
+  // the rows and the header stats agree about what is open.
+  const { data: reports } = useGateReports(
+    enrolments.map((enrolment) => enrolment.track.id),
+    session?.user?.id,
+  );
 
   const stats = useMemo(() => {
     const now = Date.now();
     const phases = enrolments.map((enrolment) =>
-      phaseOf(enrolment.track, windowStateAt(enrolment.track, now), now),
+      phaseOf(reports?.[enrolment.track.id] ?? [], now),
     );
 
     return {
@@ -76,7 +82,7 @@ function MeEnrolmentsPage() {
         0,
       ),
     };
-  }, [enrolments]);
+  }, [enrolments, reports]);
 
   const results = useMemo(() => {
     const byTrack: Record<string, EnrolmentResult | undefined> = {};
@@ -130,6 +136,7 @@ function MeEnrolmentsPage() {
           isSignedIn={Boolean(session?.user)}
           isLoading={isLoading}
           results={results}
+          reports={reports}
         />
       </PageBody>
     </>

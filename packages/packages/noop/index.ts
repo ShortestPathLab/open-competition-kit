@@ -18,10 +18,14 @@ export default {
   sandbox: { run: noop },
   user: {},
   form: { loader: noop, ui: noop, submit: {} },
-  submissions: { submit: noop, gate: noop },
+  submissions: { submit: noop, gate: noop, status: noop },
   runner: { ui: {}, run: noop, setup: noop, teardown: noop },
   track: { enrol: {} },
   leaderboard: { ui: noop, loader: noop },
   enrolments: { enrol: noop },
   surface: { content: noop, view: noop },
-} satisfies DeepRequired<Package>;
+  // `config` is omitted from the check rather than filled in. The point of this
+  // type is to fail when a hook is added and nothing here answers it; requiring
+  // an extension for every node kind would only mean writing eleven empty
+  // schemas for fields this package deliberately has none of.
+} satisfies DeepRequired<Omit<Package, "config">>;

@@ -6,8 +6,8 @@ import sdk, {
   unsafe,
   users,
   type Leaderboard,
-  type LeaderboardSource,
 } from "@open-competition-kit/sdk";
+import { leaderboardSource, type LeaderboardSource } from "./config";
 
 type Value = string | number | boolean | null;
 export type Row = Record<string, Value>;
@@ -211,8 +211,16 @@ export function rank(
  * static and computed boards can coexist.
  */
 export async function load(def: Leaderboard, competition: string) {
-  if (!def.from) return [...(def.items ?? [])] as Row[];
+  // `from` is this package's field rather than core's, so it is read back with
+  // the schema that declared it instead of off a core type that no longer
+  // mentions it. A board configured for some other loader simply has no `from`
+  // here, and falls through to its literal rows.
+  const parsed = leaderboardSource.optional().safeParse(
+    (def as { from?: unknown }).from,
+  );
+  const from = parsed.success ? parsed.data : undefined;
 
-  const from = def.from;
+  if (!from) return [...(def.items ?? [])] as Row[];
+
   return rank(select(await collect(competition, from), from), from, def.shape);
 }

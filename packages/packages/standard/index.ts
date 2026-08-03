@@ -12,7 +12,8 @@ import sdk, {
   type Package,
 } from "@open-competition-kit/sdk";
 import Zip from "jszip";
-import { standardRefusals } from "./gates";
+import { config, runnerBody } from "./config";
+import { standardRefusals, standardReports } from "./gates";
 import { load as loadLeaderboard } from "./leaderboard";
 
 /**
@@ -56,6 +57,7 @@ export default {
   description:
     "Implements the standard enrolment, submission, job creation, and runner workflow for Open Competition Kit.",
   version: "0.0.6",
+  config,
   enrolments: {
     enrol: async (args, next) => {
       await next?.(args);
@@ -88,6 +90,19 @@ export default {
         ...(await standardRefusals(user, track, Date.now())),
       ];
       return (await next?.({ user, track, refusals: all })) ?? all;
+    },
+    /**
+     * The same three rules as `gate`, reported rather than enforced.
+     *
+     * Additive in the same way, so a package that adds a gate of its own adds a
+     * report beside these instead of replacing them.
+     */
+    status: async ({ track, user, reports }, next) => {
+      const all = [
+        ...reports,
+        ...(await standardReports(track, user, Date.now())),
+      ];
+      return (await next?.({ track, user, reports: all })) ?? all;
     },
     submit: async (args, next) => {
       const inherited = await next?.(args);
@@ -139,7 +154,11 @@ export default {
       );
 
       try {
-        const result = eval(competition.runner.body ?? "");
+        // Core no longer types `runner`, since what a runner is configured with
+        // is whatever runner package is installed. Ours takes a `body:`, so ours
+        // is what reads it back out.
+        const { body } = runnerBody.parse(competition.runner);
+        const result = eval(body ?? "");
         const unzipped = await Zip.loadAsync(source, {
           base64: typeof source === "string",
         });

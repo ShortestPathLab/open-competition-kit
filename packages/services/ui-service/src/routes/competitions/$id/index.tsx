@@ -48,8 +48,13 @@ import {
 import { useUserEnrolments } from "src/lib/enrolment-fn";
 import { useCompetitionSubmissions } from "src/lib/submission-fn";
 import { authClient } from "src/lib/auth-client";
+import { useTracksWithReports } from "src/lib/gate-fn";
+import type { TrackSummary } from "src/lib/competition-data";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+/** Stable identity, so an absent competition does not rebuild the query key. */
+const NO_TRACKS: TrackSummary[] = [];
 
 export const Route = createFileRoute("/competitions/$id/")({
   component: CompetitionOverviewPage,
@@ -73,6 +78,12 @@ function CompetitionOverviewPage() {
   const { data: enrolmentCount } = useCompetitionEnrolmentCount(id);
   const { data: standings, isPending: standingsLoading } =
     useCompetitionStandings(id, userId);
+  // Above the early return, because hooks are. An absent competition asks about
+  // no tracks, which the query skips entirely.
+  const tracksWithReports = useTracksWithReports(
+    competition?.tracks ?? NO_TRACKS,
+    userId,
+  );
 
   if (!competition) return <PageSkeleton />;
 
@@ -92,7 +103,7 @@ function CompetitionOverviewPage() {
         competitionName={competition.name}
         crumb="Overview"
         media={
-          <div className="hidden size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-muted sm:block">
+          <div className="hidden size-16 shrink-0 overflow-hidden rounded-xl bg-muted sm:block">
             <BoringAvatar
               name={competition.name}
               square
@@ -106,12 +117,12 @@ function CompetitionOverviewPage() {
             {competition.name}
             {/* Only an organiser is ever handed a draft, so this doubles as a
                 reminder that nobody else can reach this page. */}
-            {isDraft(competition) ? (
+            {isDraft(competition) ?
               <Badge variant="secondary">
                 <PencilRuler />
                 Draft, visible only to organisers
               </Badge>
-            ) : null}
+            : null}
           </span>
         }
         description={
@@ -211,7 +222,7 @@ function CompetitionOverviewPage() {
                 Participation happens at the track level. Pick one to see its
                 rules and standings.
               </p>
-              {competition.tracks.length > 0 ? (
+              {competition.tracks.length > 0 ?
                 <div className="grid gap-3 sm:grid-cols-2">
                   {competition.tracks.slice(0, 4).map((track) => (
                     <TrackCard
@@ -223,8 +234,7 @@ function CompetitionOverviewPage() {
                     />
                   ))}
                 </div>
-              ) : (
-                <Empty className="rounded-xl border border-dashed border-border">
+              : <Empty className="rounded-xl border border-dashed border-border">
                   <EmptyHeader>
                     <EmptyMedia variant="icon">
                       <Layers3 />
@@ -232,7 +242,7 @@ function CompetitionOverviewPage() {
                     <EmptyTitle>No tracks yet</EmptyTitle>
                   </EmptyHeader>
                 </Empty>
-              )}
+              }
             </section>
 
             <Panel>
@@ -263,7 +273,7 @@ function CompetitionOverviewPage() {
             is true of the competition to what is true of the reader, and the
             deadline goes first because it is the only one that expires. */}
           <aside className="space-y-5 lg:sticky lg:top-6 lg:self-start">
-            <DeadlinePanel tracks={competition.tracks} />
+            <DeadlinePanel tracks={tracksWithReports} />
 
             <StandingsPanel
               competitionId={id}
@@ -287,7 +297,7 @@ function CompetitionOverviewPage() {
             <Panel>
               <PanelHeader>
                 <PanelTitle>Leaderboards</PanelTitle>
-                {leaderboards?.length ? (
+                {leaderboards?.length ?
                   <Button
                     variant="link"
                     size="sm"
@@ -301,10 +311,10 @@ function CompetitionOverviewPage() {
                   >
                     All
                   </Button>
-                ) : null}
+                : null}
               </PanelHeader>
               <PanelBody className="p-3">
-                {leaderboards?.length ? (
+                {leaderboards?.length ?
                   <div className="flex flex-col">
                     {leaderboards.map((lb) => (
                       <Link
@@ -318,18 +328,17 @@ function CompetitionOverviewPage() {
                           <span className="block truncate text-sm font-medium">
                             {lb.name}
                           </span>
-                          {lb.description ? (
+                          {lb.description ?
                             <span className="block truncate text-xs text-muted-foreground">
                               {lb.description}
                             </span>
-                          ) : null}
+                          : null}
                         </span>
                         <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
                       </Link>
                     ))}
                   </div>
-                ) : (
-                  <Empty className="border border-dashed border-border">
+                : <Empty className="border border-dashed border-border">
                     <EmptyHeader>
                       <EmptyMedia variant="icon">
                         <Trophy />
@@ -337,7 +346,7 @@ function CompetitionOverviewPage() {
                       <EmptyTitle>No leaderboards yet</EmptyTitle>
                     </EmptyHeader>
                   </Empty>
-                )}
+                }
               </PanelBody>
             </Panel>
           </aside>

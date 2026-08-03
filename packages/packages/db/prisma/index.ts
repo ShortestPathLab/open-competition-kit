@@ -1,4 +1,5 @@
 import { type Package } from "@open-competition-kit/sdk";
+import { config } from "./config";
 import { db } from "./db";
 
 const getCollection = async (collection: string) => {
@@ -14,6 +15,7 @@ const getCollection = async (collection: string) => {
 
 export default {
   name: "@open-competition-kit/db-prisma",
+  config,
   description:
     "Provides the Open Competition Kit database hooks backed by Prisma and the generated Prisma client.",
   version: "0.0.6",

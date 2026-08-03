@@ -16,15 +16,6 @@ export type TrackSummary = {
   overview: string;
   rules: string;
   competitionId: string;
-  /**
-   * The submission window, as ISO 8601 instants. Sent raw rather than as a
-   * resolved open/closed flag: these summaries are cached by react-query, and a
-   * flag computed here would keep saying "open" for as long as the cache holds.
-   * The client re-derives the state on each render, and the server rejects late
-   * submissions regardless of what the client believes.
-   */
-  opensAt?: string;
-  closesAt?: string;
 };
 
 export type CompetitionSummary = {
@@ -50,8 +41,8 @@ export type SubmissionSummary = {
    *
    * The id is a cuid, which tells a competitor nothing and is unpleasant to say
    * out loud. Numbering runs per track because that is the unit a competitor is
-   * given: `maxSubmissions` and `rateLimit` are both counted per track, so
-   * "submission 3" is the same 3 the quota is talking about.
+   * given: the gates a package enforces are counted per track, so "submission 3"
+   * is the same 3 an attempt quota is talking about.
    */
   number: number;
 };
@@ -112,8 +103,6 @@ export async function getCompetitionSummary(
     overview: track.overview ?? "",
     rules: track.rules ?? "",
     competitionId: id,
-    opensAt: track.opensAt,
-    closesAt: track.closesAt,
   }));
 
   return {

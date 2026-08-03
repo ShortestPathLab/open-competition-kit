@@ -26,6 +26,8 @@ export * as system from "./system";
 
 export * from "./result";
 
+export * from "./instant";
+
 export * from "./kit";
 
 export * from "./ui";

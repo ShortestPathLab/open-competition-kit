@@ -2,12 +2,12 @@ import { Panel } from "*/components/panel";
 import { cn } from "*/lib/utils";
 import { CalendarClock, Clock, LockKeyhole } from "lucide-react";
 import { useEffect, useState } from "react";
-import { formatInstant } from "@open-competition-kit/sdk/window";
+import { formatInstant } from "@open-competition-kit/sdk/instant";
 import {
   competitionSchedule,
   splitRemaining,
   type Milestone,
-  type TrackWindow,
+  type TrackReports,
 } from "src/lib/competition-window";
 
 /** How many dated rows fit under the clock before the list starts to sprawl. */
@@ -55,7 +55,7 @@ function MilestoneRow({ milestone }: { milestone: Milestone }) {
           className={cn(
             "size-1.5 shrink-0 rounded-full",
             milestone.past ? "bg-muted-foreground/40"
-            : milestone.kind === "opens" ? "bg-success"
+            : milestone.state === "ok" ? "bg-success"
             : "bg-warning",
           )}
         />
@@ -81,7 +81,11 @@ function MilestoneRow({ milestone }: { milestone: Milestone }) {
  * an opening or closing time, so a competition that runs indefinitely does not
  * grow an empty panel.
  */
-export function DeadlinePanel({ tracks }: { tracks: readonly TrackWindow[] }) {
+export function DeadlinePanel({
+  tracks,
+}: {
+  tracks: readonly TrackReports[];
+}) {
   const now = useNow();
 
   // Recomputed on every tick rather than memoised against the track list. It is
@@ -108,7 +112,7 @@ export function DeadlinePanel({ tracks }: { tracks: readonly TrackWindow[] }) {
             <div
               className={cn(
                 "flex items-center gap-2 text-xs font-medium",
-                schedule.state.status === "upcoming" ?
+                schedule.status === "upcoming" ?
                   "text-muted-foreground"
                 : "text-warning",
               )}
@@ -124,7 +128,7 @@ export function DeadlinePanel({ tracks }: { tracks: readonly TrackWindow[] }) {
             </div>
           </>
         : <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            {schedule.state.status === "closed" ?
+            {schedule.status === "closed" ?
               <>
                 <LockKeyhole className="size-3.5 shrink-0" />
                 Submissions have closed

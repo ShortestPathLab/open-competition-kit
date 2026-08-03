@@ -9,7 +9,8 @@
   "type": "module",
   "dependencies": {
     "@open-competition-kit/sdk": "workspace:*",
-    "es-toolkit": "^1.46.1"
+    "es-toolkit": "^1.46.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bun": "latest"

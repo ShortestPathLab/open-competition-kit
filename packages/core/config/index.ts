@@ -10,13 +10,19 @@ import {
 } from "effect";
 import { load as _load, YAMLException } from "js-yaml";
 import { mapValues, uniq } from "lodash-es";
+import { createPackageResolver } from "../resolve";
+import { describeConfig } from "./describe";
 import { decode, Extendable } from "./schema";
 import { transform } from "./transform";
+import { validateConfig } from "./validate";
 
 export * from "./schema";
 export * from "./access";
 export * from "./transform";
-export * from "./window";
+export * from "./extension";
+export * from "./validate";
+export * from "./walk";
+export * from "./describe";
 export * from "./visibility";
 
 const load = (s: string) =>
@@ -67,19 +73,79 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
   {
     effect: E.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      const pathService = yield* Path.Path;
       const { cwd, path } = yield* pipe(
         C.string("CONFIG"),
         C.withDefault("./competition.config.yaml"),
         E.andThen(resolveRecursive),
       );
       yield* E.logInfo(`Using configuration at ${path}`);
+
+      /**
+       * The config as authored, with interpolations resolved and core's own
+       * schema applied. Package-declared fields are present but unchecked.
+       *
+       * This is what the package resolver runs against, and it is the reason
+       * there are two stages rather than one: validating package fields means
+       * importing the packages, and knowing which packages to import means
+       * reading `with:` off the config. Splitting here breaks that loop without
+       * either half having to know about the other.
+       */
       const raw = pipe(
         fs.readFileString(path),
         E.andThen(load),
         E.andThen(decode),
         E.andThen((config) => transform(cwd, config)),
       );
-      return { cwd, path, config: raw.pipe(E.map(propagateExtendable)) };
+
+      const resolve = createPackageResolver(path);
+
+      const config = pipe(
+        raw,
+        E.andThen((config) =>
+          E.gen(function* () {
+            const validated = yield* validateConfig(
+              config as unknown as Record<string, unknown>,
+              { resolve: yield* resolve },
+            );
+            return validated as unknown as typeof config;
+          }),
+        ),
+        // Last, so that no node is carrying an inherited `with` while it is
+        // being checked against the fields a package says it may have.
+        E.map(propagateExtendable),
+      );
+
+      /**
+       * The same tree, described for a config editor rather than checked.
+       *
+       * Built from `raw` rather than from `config`, so the values shown are the
+       * ones an organiser would find in the file. The propagated `with` on every
+       * node is a derivation, and putting it in front of somebody editing their
+       * own config would be showing them a setting they never wrote.
+       *
+       * Cached at construction, which does two things. It reads the file and
+       * imports the packages once per process instead of once per page view, and
+       * it discharges the platform services here, where they are in scope, so a
+       * caller gets an effect it can run without holding a filesystem.
+       */
+      const describe = yield* E.cached(
+        pipe(
+          raw,
+          E.andThen((config) =>
+            E.gen(function* () {
+              return yield* describeConfig(
+                config as unknown as Record<string, unknown>,
+                yield* resolve,
+              );
+            }),
+          ),
+          E.provideService(FileSystem.FileSystem, fs),
+          E.provideService(Path.Path, pathService),
+        ),
+      );
+
+      return { cwd, path, raw, config, describe };
     }),
   },
 ) {}

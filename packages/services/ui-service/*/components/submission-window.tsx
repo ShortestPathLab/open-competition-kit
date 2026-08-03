@@ -1,22 +1,36 @@
 import { StatusPill, type PillTone } from "*/components/status-pill";
-import { Badge } from "*/components/ui/badge";
 import { cn } from "*/lib/utils";
 import { CalendarClock, CircleCheck, LockKeyhole } from "lucide-react";
 import { useEffect, useState } from "react";
-import { describeDuration } from "src/lib/competition-window";
+import { isActionable, phaseOf, type Phase } from "src/lib/competition-window";
 import {
+  describeDuration,
   formatInstant,
-  windowStateAt,
-  type SubmissionWindow,
-  type WindowState,
-} from "@open-competition-kit/sdk/window";
+} from "@open-competition-kit/sdk/instant";
+import { nextInstant, type GateReport } from "@open-competition-kit/sdk/gate";
 
 /**
- * Re-renders on a timer so a window that closes while somebody is staring at the
+ * What the installed gates say about a track, drawn in the product's own design.
+ *
+ * Nothing here knows what a deadline, an attempt ceiling or a rate limit is. A
+ * package reports a state, a label and sometimes an instant, and this turns those
+ * into a pill, a countdown and a sentence. A package that adds a rule next year
+ * gets all three without shipping a component.
+ *
+ * Advisory throughout. The server decides whether a submission is accepted, so
+ * this being briefly stale on a slow cache costs a confusing moment and nothing
+ * else.
+ */
+
+/**
+ * Re-renders on a timer so a track that closes while somebody is staring at the
  * page actually closes on screen. Half a minute is close enough for a deadline
  * measured in weeks, and cheap enough to leave running.
+ *
+ * Only the phase is recomputed, not the reports themselves: those come from the
+ * server and are refetched on their own schedule.
  */
-function useNow(intervalMs = 30_000) {
+export function useNow(intervalMs = 30_000) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), intervalMs);
@@ -25,166 +39,143 @@ function useNow(intervalMs = 30_000) {
   return now;
 }
 
-/**
- * The live state of a track's window.
- *
- * Advisory only. The server decides whether a submission is accepted, so this
- * being briefly wrong on a skewed clock costs nothing but a confusing moment.
- */
-export function useWindowState(window: SubmissionWindow): WindowState {
-  return windowStateAt(window, useNow());
+/** The live phase of a track, from what its gates last reported. */
+export function usePhase(reports: readonly GateReport[]): Phase {
+  return phaseOf(reports, useNow());
 }
 
-export function SubmissionWindowBadge({ state }: { state: WindowState }) {
-  switch (state.status) {
-    case "upcoming":
-      return (
-        <Badge variant="secondary">
-          <CalendarClock />
-          Opens {formatInstant(state.opensAt)}
-        </Badge>
-      );
-    case "closed":
-      return (
-        <Badge variant="destructive">
-          <LockKeyhole />
-          Closed {formatInstant(state.closesAt)}
-        </Badge>
-      );
-    case "open":
-      return (
-        <Badge variant="outline">
-          <CircleCheck />
-          Open for submissions
-        </Badge>
-      );
-  }
-}
-
-/** Inside this much of the deadline, a track reads as closing rather than open. */
-export const CLOSING_SOON_MS = 3 * 24 * 60 * 60 * 1000;
-
-export type WindowPhase = "open" | "closing" | "upcoming" | "closed";
-
-/**
- * The window as one word, which is what a list can sort and section by.
- *
- * "Closing" is not a state the kit has: a window is open until it is not. It
- * exists here because a track with two days left and a track with two months
- * left are otherwise the same colour, and only one of them needs you today.
- *
- * Takes the window as well as its state because `WindowState` carries only the
- * bound that decided it, and an open window's `closesAt` is the one this needs.
- */
-export function phaseOf(
-  window: SubmissionWindow,
-  state: WindowState,
-  now = Date.now(),
-): WindowPhase {
-  if (state.status === "upcoming") return "upcoming";
-  if (state.status === "closed") return "closed";
-  if (window.closesAt && Date.parse(window.closesAt) - now <= CLOSING_SOON_MS) {
-    return "closing";
-  }
-  return "open";
-}
-
-const PHASE_TONES: Record<WindowPhase, PillTone> = {
+const PHASE_TONES: Record<Phase, PillTone> = {
   open: "success",
   closing: "pending",
   upcoming: "unknown",
   closed: "unknown",
 };
 
-const PHASE_LABELS: Record<WindowPhase, string> = {
+const PHASE_LABELS: Record<Phase, string> = {
   open: "Open",
   closing: "Closes soon",
   upcoming: "Upcoming",
   closed: "Closed",
 };
 
+const PHASE_ICONS = {
+  open: CircleCheck,
+  closing: CalendarClock,
+  upcoming: CalendarClock,
+  closed: LockKeyhole,
+} as const;
+
 /**
- * A track's window in the space a list column has: a pill, how far away the
- * next bound is, and the instant itself underneath in the reader's timezone.
+ * The label for a phase, preferring what the gate itself said.
  *
- * A track with neither bound has always been open and always will be, so it
- * says so rather than counting down to nothing.
+ * A package that reports "No attempts left" has written something better than
+ * "Closed", and there is no reason for the product to overrule it. The generic
+ * word is the fallback for a track nothing had anything to say about.
+ */
+function labelFor(reports: readonly GateReport[], phase: Phase) {
+  const deciding = reports.find(
+    (report) =>
+      (phase === "open" && report.state === "ok") ||
+      (phase === "closing" && report.state === "pending") ||
+      ((phase === "upcoming" || phase === "closed") &&
+        report.state === "blocked"),
+  );
+  return deciding?.label ?? PHASE_LABELS[phase];
+}
+
+export function SubmissionWindowBadge({
+  reports,
+}: {
+  reports: readonly GateReport[];
+}) {
+  const phase = usePhase(reports);
+  const Icon = PHASE_ICONS[phase];
+
+  return (
+    <StatusPill tone={PHASE_TONES[phase]} pulse={phase === "closing"}>
+      <Icon className="size-3" />
+      {labelFor(reports, phase)}
+    </StatusPill>
+  );
+}
+
+/**
+ * A track's status in the space a list column has: a pill, how far away whatever
+ * happens next is, and the instant itself underneath in the reader's timezone.
  */
 export function WindowStatus({
-  window,
+  reports,
   className,
 }: {
-  window: SubmissionWindow;
+  reports: readonly GateReport[];
   className?: string;
 }) {
-  const state = useWindowState(window);
-  const now = Date.now();
-  const phase = phaseOf(window, state, now);
-
-  const bound = phase === "upcoming" ? window.opensAt : window.closesAt;
-
-  const distance =
-    bound && phase !== "closed" ?
-      describeDuration(Math.abs(Date.parse(bound) - now))
-    : undefined;
+  const now = useNow();
+  const phase = phaseOf(reports, now);
+  const next = nextInstant(reports, now);
 
   const summary =
-    phase === "upcoming" && distance ? `opens in ${distance}`
+    next?.at ?
+      `${(next.atLabel ?? "next").toLowerCase()} in ${describeDuration(Date.parse(next.at) - now)}`
     : phase === "closed" ? "no longer accepting submissions"
-    : distance ? `closes in ${distance}`
     : "no closing date";
 
   return (
     <div className={cn("min-w-0", className)}>
       <StatusPill tone={PHASE_TONES[phase]} pulse={phase === "closing"}>
-        {PHASE_LABELS[phase]}
+        {labelFor(reports, phase)}
       </StatusPill>
       <p className="mt-1.5 text-xs text-muted-foreground">{summary}</p>
-      {bound ? (
+      {next?.at ?
         <time
-          dateTime={bound}
+          dateTime={next.at}
           className="mt-0.5 block font-mono text-[11px] text-muted-foreground/80"
         >
-          {formatInstant(bound)}
+          {formatInstant(next.at)}
         </time>
-      ) : null}
+      : null}
     </div>
   );
 }
+
+const STATE_TONES: Record<GateReport["state"], PillTone> = {
+  ok: "success",
+  pending: "pending",
+  blocked: "destructive",
+};
 
 /**
- * The window as a competitor needs to read it: both bounds, spelled out, in their
- * own timezone. Renders nothing when a track has no window, so tracks that never
- * close do not grow an empty panel.
+ * Every gate's answer, spelled out, for somewhere with room to say it.
+ *
+ * One row per report rather than a single summary, because the reports are about
+ * different things: a track can be open and still have one attempt left, and a
+ * competitor needs both facts. Renders nothing when no gate has anything to say,
+ * so a track with no rules does not grow an empty panel.
  */
 export function SubmissionWindowSummary({
-  window,
-  state,
+  reports,
 }: {
-  window: SubmissionWindow;
-  state: WindowState;
+  reports: readonly GateReport[];
 }) {
-  if (!window.opensAt && !window.closesAt) return null;
+  if (!reports.length) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-      <SubmissionWindowBadge state={state} />
-      {window.opensAt ?
-        <span className="text-muted-foreground">
-          Opens{" "}
-          <time dateTime={window.opensAt} className="text-foreground">
-            {formatInstant(window.opensAt)}
-          </time>
-        </span>
-      : null}
-      {window.closesAt ?
-        <span className="text-muted-foreground">
-          Closes{" "}
-          <time dateTime={window.closesAt} className="text-foreground">
-            {formatInstant(window.closesAt)}
-          </time>
-        </span>
-      : null}
+    <div className="flex flex-col gap-2 text-sm">
+      {reports.map((report) => (
+        <div
+          key={report.gate}
+          className="flex flex-wrap items-center gap-x-3 gap-y-1"
+        >
+          <StatusPill tone={STATE_TONES[report.state]}>
+            {report.label}
+          </StatusPill>
+          {report.detail ?
+            <span className="text-muted-foreground">{report.detail}</span>
+          : null}
+        </div>
+      ))}
     </div>
   );
 }
+
+export { isActionable, phaseOf, type Phase };

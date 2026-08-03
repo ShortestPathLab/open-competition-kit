@@ -16,11 +16,11 @@ import {
 } from "*/components/ui/empty";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { surface } from "@open-competition-kit/sdk/surface";
-import { windowStateAt } from "@open-competition-kit/sdk/window";
 import { ArrowRight, ClipboardList, Layers3, Lock } from "lucide-react";
 import { useMemo } from "react";
 import { authClient } from "src/lib/auth-client";
 import { useUserEnrolments } from "src/lib/enrolment-fn";
+import { useGateReports } from "src/lib/gate-fn";
 import { useUserSubmissions } from "src/lib/submission-fn";
 
 export const Route = createFileRoute("/me/")({
@@ -33,6 +33,10 @@ function MeIndexPage() {
     useUserEnrolments(session?.user?.id);
   const { data: submissions = [], isLoading: submissionsLoading } =
     useUserSubmissions(session?.user?.id);
+  const { data: reports } = useGateReports(
+    enrolments.map((enrolment) => enrolment.track.id),
+    session?.user?.id,
+  );
 
   const signedIn = Boolean(session?.user);
   const loading =
@@ -48,14 +52,10 @@ function MeIndexPage() {
       submissions: submissions.length,
       closing: enrolments.filter(
         (enrolment) =>
-          phaseOf(
-            enrolment.track,
-            windowStateAt(enrolment.track, now),
-            now,
-          ) === "closing",
+          phaseOf(reports?.[enrolment.track.id] ?? [], now) === "closing",
       ).length,
     };
-  }, [enrolments, submissions]);
+  }, [enrolments, reports, submissions]);
 
   return (
     <>

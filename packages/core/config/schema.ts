@@ -11,6 +11,11 @@ import { Item, Value } from "../common/shape";
  * spread into an empty object and the instant lost entirely. Normalising at
  * decode keeps that from ever being reachable.
  *
+ * Core no longer has a field of its own with this type. It stays here, and stays
+ * exported, because a package that declares a scheduled field needs exactly this
+ * behaviour and the reasoning above is not obvious enough to rediscover. The Zod
+ * equivalent in `@open-competition-kit/standard` exists for the same reason.
+ *
  * An offset is not required but is strongly advised: `2026-08-01T09:00:00` is
  * read in the host's timezone, which is rarely the one the deadline was written
  * in. Prefer a trailing `Z` or an explicit `+10:00`.
@@ -40,106 +45,70 @@ export const Timestamp = S.transformOrFail(
 
 export const Extendable = S.Struct({ with: S.Array(S.String) });
 
+/**
+ * One field on a submission form.
+ *
+ * `kind` is an open string on purpose: `github:ref-select` is provided by the
+ * GitHub integration and core has never heard of it. A package that provides a
+ * field kind may declare the extra properties that kind accepts by contributing
+ * a `formField` extension.
+ */
+export const FormFieldNode = S.Struct({ ...Shape.fields, ...Meta.fields });
+
 export const FormConfig = S.Struct({
   ...Meta.fields,
-  shape: S.Array(S.Struct({ ...Shape.fields, ...Meta.fields })),
+  shape: S.Array(FormFieldNode),
+});
+
+export const FormNode = S.Struct({
+  ...Extendable.fields,
+  ...FormConfig.fields,
 });
 
 /**
- * Describes where a leaderboard's rows come from.
+ * A leaderboard, as core understands one: a heading, a set of columns, and
+ * optionally some literal rows.
  *
- * Rows are built from job outputs: every non-failed job belonging to the
- * selected tracks contributes the output stored under `output`, which is
- * flattened into a row. Rows are then grouped, one winner is picked per group,
- * and the survivors are ranked.
+ * Where computed rows come from is not core's business. `standard` contributes a
+ * `from:` block describing how it reads job outputs, and a package that sources
+ * rows some other way contributes its own. Core knows only that a loader turns
+ * this definition into `items`.
  */
-export const LeaderboardSource = S.Struct({
-  /** Restrict to a single track. Defaults to every track in the competition. */
-  track: S.optional(S.String),
-  /** Which job output reference to read. Defaults to `default`. */
-  output: S.optional(S.String),
-  /** One row per `user` (default), `submission`, `job`, or `none` to skip grouping. */
-  groupBy: S.optional(
-    S.Literal("user", "submission", "job", "none"),
-  ),
-  /** Which row wins its group: the `best` by `rank` (default), or the `latest`. */
-  select: S.optional(S.Literal("best", "latest")),
-  /** How to order rows, and what `best` means. */
-  rank: S.optional(
-    S.Struct({
-      field: S.String,
-      order: S.optional(S.Literal("asc", "desc")),
-    }),
-  ),
-  /** Keep only the first N rows after ranking. */
-  limit: S.optional(S.Number),
-});
-
 export const LeaderboardConfig = S.Struct({
   ...Meta.fields,
   shape: S.Array(Shape),
-  /** Literal rows. Used when `from` is absent — handy for demos and static boards. */
+  /** Literal rows. Used when no loader produces any — handy for demos and static boards. */
   items: S.optional(S.Array(S.Record({ key: S.String, value: Value }))),
-  /** Computed rows. Takes precedence over `items`. */
-  from: S.optional(LeaderboardSource),
   /** Renderer-specific settings, passed through to whichever package draws this board. */
   options: S.optional(S.Record({ key: S.String, value: S.Any })),
 });
 
-export const TrackConfig = S.Struct({
+export const LeaderboardNode = S.Struct({
+  ...Item.fields,
+  ...Extendable.fields,
+  ...LeaderboardConfig.fields,
+});
+
+/**
+ * How submissions to a track get evaluated.
+ *
+ * Core declares that a track's competition has a runner and which packages are
+ * installed on it, and stops there. What a runner is configured *with* is the
+ * runner package's own vocabulary: `standard` takes a `body:` of JavaScript, and
+ * a package that runs a container image or a workflow graph would take neither.
+ */
+export const RunnerNode = S.Struct({ ...Extendable.fields });
+
+export const TrackNode = S.Struct({
   ...Item.fields,
   ...Extendable.fields,
   description: S.optional(S.String),
   overview: S.optional(S.String),
   rules: S.optional(S.String),
-  /**
-   * When the track starts accepting submissions. Absent means it always has.
-   */
-  opensAt: S.optional(Timestamp),
-  /**
-   * When the track stops accepting them. Absent means it never does.
-   *
-   * This is the deadline, and it is enforced rather than advertised: submissions
-   * are refused past it wherever they arrive from, not only from the form.
-   */
-  closesAt: S.optional(Timestamp),
-  /**
-   * How many submissions one competitor may make to this track in total. Absent
-   * means no ceiling.
-   *
-   * Counts submissions rather than jobs. A submission that is re-run does not
-   * spend another attempt, which is the reading a competitor expects and the one
-   * that does not punish them for an organiser's retry.
-   */
-  maxSubmissions: S.optional(S.Number.pipe(S.int(), S.positive())),
-  /**
-   * A rolling cap: at most `count` submissions in any `windowMinutes` period,
-   * measured backwards from now rather than against fixed clock boundaries.
-   *
-   * Fixed buckets let a competitor spend a whole quota at 10:59 and another at
-   * 11:00; a rolling window is what people mean when they say "three an hour".
-   */
-  rateLimit: S.optional(
-    S.Struct({
-      count: S.Number.pipe(S.int(), S.positive()),
-      windowMinutes: S.Number.pipe(S.positive()),
-    }),
-  ),
-  form: S.Struct({ ...Extendable.fields, ...FormConfig.fields }),
-}).pipe(
-  // A window that closes before it opens never opens at all. That is a typo
-  // every time, and it is worth failing at boot rather than at the deadline,
-  // when the track silently refuses the first submission anyone tries.
-  S.filter((track) =>
-    (
-      track.opensAt &&
-      track.closesAt &&
-      Date.parse(track.closesAt) <= Date.parse(track.opensAt)
-    ) ?
-      `Track "${track.id}" closes at ${track.closesAt}, which is not after it opens at ${track.opensAt}.`
-    : undefined,
-  ),
-);
+  form: FormNode,
+});
+
+export const TrackConfig = TrackNode;
 
 export const CompetitionConfig = S.Struct({
   ...Item.fields,
@@ -161,14 +130,48 @@ export const CompetitionConfig = S.Struct({
   overview: S.optional(S.String),
   rules: S.optional(S.String),
   tracks: S.Array(TrackConfig),
-  runner: S.Struct({ ...Extendable.fields, body: S.optional(S.String) }),
-  leaderboards: S.Array(
-    S.Struct({
-      ...Item.fields,
-      ...Extendable.fields,
-      ...LeaderboardConfig.fields,
-    }),
-  ),
+  runner: RunnerNode,
+  leaderboards: S.Array(LeaderboardNode),
+});
+
+/**
+ * A block core declares the existence of and nothing else about.
+ *
+ * The package that implements the matching hooks declares the contents. An empty
+ * struct rather than a record of anything, so that every key inside is unclaimed
+ * until some installed package claims it, and a misspelled one is an error at
+ * boot instead of a default silently taking over at runtime.
+ */
+export const DbNode = S.Struct({});
+
+/**
+ * Where large files go, as far as core is concerned.
+ *
+ * Only the ceiling. Core rejects an upload past `maxBytes` before it reaches any
+ * backend, so the field has to be readable without knowing which backend is
+ * installed. Everything else about storage — a filesystem root, a bucket, a set
+ * of credentials — belongs to whichever package moves the bytes.
+ */
+export const LargeFilesNode = S.Struct({
+  /** Largest upload core will accept, in bytes. */
+  maxBytes: S.optional(S.Number.pipe(S.positive())),
+});
+
+/**
+ * Confinement defaults for whichever package implements the `sandbox` hooks.
+ *
+ * An organiser's ceiling, not a runner's preference: a runner may ask for less
+ * than this but never for more, so one careless package cannot hand a stranger
+ * the whole machine. Core applies these itself before calling the hook, which is
+ * the reason they are declared here rather than left to the sandbox package: a
+ * package cannot be trusted to enforce the limit that exists to contain it.
+ */
+export const SandboxNode = S.Struct({
+  /** Wall-clock limit per run. */
+  timeoutMs: S.optional(S.Number.pipe(S.positive())),
+  memoryMb: S.optional(S.Number.pipe(S.positive())),
+  /** Process cap. Without one, a fork bomb takes the host down. */
+  pids: S.optional(S.Number.pipe(S.int(), S.positive())),
 });
 
 export const Config = S.Struct({
@@ -176,7 +179,8 @@ export const Config = S.Struct({
   appDescription: S.String,
   auth: S.Record({ key: S.String, value: S.Any }),
   competitions: S.Array(CompetitionConfig),
-  db: S.Struct({}),
+  /** Connection settings for whichever package implements the `db` hooks. */
+  db: DbNode,
   secrets: S.optional(S.Record({ key: S.String, value: S.String })),
   /**
    * Email addresses permitted to reach the organiser dashboard. Absent or empty
@@ -184,29 +188,23 @@ export const Config = S.Struct({
    * surface is worse than an unreachable one.
    */
   admins: S.optional(S.Array(S.String)),
-  /**
-   * Settings for whichever package implements the `files` hooks. Backend-specific,
-   * so it is passed through unvalidated — `root` for the local backend, bucket and
-   * credentials for S3.
-   */
-  largeFiles: S.optional(S.Record({ key: S.String, value: S.Any })),
-  /**
-   * Confinement defaults for whichever package implements the `sandbox` hooks.
-   *
-   * An organiser's ceiling, not a runner's preference: a runner may ask for less
-   * than this but never for more, so one careless package cannot hand a stranger
-   * the whole machine. `timeoutMs`, `memoryMb`, `pids`.
-   */
-  sandbox: S.optional(S.Record({ key: S.String, value: S.Any })),
+  largeFiles: S.optional(LargeFilesNode),
+  sandbox: S.optional(SandboxNode),
   ...Extendable.fields,
 });
 
 export type Config = S.Schema.Type<typeof Config>;
 export type Form = S.Schema.Type<typeof FormConfig>;
 export type Leaderboard = S.Schema.Type<typeof LeaderboardConfig>;
-export type LeaderboardSource = S.Schema.Type<typeof LeaderboardSource>;
 export type CompetitionConfig = S.Schema.Type<typeof CompetitionConfig>;
 export type Extendable = S.Schema.Type<typeof Extendable>;
 export type TrackConfig = S.Schema.Type<typeof TrackConfig>;
 
+/**
+ * Excess properties are preserved because most of them belong to somebody: a
+ * package declares them through a `config` extension, and `validateConfig` runs
+ * straight after this to check them against whoever declared them. A key that no
+ * installed package claims is rejected there, where the error can name which
+ * packages were asked.
+ */
 export const decode = S.decodeUnknown(Config, { onExcessProperty: "preserve" });

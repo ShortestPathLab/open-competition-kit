@@ -186,12 +186,24 @@ export const getCompetitionStandings = createServerFn({ method: "GET" })
       );
       if (!competition) return null;
 
+      /**
+       * How a board says its rows are ordered.
+       *
+       * `from` belongs to whichever package loads the board rather than to core,
+       * so this reads it loosely and asks only what it needs: is there a ranking
+       * field, and which track do the rows come from. A board loaded by some
+       * other package answers neither and is passed over, which is the right
+       * outcome for one this page cannot describe.
+       */
+      const sourceOf = (board: unknown) =>
+        (board as { from?: { track?: string; rank?: { field?: string } } }).from;
+
       // Only boards whose rows are computed and ordered. A board with literal
       // `items` and no `rank` is a table the organiser wrote by hand, and
       // calling row three of it "third place" would be putting words in their
       // mouth.
       const ranked = competition.leaderboards.filter(
-        (board) => board.from?.rank?.field,
+        (board) => sourceOf(board)?.rank?.field,
       );
       if (!ranked.length) return null;
 
@@ -209,13 +221,13 @@ export const getCompetitionStandings = createServerFn({ method: "GET" })
           ),
         );
         board =
-          ranked.find(
-            (candidate) =>
-              candidate.from?.track && entered.has(candidate.from.track),
-          ) ?? board;
+          ranked.find((candidate) => {
+            const track = sourceOf(candidate)?.track;
+            return track && entered.has(track);
+          }) ?? board;
       }
 
-      const field = board.from!.rank!.field;
+      const field = sourceOf(board)!.rank!.field!;
       const def = await unsafe(sdk.leaderboards.load(board.id));
       // Already grouped, ordered and trimmed by whichever package loaded them,
       // so position in this array is position on the board.
@@ -246,11 +258,11 @@ export const getCompetitionStandings = createServerFn({ method: "GET" })
       const yourIndex =
         viewer ? rows.findIndex((row) => participantIdOf(row) === viewer) : -1;
 
+      const from = sourceOf(board);
       const trackName =
-        board.from?.track ?
-          (competition.tracks.find(
-            (track) => track.id === board.from!.track,
-          )?.name ?? board.from.track)
+        from?.track ?
+          (competition.tracks.find((track) => track.id === from.track)?.name ??
+            from.track)
         : undefined;
       const metric =
         board.shape.find((column) => column.id === field)?.name ?? field;

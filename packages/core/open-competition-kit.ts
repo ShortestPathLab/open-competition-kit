@@ -405,6 +405,25 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
             );
             return verdictOf(refusals ?? []);
           }),
+        /**
+         * What every installed gate has to say about a track, refusing or not.
+         *
+         * Seeded empty for the same reason `gate` is: core contributes nothing of
+         * its own, so every report comes from a package the config installed and
+         * can be traced back to it.
+         *
+         * `user` is optional because most of the answer does not depend on who is
+         * asking. A track list renders for signed-out readers and still wants to
+         * say when each track closes.
+         */
+        status: (track: string, user?: string) =>
+          E.gen(function* () {
+            const reports = yield* hooks.do(
+              (h) => h.submissions.status({ track, user, reports: [] }),
+              { competitions: { tracks: track } },
+            );
+            return reports ?? [];
+          }),
         submit: (user: string, body: string, track: string) =>
           E.gen(function* () {
             // The same question the form asked, asked again where it counts. A
@@ -763,6 +782,15 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         config: {
           get: () => config,
           access: <T extends Accessor>(accessor: T) => access(accessor, config),
+          /**
+           * Every editable node, with the package fields that apply to it.
+           *
+           * What a config editor renders a form from: labels, descriptions and
+           * current values, contributed by whichever packages the organiser
+           * installed. Serialisable, so it crosses to the browser; the schemas
+           * that produced it do not and stay on this side.
+           */
+          describe: () => configService.describe,
         },
         competitions,
         tracks,

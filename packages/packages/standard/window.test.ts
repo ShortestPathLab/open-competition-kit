@@ -1,8 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { Effect as E, Schema as S } from "effect";
 import { load } from "js-yaml";
-import { Timestamp, TrackConfig } from "./schema";
-import { propagateExtendable } from "./index";
+import { propagateExtendable } from "@open-competition-kit/sdk";
+import { gatedTrack, timestamp } from "./config";
 import {
   describeWindowState,
   formatInstant,
@@ -11,8 +10,7 @@ import {
 } from "./window";
 
 const at = (iso: string) => Date.parse(iso);
-const decodeTimestamp = (input: unknown) =>
-  E.runPromise(E.either(S.decodeUnknown(Timestamp)(input)));
+const decodeTimestamp = (input: unknown) => timestamp.safeParse(input);
 
 describe("windowStateAt", () => {
   const window = {
@@ -75,85 +73,91 @@ describe("formatInstant", () => {
   });
 });
 
-describe("TrackConfig", () => {
-  const track = (window: Record<string, string>) => ({
-    id: "t1",
-    with: [],
-    form: { with: [], shape: [] },
-    ...window,
-  });
-  const decodeTrack = (input: unknown) =>
-    E.runPromise(E.either(S.decodeUnknown(TrackConfig)(input)));
-
-  test("accepts a window that opens before it closes", async () => {
-    const result = await decodeTrack(
-      track({
-        opensAt: "2026-08-01T00:00:00Z",
-        closesAt: "2026-09-01T00:00:00Z",
-      }),
-    );
-    expect(result._tag).toBe("Right");
+describe("gatedTrack", () => {
+  test("accepts a window that opens before it closes", () => {
+    const result = gatedTrack.safeParse({
+      opensAt: "2026-08-01T00:00:00Z",
+      closesAt: "2026-09-01T00:00:00Z",
+    });
+    expect(result.success).toBe(true);
   });
 
   // A window that closes before it opens never opens at all. Catching it at boot
   // beats discovering it when the first competitor is refused.
-  test("rejects a window that closes before it opens", async () => {
-    const result = await decodeTrack(
-      track({
-        opensAt: "2026-09-01T00:00:00Z",
-        closesAt: "2026-08-01T00:00:00Z",
-      }),
-    );
-    expect(result._tag).toBe("Left");
-    expect(String((result as { left: unknown }).left)).toContain(
-      "which is not after it opens at",
+  test("rejects a window that closes before it opens", () => {
+    const result = gatedTrack.safeParse({
+      opensAt: "2026-09-01T00:00:00Z",
+      closesAt: "2026-08-01T00:00:00Z",
+    });
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result.error?.issues)).toContain(
+      "closesAt must be after opensAt",
     );
   });
 
-  test("rejects a window that closes exactly when it opens", async () => {
+  test("rejects a window that closes exactly when it opens", () => {
     const instant = "2026-08-01T00:00:00Z";
-    const result = await decodeTrack(
-      track({ opensAt: instant, closesAt: instant }),
-    );
-    expect(result._tag).toBe("Left");
+    const result = gatedTrack.safeParse({
+      opensAt: instant,
+      closesAt: instant,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // Core no longer declares these, so a track only gets them because this
+  // package said it may have them. Everything else on the node is somebody
+  // else's and is left where it was found.
+  test("claims only its own fields", () => {
+    const result = gatedTrack.safeParse({
+      id: "t1",
+      with: [],
+      maxSubmissions: 3,
+    });
+    expect(result.success).toBe(true);
+    expect(Object.keys(result.data ?? {})).toEqual(["maxSubmissions"]);
+  });
+
+  test("rejects an attempt ceiling of zero", () => {
+    expect(gatedTrack.safeParse({ maxSubmissions: 0 }).success).toBe(false);
   });
 });
 
-describe("Timestamp", () => {
-  test("accepts an ISO string and normalises it", async () => {
-    const result = await decodeTimestamp("2026-08-01T09:00:00+10:00");
-    expect(result).toMatchObject({ right: "2026-07-31T23:00:00.000Z" });
+describe("timestamp", () => {
+  test("accepts an ISO string and normalises it", () => {
+    expect(decodeTimestamp("2026-08-01T09:00:00+10:00")).toMatchObject({
+      data: "2026-07-31T23:00:00.000Z",
+    });
   });
 
   // js-yaml resolves an unquoted YAML timestamp to a Date, so organisers who
   // leave the quotes off must not get a parse error for their trouble.
-  test("accepts the Date js-yaml produces for an unquoted timestamp", async () => {
+  test("accepts the Date js-yaml produces for an unquoted timestamp", () => {
     const document = load("closesAt: 2026-09-01T09:00:00Z") as Record<
       string,
       unknown
     >;
     const parsed = document.closesAt;
     expect(parsed).toBeInstanceOf(Date);
-    expect(await decodeTimestamp(parsed)).toMatchObject({
-      right: "2026-09-01T09:00:00.000Z",
+    expect(decodeTimestamp(parsed)).toMatchObject({
+      data: "2026-09-01T09:00:00.000Z",
     });
   });
 
-  test("rejects something that is not a date", async () => {
-    const result = await decodeTimestamp("next tuesday");
-    expect(result._tag).toBe("Left");
+  test("rejects something that is not a date", () => {
+    expect(decodeTimestamp("next tuesday").success).toBe(false);
   });
 
   // The instant has to survive the config walk. `propagateExtendable` spreads
   // every `instanceof Object` it meets, which would quietly empty out a Date and
-  // leave the track with no deadline at all.
-  test("survives propagateExtendable as a string", async () => {
-    const decoded = await decodeTimestamp(new Date("2026-09-01T09:00:00Z"));
-    expect(decoded).toMatchObject({ right: "2026-09-01T09:00:00.000Z" });
+  // leave the track with no deadline at all. Validation runs before that walk,
+  // which is what makes the normalisation above load-bearing rather than tidy.
+  test("survives propagateExtendable as a string", () => {
+    const decoded = decodeTimestamp(new Date("2026-09-01T09:00:00Z"));
+    expect(decoded).toMatchObject({ data: "2026-09-01T09:00:00.000Z" });
 
     const walked = propagateExtendable({
       with: [],
-      closesAt: (decoded as { right: string }).right,
+      closesAt: decoded.data as string,
     });
     expect(walked.closesAt).toBe("2026-09-01T09:00:00.000Z");
   });

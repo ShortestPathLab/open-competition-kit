@@ -1,7 +1,7 @@
 import { WindowStatus } from "*/components/submission-window";
 import { cn } from "*/lib/utils";
 import { Link } from "@tanstack/react-router";
-import type { SubmissionWindow } from "@open-competition-kit/sdk/window";
+import type { GateReport } from "@open-competition-kit/sdk/gate";
 import { ArrowRight, Check } from "lucide-react";
 import BoringAvatar from "boring-avatars";
 import type { ReactNode } from "react";
@@ -13,10 +13,10 @@ interface TrackCardProps {
   description: string;
   imageUrl?: string;
   /**
-   * The track's submission window. Given, the card grows a column saying
-   * whether it is open and when that changes.
+   * What the installed gates say about this track. Given a non-empty list, the
+   * card grows a column saying whether it is open and when that changes.
    */
-  window?: SubmissionWindow;
+  reports?: readonly GateReport[];
   /**
    * How many submissions the reader has made here. `undefined` means they are
    * not enrolled, which is a different statement from `0`.
@@ -70,7 +70,7 @@ function TrackMedia({
  * A track, as a card in a grid or as a row in a list.
  *
  * The plain form is the whole card a link, which is what the competition
- * overview shows four of. Passing a window, an enrolment, or an action turns it
+ * overview shows four of. Passing reports, an enrolment, or an action turns it
  * into the list row the tracks page uses, where those extra columns are the
  * reason to be on that page at all.
  */
@@ -80,7 +80,7 @@ export function TrackCard({
   name,
   description,
   imageUrl,
-  window,
+  reports,
   submissions,
   showEnrolment = false,
   action,
@@ -127,8 +127,8 @@ export function TrackCard({
           {description}
         </p>
       </div>
-      {window ?
-        <WindowStatus window={window} className="sm:w-44 sm:shrink-0" />
+      {reports?.length ?
+        <WindowStatus reports={reports} className="sm:w-44 sm:shrink-0" />
       : null}
       {!showEnrolment && submissions === undefined ?
         null

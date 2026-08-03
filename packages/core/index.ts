@@ -9,19 +9,30 @@ export {
   CompetitionConfig,
   type Accessor as ConfigAccessor,
   TrackConfig,
+  Timestamp,
   type Form,
   type Leaderboard,
-  type LeaderboardSource,
-  describeWindowState,
-  formatInstant,
-  isOpenAt,
-  windowStateAt,
-  type SubmissionWindow,
-  type WindowState,
   isDraft,
   isVisibleTo,
+  propagateExtendable,
   type Visibility,
+  ConfigExtensionError,
+  CORE_KEYS,
+  describeConfig,
+  walkNodes,
+  type ConfigFieldDescription,
+  type ConfigNodeDescription,
+  type ConfigSectionDescription,
+  isStandardSchema,
+  validateConfig,
+  validateNode,
+  type ConfigExtension,
+  type ConfigExtensions,
+  type NodeKind,
+  type ResolvedExtension,
+  type StandardSchemaV1,
 } from "./config";
+export { createPackageResolver } from "./resolve";
 export type { Package, Hooks } from "./hook";
 export { OpenCompetitionKit } from "./open-competition-kit";
 export type {
@@ -60,8 +71,12 @@ export {
 
 export {
   describeRefusals,
+  nextInstant,
   verdictOf,
+  worstOf,
+  type GateReport,
   type GateRequest,
+  type GateStatusRequest,
   type GateVerdict,
   type Refusal,
 } from "./gate";

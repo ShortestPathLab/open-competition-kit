@@ -4,12 +4,13 @@ import { HeaderStats, PageBody } from "*/components/page-header-band";
 import { PageSkeleton } from "*/components/skeletons";
 import { Panel, PanelHeader, PanelTitle, PanelBody } from "*/components/panel";
 import { Stat } from "*/components/stat-strip";
-import { useWindowState } from "*/components/submission-window";
+import { useNow } from "*/components/submission-window";
 import { SurfaceSlot } from "*/components/surface-slot";
 import { Button } from "*/components/ui/button";
 import { Skeleton } from "*/components/ui/skeleton";
 import { surface } from "@open-competition-kit/sdk/surface";
-import { formatInstant } from "@open-competition-kit/sdk/window";
+import { formatInstant } from "@open-competition-kit/sdk/instant";
+import { nextInstant } from "@open-competition-kit/sdk/gate";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,6 +20,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { authClient } from "src/lib/auth-client";
 import { useCompetition } from "src/lib/competition-fn";
+import { useTrackReports } from "src/lib/gate-fn";
 import { getEnrollmentStatus } from "src/lib/enrolment-fn";
 import { ensureTrack } from "src/lib/route-guards";
 import {
@@ -60,7 +62,8 @@ function TrackDetailsPage() {
 
   // Before the early returns: hooks cannot run conditionally, and `track` is
   // absent on the first render.
-  const windowState = useWindowState(track ?? {});
+  const { reports } = useTrackReports(trackId, session?.user?.id);
+  const now = useNow();
 
   if (trackLoading) return <PageSkeleton />;
   // The guard above rules out an unconfigured id, so reaching this means the
@@ -69,18 +72,26 @@ function TrackDetailsPage() {
 
   const isSignedIn = Boolean(session?.user);
 
-  // The window as a single cell: the label carries the state and the value
-  // carries the instant, so an open track still says when it stops being one.
-  // A track configured with neither bound has always been open and always will
-  // be, so it gets no cell rather than an empty one.
+  // Whatever the gates are counting down to, as a single cell: the label carries
+  // what happens and the value carries when, so an open track still says when it
+  // stops being one. A track no gate has a date for gets no cell rather than an
+  // empty one.
+  //
+  // A gate that is refusing names the cell even though its date has passed,
+  // since "Closed 3 June" is the fact a reader arriving late wants. Otherwise it
+  // is whatever comes next.
+  const deciding =
+    reports.find((report) => report.state === "blocked" && report.at) ??
+    nextInstant(reports, now);
+
   const deadline =
-    windowState.status === "upcoming"
-      ? { label: "Opens", at: windowState.opensAt, closed: false }
-      : windowState.status === "closed"
-        ? { label: "Closed", at: windowState.closesAt, closed: true }
-        : track.closesAt
-          ? { label: "Closes", at: track.closesAt, closed: false }
-          : undefined;
+    deciding?.at ?
+      {
+        label: deciding.atLabel ?? deciding.label,
+        at: deciding.at,
+        closed: deciding.state === "blocked",
+      }
+    : undefined;
 
   // One call to action, and it is whichever step the reader has not taken yet.
   // The second button only appears once they are in, because there is nothing to

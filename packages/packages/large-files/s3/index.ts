@@ -6,6 +6,7 @@ import {
 } from "@open-competition-kit/sdk";
 import { S3Client } from "bun";
 import { once } from "es-toolkit";
+import { config as extensions } from "./config";
 
 const DEFAULT_EXPIRY_SECONDS = 15 * 60;
 
@@ -64,6 +65,7 @@ const client = once(async () => {
 
 export default {
   name: "@open-competition-kit/large-files-s3",
+  config: extensions,
   description:
     "Stores Open Competition Kit large files in any S3-compatible bucket, using Bun's native S3 client. Presigns URLs so uploads and downloads bypass the app server.",
   version: "0.0.6",

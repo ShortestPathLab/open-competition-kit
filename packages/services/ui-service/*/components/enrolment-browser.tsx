@@ -6,10 +6,10 @@ import { Panel, PanelHeader, PanelTitle } from "*/components/panel";
 import { phaseOf, WindowStatus } from "*/components/submission-window";
 import { Button } from "*/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { windowStateAt } from "@open-competition-kit/sdk/window";
 import { ArrowUpRight } from "lucide-react";
 import BoringAvatar from "boring-avatars";
 import type { EnrolmentSummary } from "src/lib/competition-data";
+import type { GateReport } from "@open-competition-kit/sdk/gate";
 import { formatScore } from "src/lib/submission-readout";
 import { useMemo } from "react";
 
@@ -23,6 +23,13 @@ interface EnrolmentBrowserProps {
   isLoading: boolean;
   /** Keyed by track id. A missing entry just shows the submission count. */
   results?: Record<string, EnrolmentResult | undefined>;
+  /**
+   * What the installed gates say about each track, keyed by track id.
+   *
+   * Passed in rather than fetched here, so the page that already asked about
+   * these tracks for its own header does not ask a second time.
+   */
+  reports?: Record<string, GateReport[] | undefined>;
 }
 
 type Group = {
@@ -60,14 +67,15 @@ function groupByCompetition(enrolments: EnrolmentSummary[]): Group[] {
 
 function EnrolmentRow({
   enrolment,
+  reports,
   result,
 }: {
   enrolment: EnrolmentSummary;
+  reports: readonly GateReport[];
   result?: EnrolmentResult;
 }) {
   const { track, competition } = enrolment;
-  const now = Date.now();
-  const phase = phaseOf(track, windowStateAt(track, now), now);
+  const phase = phaseOf(reports, Date.now());
 
   return (
     <div className="grid gap-4 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_11rem_8rem_auto] sm:items-center">
@@ -84,7 +92,7 @@ function EnrolmentRow({
         </p>
       </div>
 
-      <WindowStatus window={track} />
+      <WindowStatus reports={reports} />
 
       <div className="text-sm text-muted-foreground">
         {result ? result.label : "Submissions"}
@@ -144,12 +152,16 @@ function EnrolmentRow({
  */
 const NO_FILTERS: DataBrowserFilterOption[] = [];
 
+/** Stable identity for a track nothing has reported on yet. */
+const NO_REPORTS: GateReport[] = [];
+
 export function EnrolmentBrowser({
   enrolments,
   isSessionLoading,
   isSignedIn,
   isLoading,
   results,
+  reports,
 }: EnrolmentBrowserProps) {
   // Search earns its place once the list is longer than a screen.
   const searchable = enrolments.length > 6;
@@ -221,6 +233,7 @@ export function EnrolmentBrowser({
                   <EnrolmentRow
                     key={enrolment.id}
                     enrolment={enrolment}
+                    reports={reports?.[enrolment.track.id] ?? NO_REPORTS}
                     result={results?.[enrolment.track.id]}
                   />
                 ))}

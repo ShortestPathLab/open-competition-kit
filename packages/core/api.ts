@@ -126,6 +126,15 @@ export type OpenCompetitionKitApi = {
      */
     get: unknown;
     access: unknown;
+    /**
+     * Describe every node an organiser could edit, with the fields each
+     * installed package declares there.
+     *
+     * The editor's half of the extension mechanism. The validator uses the same
+     * declarations to decide whether a config boots, so a field that can be set
+     * is a field that will be checked.
+     */
+    describe: unknown;
   };
 
   /**
@@ -156,6 +165,15 @@ export type OpenCompetitionKitApi = {
      * up front instead of letting someone fill it in and be turned away.
      */
     gate: unknown;
+    /**
+     * What every installed gate has to say about a track, whether or not it is
+     * refusing.
+     *
+     * The half of the gate chain a page can render when the answer is yes: when
+     * the track closes, how many attempts are left. Advisory, so unlike `gate`
+     * it is safe to call while a list renders and safe to cache.
+     */
+    status: unknown;
   };
 
   jobs: CollectionApi & {

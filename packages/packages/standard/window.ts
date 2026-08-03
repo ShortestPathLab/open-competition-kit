@@ -1,12 +1,19 @@
 /**
  * When a track accepts submissions.
  *
- * Deliberately free of imports. The server enforces the window and the browser
- * renders it, and both need the same answer to "is this open?" — a shared module
- * is the only way that stays true. Anything importing `effect` here would land in
- * the client bundle, so the schema that parses these fields lives in `./schema`
- * instead, and this file holds only the reasoning about them.
+ * Deliberately free of imports beyond the instant formatter. The server enforces
+ * the window and the browser renders it, and both need the same answer to "is
+ * this open?" — a shared module is the only way that stays true. Anything
+ * importing `effect` here would land in the client bundle, so the schema that
+ * parses these fields lives in `./config` instead, and this file holds only the
+ * reasoning about them.
+ *
+ * This used to live in core. It moved here with the fields it reasons about:
+ * core declares that a track exists and takes submissions, and this package
+ * declares that a track may have a deadline. A host that installs a different
+ * gating package gets that package's rules and never sees these.
  */
+import { formatInstant } from "@open-competition-kit/sdk/instant";
 
 /** The part of a track's config that decides whether it takes submissions. */
 export type SubmissionWindow = {
@@ -62,18 +69,4 @@ export const describeWindowState = (state: WindowState) => {
   }
 };
 
-export const formatInstant = (iso: string) => {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return iso;
-  // Spelled out field by field rather than with `dateStyle`/`timeStyle`, which
-  // throw outright when combined with `timeZoneName`. The zone is the one part
-  // that cannot be dropped: a deadline read in the wrong timezone is missed.
-  return parsed.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
-};
+export { formatInstant };

@@ -9,6 +9,7 @@ import { once } from "es-toolkit";
 import { createHash } from "node:crypto";
 import { mkdir, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
+import { config as extensions } from "./config";
 
 const DEFAULT_ROOT = "/data/files";
 
@@ -88,6 +89,7 @@ const store = (path: string, body: FileBody) =>
 
 export default {
   name: "@open-competition-kit/large-files-local",
+  config: extensions,
   description:
     "Stores Open Competition Kit large files on the local filesystem. The default backend.",
   version: "0.0.6",

@@ -16,7 +16,8 @@
     "effect": "^3.18.4",
     "lodash-es": "^4.17.21",
     "prisma": "7.4.0",
-    "@open-competition-kit/sdk": "workspace:*"
+    "@open-competition-kit/sdk": "workspace:*",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bun": "latest"

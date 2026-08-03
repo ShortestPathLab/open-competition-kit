@@ -1,5 +1,4 @@
-import { Path } from "@effect/platform";
-import { Data, Effect as E, Match as M, pipe, Schema as S } from "effect";
+import { Data, Effect as E, Schema as S } from "effect";
 import { isFunction, mergeWith } from "lodash-es";
 import type { Meta, Shape, Value } from "../common/shape";
 import {
@@ -8,12 +7,19 @@ import {
   type Leaderboard,
 } from "../config";
 import { access, type Accessor } from "../config/access";
+import type { ConfigExtensions } from "../config/extension";
+import { createPackageResolver } from "../resolve";
 import type { FileBody, FileMeta } from "../file";
 import type {
   SerialisableObject,
   SerialisableValue,
 } from "../serialisable";
-import type { GateRequest, Refusal } from "../gate";
+import type {
+  GateReport,
+  GateRequest,
+  GateStatusRequest,
+  Refusal,
+} from "../gate";
 import type {
   SurfaceItem,
   SurfaceRequest,
@@ -167,6 +173,27 @@ export const Hooks = S.Struct({
      * The same call decides the real thing inside `submissions.submit`.
      */
     gate: hook<GateRequest, readonly Refusal[]>(),
+    /**
+     * What every gate has to say about a track, refusing or not.
+     *
+     * Chained and additive exactly like `gate`, and threaded the same way:
+     *
+     *     status: async ({ track, user, reports }, next) => {
+     *       const all = [...reports, ...mine]
+     *       return (await next?.({ track, user, reports: all })) ?? all
+     *     }
+     *
+     * Separate from `gate` on purpose, although a package will usually answer
+     * both from the same internals. `gate` decides whether a submission is
+     * accepted and has to fail closed; this one is advisory, is asked while a
+     * list of tracks renders, and is cached. Deriving enforcement from display
+     * would tie the strictness of one to the freshness of the other.
+     *
+     * `user` is absent when nobody is signed in, and an implementation should
+     * answer with whatever is true regardless of who is asking rather than
+     * refusing to answer at all.
+     */
+    status: hook<GateStatusRequest, readonly GateReport[]>(),
   }),
   runner: S.Struct({
     ui: S.Unknown,
@@ -227,6 +254,14 @@ export type Package = {
   name?: string;
   description?: string;
   version?: string;
+  /**
+   * Config fields this package owns, by the kind of node they sit on.
+   *
+   * Read straight off the module rather than through the decode below, which
+   * drops keys `Hooks` does not declare, and around the hook merge, which
+   * composes functions and would deep-merge two schemas into neither of them.
+   */
+  config?: ConfigExtensions;
 } & DeepPartial<Hooks>;
 
 // Produces dot-notation keys for a nested object T (arrays and functions are treated as leaves)
@@ -241,45 +276,6 @@ type DotNotationKeys<T, Prev extends string = ""> = {
 export type HookKey = DotNotationKeys<Hooks>;
 
 const decode = S.decodeUnknown(Hooks);
-
-class NotImplementedError extends Data.TaggedError("NotImplementedError") {}
-
-class ImportError extends Data.TaggedError("ImportError")<{
-  cause: unknown;
-  path: string;
-}> {}
-
-export const createPackageResolver = (root: string) =>
-  E.cachedFunction((p: string) =>
-    E.gen(function* () {
-      const path = yield* Path.Path;
-      return yield* M.value(p).pipe(
-        M.when(
-          (s) => s.startsWith("https://"),
-          () => E.fail(new NotImplementedError()),
-        ),
-        M.orElse(() =>
-          pipe(
-            E.tryPromise({
-              try: async () =>
-                (await import(path.resolve(path.dirname(root), p)))?.default,
-              catch: (e) => {
-                // `E.logError` builds an effect; it was never yielded, so a
-                // package that failed to import said nothing at all and surfaced
-                // as a bare ImportError with no cause. Log it for real.
-                console.error(
-                  `[open-competition-kit] Failed to load package "${p}" ` +
-                    `(resolved from ${path.dirname(root)}):`,
-                  e,
-                );
-                return new ImportError({ cause: e, path: p });
-              },
-            }),
-          ),
-        ),
-      );
-    }),
-  );
 
 export class HookError extends Data.TaggedError("HookError") {}
 export class AccessorError extends Data.TaggedError("AccessorError")<{

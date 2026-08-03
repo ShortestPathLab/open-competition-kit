@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk, { reference, unsafe } from "@open-competition-kit/sdk";
+import sdk, {
+  reference,
+  unsafe,
+  type ConfigNodeDescription,
+} from "@open-competition-kit/sdk";
 import {
   Empty,
   EmptyDescription,
@@ -44,12 +48,34 @@ const getCompetitionConfig = createServerFn({ method: "GET" })
         name: t.name ?? t.id,
         fields: t.form.shape.length,
       })),
-      leaderboards: competition.leaderboards.map((l) => ({
-        id: l.id,
-        name: l.name ?? l.id,
-        source: l.from ? (l.from.output ?? reference.std.output) : "static items",
-      })),
+      leaderboards: competition.leaderboards.map((l) => {
+        // A package's field, read loosely for a summary line. Core takes no
+        // position on where a board's rows come from.
+        const from = (l as { from?: { output?: string } }).from;
+        return {
+          id: l.id,
+          name: l.name ?? l.id,
+          source: from ? (from.output ?? reference.std.output) : "static items",
+        };
+      }),
       packages: [...competition.with],
+      /**
+       * The settings the installed packages declare, with the labels and
+       * descriptions those packages wrote.
+       *
+       * The same declarations the validator checks the file against, so every
+       * field listed here is one that would have stopped the app from booting had
+       * it been misspelled. Narrowed to this competition and the blocks above it,
+       * since a dashboard page for one competition has no business listing
+       * another's tracks.
+       */
+      settings: (await unsafe(sdk.config.describe())).filter(
+        (node: ConfigNodeDescription) =>
+          node.sections.length > 0 &&
+          (node.path === `config.competitions.${id}` ||
+            node.path.startsWith(`config.competitions.${id}.`) ||
+            !node.path.startsWith("config.competitions")),
+      ),
       database: {
         provider: db?.provider ?? "-",
         // Never surface the connection string: it carries credentials.
@@ -57,6 +83,43 @@ const getCompetitionConfig = createServerFn({ method: "GET" })
       },
     };
   });
+
+/**
+ * One package-declared field.
+ *
+ * The label and the help text are the package's own words. Core never sees
+ * either; it collects them and hands them over, which is the whole point of a
+ * declaration carrying a shape as well as a schema.
+ */
+function SettingRow({
+  field,
+}: {
+  field: ConfigNodeDescription["sections"][number]["fields"][number];
+}) {
+  const value = field.value;
+
+  return (
+    <div className="border-b border-border py-2.5 last:border-0">
+      <div className="flex items-baseline justify-between gap-6">
+        <span className="text-sm text-muted-foreground">
+          {field.label ?? field.name ?? field.id}
+        </span>
+        <span className="text-right text-sm font-medium text-foreground">
+          {value === undefined ?
+            <span className="text-muted-foreground">Not set</span>
+          : typeof value === "object" ?
+            <code className="font-mono text-xs">{JSON.stringify(value)}</code>
+          : <code className="font-mono text-xs">{String(value)}</code>}
+        </span>
+      </div>
+      {field.description ?
+        <p className="mt-1 max-w-prose text-xs text-muted-foreground">
+          {field.description}
+        </p>
+      : null}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/dashboard/$competitionId/configure/")({
   component: ConfigurePage,
@@ -191,6 +254,51 @@ function ConfigurePage() {
               </code>
             ))
           : <span className="text-sm text-muted-foreground">None</span>}
+        </div>
+      </section>
+
+      <section>
+        <SectionHeader
+          title="Package settings"
+          description="Fields the installed packages declare, and what this config has in them."
+        />
+        <div className="mt-4 flex flex-col gap-4">
+          {config.settings.length ?
+            config.settings.map((node) => (
+              <div
+                key={node.path}
+                className="rounded-lg border border-border px-4 py-1"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border py-2.5">
+                  <span className="text-sm font-medium">{node.label}</span>
+                  <code className="font-mono text-xs text-muted-foreground">
+                    {node.path}
+                  </code>
+                </div>
+                {node.sections.map((section) => (
+                  <div key={`${node.path}:${section.source}`} className="py-2.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {section.group?.label ?? "Settings"}
+                      </span>
+                      <code className="font-mono text-[11px] text-muted-foreground">
+                        {section.source}
+                      </code>
+                    </div>
+                    {section.fields.map((field) => (
+                      <SettingRow key={field.id} field={field} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ))
+          : <div className="rounded-lg border border-border px-4">
+              <Row
+                label="No package settings"
+                value="No installed package declares config fields here."
+              />
+            </div>
+          }
         </div>
       </section>
     </div>
