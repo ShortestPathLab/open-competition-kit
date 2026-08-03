@@ -1,11 +1,9 @@
 import sdk, {
-  cast,
   enrolments,
-  files,
-  isFile,
   jobs,
   outputs,
   reference,
+  source,
   submissions,
   tracks,
   unsafe,
@@ -15,42 +13,6 @@ import Zip from "jszip";
 import { config, runnerBody } from "./config";
 import { standardRefusals, standardReports } from "./gates";
 import { load as loadLeaderboard } from "./leaderboard";
-
-/**
- * The submission archive, however the integration chose to hand it over.
- *
- * Prefers a `FileRef` — the bytes stream out of the large-file backend, so the
- * archive can be far larger than a database row. Falls back to the legacy base64
- * context value so jobs created before the migration still run.
- */
-async function resolveSource(job: string): Promise<Uint8Array | string> {
-  const fileRef = await cast<unknown>()(
-    jobs.context.get({
-      owner: job,
-      reference: reference.std.submissionSource,
-    }),
-  );
-
-  if (!fileRef.error && isFile(fileRef.value)) {
-    const stream = await unsafe(files.read(fileRef.value));
-    return new Uint8Array(await new Response(stream).arrayBuffer());
-  }
-
-  const codeZipB64 = await cast<string>()(
-    jobs.context.require({
-      owner: job,
-      reference: reference.std.submissionSourceCodeZipB64,
-    }),
-  );
-  if (!codeZipB64.error) return codeZipB64.value;
-
-  throw new Error(
-    `Could not resolve source code for job. This package looks for sources from contexts with the following references: ${[
-      reference.std.submissionSource,
-      reference.std.submissionSourceCodeZipB64,
-    ].join(", ")}`,
-  );
-}
 
 export default {
   name: "@open-competition-kit/standard",
@@ -129,7 +91,11 @@ export default {
 
       const jobRecord = await unsafe(jobs.get(job));
       const submission = await unsafe(submissions.get(jobRecord.submission));
-      const source = await resolveSource(job);
+      // Finding the archive, and coping with the two ways an integration may
+      // have handed it over, is the same problem for every runner. It lives in
+      // the SDK so that a runner written outside this repository gets the
+      // `FileRef` path and the legacy fallback without knowing either exists.
+      const archive = await source.archive(job);
 
       const trackRecord = await unsafe(tracks.get(submission.track));
       const competition = await unsafe(
@@ -159,8 +125,8 @@ export default {
         // is what reads it back out.
         const { body } = runnerBody.parse(competition.runner);
         const result = eval(body ?? "");
-        const unzipped = await Zip.loadAsync(source, {
-          base64: typeof source === "string",
+        const unzipped = await Zip.loadAsync(archive, {
+          base64: typeof archive === "string",
         });
         const output = Object.entries(unzipped.files).map(
           ([k, v]) =>

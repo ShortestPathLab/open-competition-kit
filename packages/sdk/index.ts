@@ -24,6 +24,12 @@ export default kit;
 
 export * as system from "./system";
 
+/**
+ * Reading a submission: `source.archive` for the bytes, `source.files` for the
+ * permitted files already unpacked.
+ */
+export * as source from "./source";
+
 export * from "./result";
 
 export * from "./instant";
