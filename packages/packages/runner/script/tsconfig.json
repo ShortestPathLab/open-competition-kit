@@ -6,11 +6,7 @@
     "module": "Preserve",
     "moduleDetection": "force",
     "jsx": "react-jsx",
-    // Off, unlike every other package here. `shim.mjs` is an asset that happens
-    // to be JavaScript: it is read as text and injected into a container, never
-    // imported as code. With `allowJs` on, TypeScript resolves the import to a
-    // module it can parse and reports that it has no default export.
-    "allowJs": false,
+    "allowJs": true,
 
     // Bundler mode
     "moduleResolution": "bundler",

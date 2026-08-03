@@ -13,7 +13,6 @@
  */
 import type { ConfigExtensions } from "@open-competition-kit/sdk";
 import { z } from "zod";
-import { RUNTIME_NAMES, type RuntimeName } from "./runtime";
 
 /**
  * The config with `with:` taken back out of it.
@@ -86,41 +85,23 @@ const shape = z
     image: z.string().min(1).optional(),
     build: build.optional(),
     /**
-     * The program, inlined. `${{ text("./evaluate.py") }}`.
+     * What to run, once per phase.
      *
-     * Not a path, for the same reason the Dockerfile is not one: a path has to
-     * resolve inside the runner container, which means a volume mount, which
-     * means the config no longer describes the competition on its own.
-     */
-    program: z.string().min(1).optional(),
-    /**
-     * Which language the program is written in.
+     * The whole of how a program is started, and the reason this package knows
+     * no language: it runs a command and the command reads a file. A Python
+     * script, a Go binary and a shell script are the same thing from here.
      *
-     * Picks the shim that turns the file protocol into functions, so a program
-     * is three plain functions rather than an argument parser. Required
-     * alongside `program`, and deliberately not guessed: the program arrives as
-     * text with no filename to read an extension off, and sniffing a shebang
-     * would be a rule that works until the day it does not.
-     *
-     * A language with no shim is not shut out. `command:` below speaks the same
-     * protocol directly, and a shim is a convenience rather than the interface.
-     */
-    runtime: z.enum(RUNTIME_NAMES as [RuntimeName, ...RuntimeName[]]).optional(),
-    /**
-     * Run this instead of a shim, and speak the protocol yourself.
-     *
-     * The escape hatch, and the reason this package does not need to know any
-     * particular language: a compiled binary, a shell script, or a runtime
-     * nobody has written a shim for reads one JSON file and writes another. The
-     * request names both paths, so nothing has to be hardcoded on that side
-     * either.
-     *
-     * Run from the work directory, so `["./run.sh"]` finds a file placed by
-     * `include:`. Mutually exclusive with `runtime:`.
+     * Run from the work directory, so `["python3", "evaluate.py"]` finds the
+     * file `include:` placed under that name.
      */
     command: z.array(z.string().min(1)).min(1).optional(),
     /**
-     * Files placed beside the program in every phase, keyed by relative path.
+     * The files the command needs, keyed by the relative path they land at.
+     *
+     * Where the evaluation program itself goes, along with anything it reads.
+     * There is no separate key for the program because there is nothing special
+     * about it any more: nothing loads it, nothing imports it, and only the
+     * command decides which of these files is the one that runs.
      *
      * Opaque. This package copies bytes and never looks inside them, which is
      * the point: a competition's list of instances, its reference solutions and
@@ -156,32 +137,25 @@ const shape = z
     timeoutMs: z.number().positive().optional(),
     limits: limits.optional(),
   })
-  // A program with no image has nowhere to run, and an image with no program has
+  // A command with no image has nowhere to run, and an image with no command has
   // nothing to run. Either alone is a half-written runner, and finding out at
   // boot beats finding out when the first submission arrives.
-  .refine((c) => !c.program || c.image || c.build, {
-    message: "a program needs either an image: or a build: to run in",
+  .refine((c) => !c.command || c.image || c.build, {
+    message: "a command needs either an image: or a build: to run in",
     path: ["image"],
   })
-  .refine((c) => !(c.image || c.build) || c.program, {
-    message: "an image with no program: has nothing to run",
-    path: ["program"],
-  })
-  // Which of the two ways in was meant. Both is ambiguous rather than additive:
-  // a shim replaces the command, so honouring one would silently discard the
-  // other, and neither choice is obviously the right one to make on somebody's
-  // behalf.
-  .refine((c) => !(c.runtime && c.command), {
-    message:
-      "runtime: and command: are two ways to start the same program. Use runtime: " +
-      "for a language with a shim, or command: to speak the protocol yourself.",
+  .refine((c) => !(c.image || c.build) || c.command, {
+    message: "an image with no command: has nothing to run",
     path: ["command"],
   })
-  .refine((c) => !c.program || c.runtime || c.command, {
+  // The command runs from the work directory, and `include:` is the only thing
+  // that puts anything there. A command with nothing to run is nearly always a
+  // program somebody meant to include and did not.
+  .refine((c) => !c.command || Object.keys(c.include ?? {}).length > 0, {
     message:
-      `a program needs a runtime: (one of ${RUNTIME_NAMES.join(", ")}) so the kit ` +
-      "knows how to start it, or a command: if it speaks the protocol itself",
-    path: ["runtime"],
+      "there is nothing for this command to run. The evaluation program goes in " +
+      'include:, e.g. `include: { evaluate.py: ${{ text("./evaluate.py") }} }`',
+    path: ["include"],
   });
 
 export const script = z.preprocess(prune, shape);
@@ -198,24 +172,11 @@ export const config = {
     group: { id: "script", label: "Evaluation program" },
     shape: [
       {
-        id: "program",
-        label: "Program",
-        kind: "code",
-        description:
-          "The evaluation program, inlined. Define evaluate(), and optionally plan() and reduce(). Written as ${{ text(\"./evaluate.py\") }} so the file stays a file.",
-      },
-      {
-        id: "runtime",
-        label: "Language",
-        kind: "text",
-        description: `Which language the program is written in: ${RUNTIME_NAMES.join(", ")}. Picks the shim that turns the file protocol into functions.`,
-      },
-      {
         id: "command",
         label: "Command",
         kind: "object",
         description:
-          "Run this instead of a shim, for a language with none. It reads the request file the kit writes and writes the reply file the kit reads back. Run from the work directory.",
+          "What to run, once per phase, from the work directory. It reads the request file the kit writes and writes the reply file the kit reads back. Any language: the protocol is two JSON files.",
       },
       {
         id: "image",
@@ -233,10 +194,10 @@ export const config = {
       },
       {
         id: "include",
-        label: "Extra files",
+        label: "Files",
         kind: "object",
         description:
-          "Files placed beside the program, keyed by relative path. Copied without being read. Visible to a submission while a case is being evaluated.",
+          "The evaluation program and anything it reads, keyed by the relative path each lands at. Copied without being read. Visible to a submission while a case is being evaluated.",
       },
       {
         id: "params",

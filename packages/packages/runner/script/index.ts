@@ -11,7 +11,6 @@ import sdk, {
 } from "@open-competition-kit/sdk";
 import { config, script, type ScriptRunner } from "./config";
 import {
-  PROGRAM,
   PROTOCOL,
   REPLY,
   REQUEST,
@@ -21,16 +20,29 @@ import {
   type Reply,
   type Request,
 } from "./protocol";
-import { row, type Scalar } from "./row";
-import { RUNTIMES, pathsFor } from "./runtime";
+import { ONE_UNNAMED_CASE, row, sumOf, type Scalar } from "./row";
 
 /**
  * Evaluating a competition with a program instead of a package.
  *
- * The organiser writes one file. It defines `evaluate`, and optionally `plan`
- * and `reduce`, and this package runs each in its own container: `plan` once to
- * find out what there is to do, `evaluate` once per case, and `reduce` once to
- * turn the results into the row a leaderboard reads.
+ * The organiser writes a program and a command that runs it. This package runs
+ * that command three times, each in its own container: once to plan, once per
+ * case, and once to reduce the results into the row a leaderboard reads. Each
+ * run finds a JSON request at a fixed path and leaves a JSON reply at the path
+ * that request names.
+ *
+ * ## Why there is no shim
+ *
+ * Because two files is already the smallest interface, and anything friendlier
+ * has to be written once per language. A shim that loads a module and maps named
+ * arguments onto parameters is worth maybe fifteen lines to the organiser, and
+ * costs a per-language adapter that has to be kept in step with the protocol,
+ * shipped, versioned, and matched to whatever a competition's image happens to
+ * have installed. Reading a file is something every language already does.
+ *
+ * What that buys: this package contains no language, no interpreter name and no
+ * extension. A Python script, a Go binary, a shell script and a language nobody
+ * has heard of are the same thing from here.
  *
  * ## Why a container per case rather than one for the whole evaluation
  *
@@ -40,18 +52,18 @@ import { RUNTIMES, pathsFor } from "./runtime";
  * to be generous enough for the entire suite, which makes it barely a limit.
  * Fanning out costs a container start per case and buys a blast radius of one.
  *
- * `plan` and `reduce` run with no submission in the container, which keeps the
- * scoring step out of reach of the code being scored. A program that measures in
- * `evaluate` and marks in `reduce` never puts its benchmarks where a submission
- * could read them.
+ * The plan and reduce runs have no submission in the container, which keeps the
+ * scoring step out of reach of the code being scored. A program that measures
+ * when it evaluates and marks when it reduces never puts its benchmarks where a
+ * submission could read them.
  *
  * ## What this package does not know
  *
- * What a case is. `plan` returns a list and each element comes back untouched,
- * so a competition's instances, seeds or datasets are its own business and can
- * be described however the organiser likes. Files listed in `include:` are
- * copied in and never parsed, which is how a `cases.yaml` in the project reaches
- * the program without this package having heard of it.
+ * What a case is. The plan phase answers with a list and each element comes back
+ * untouched, so a competition's instances, seeds or datasets are its own
+ * business and can be described however the organiser likes. Files listed in
+ * `include:` are copied in and never parsed, which is how a `cases.yaml` in the
+ * project reaches the program without this package having heard of it.
  */
 
 const LOGS = "open-competition-kit/tag/logs";
@@ -63,7 +75,7 @@ const LOG_LINES = 512;
  * The settings for one competition's runner, or nothing when it configured
  * none.
  *
- * A competition with no `program:` is not this package's to run, and saying so
+ * A competition with no `command:` is not this package's to run, and saying so
  * by returning nothing is what lets the hook fall through to whatever else is
  * installed. Core validated this block at boot against the same schema, so a
  * failure here means the config changed underneath a running process.
@@ -81,7 +93,7 @@ const settings = async (
           .join("; "),
     );
   }
-  return read.data.program ? read.data : undefined;
+  return read.data.command ? read.data : undefined;
 };
 
 /**
@@ -103,47 +115,9 @@ const image = async (runner: ScriptRunner): Promise<string> => {
   return runner.image;
 };
 
-/**
- * How the program is started, and where it and its shim are placed.
- *
- * The only part of this package that knows any language exists, and it knows
- * because a `runtime:` named one. A `command:` skips it entirely: the program
- * goes down at an extensionless path, the command is run from the work
- * directory, and what happens next is between the config and the image.
- */
-const invocation = (
-  runner: ScriptRunner,
-): {
-  command: readonly string[];
-  files: Record<string, string>;
-  program: string;
-} => {
-  if (runner.runtime) {
-    const { shim, program } = pathsFor(runner.runtime);
-    return {
-      command: RUNTIMES[runner.runtime].command(shim),
-      files: {
-        [shim]: RUNTIMES[runner.runtime].source,
-        [program]: runner.program ?? "",
-      },
-      program,
-    };
-  }
-  return {
-    command: runner.command ?? [],
-    files: { [PROGRAM]: runner.program ?? "" },
-    program: PROGRAM,
-  };
-};
-
-/** Everything the program needs on disk, at the paths the request names. */
-const payload = (
-  runner: ScriptRunner,
-  request: Request,
-  starting: ReturnType<typeof invocation>,
-) => {
+/** Everything the command needs on disk, at the paths the request names. */
+const payload = (runner: ScriptRunner, request: Request) => {
   const files: Record<string, Uint8Array | string> = {
-    ...starting.files,
     [REQUEST]: JSON.stringify(request),
   };
   for (const [path, body] of Object.entries(runner.include ?? {})) {
@@ -164,21 +138,17 @@ const payload = (
 const invoke = async (
   runner: ScriptRunner,
   built: string,
-  // Without the two paths, which the caller cannot know: where the program ends
-  // up depends on the runtime, and both are filled in below.
-  request: Omit<Request, "program" | "reply">,
+  // Without `reply`, which is filled in below: a caller should not have to
+  // repeat a path the protocol already fixes.
+  request: Omit<Request, "reply">,
   submission?: Readonly<Record<string, Uint8Array>>,
 ): Promise<{ value: unknown; log: string }> => {
-  const starting = invocation(runner);
-
-  // The paths go into the request as well as into the container, because a
-  // program is handed a `Submission` and not a directory to go looking through.
-  // It is the difference between `submission.copy_into("/runner")` and every
-  // program writing its own directory walk, and the walk would find whatever
-  // else happened to be under that path.
+  // The submission's paths go into the request as well as into the container, so
+  // a program is handed a list rather than a directory to go walking. A walk
+  // would find whatever else happened to be under that path, and would have to
+  // be written again in every language anybody evaluates in.
   const described: Request = {
     ...request,
-    program: starting.program,
     reply: REPLY,
     ...(submission ?
       {
@@ -187,7 +157,7 @@ const invoke = async (
     : {}),
   };
 
-  const files = payload(runner, described, starting);
+  const files = payload(runner, described);
   for (const [path, body] of Object.entries(submission ?? {})) {
     files[`${SUBMISSION}/${path.replace(/^\/+/, "")}`] = body;
   }
@@ -195,7 +165,7 @@ const invoke = async (
   const result = await unsafe(
     sandbox.run({
       image: built,
-      command: starting.command,
+      command: runner.command ?? [],
       files,
       cwd: WORK,
       collect: [REPLY],
@@ -209,12 +179,16 @@ const invoke = async (
 
   const written = result.files[REPLY];
   if (!written?.length) {
+    // The common failure now that no shim catches anything: a program that threw
+    // never reached its own write. Its output is in the log, and the log is the
+    // traceback, so the message points there rather than trying to guess.
     throw new Error(
       result.timedOut ?
         `The ${where} phase ran out of time after ${runner.timeoutMs ?? "the default"}ms.`
       : `The ${where} phase exited with ${result.code} and left no reply at ` +
-        `${REPLY}. That is what running out of memory looks like, and what an ` +
-        `image missing ${starting.command[0]} looks like. Its output was:\n${log}`,
+        `${REPLY}. A program that fails before it writes one looks like this, ` +
+        `and so does an image with no ${runner.command?.[0] ?? "command"} in ` +
+        `it. Its output was:\n${log}`,
     );
   }
 
@@ -264,7 +238,13 @@ const evaluate = async (job: string, runner: ScriptRunner) => {
   };
 
   const plan = await invoke(runner, built, { ...base, phase: "plan" as Phase });
-  const cases = Array.isArray(plan.value) ? plan.value : [null];
+  if (plan.value != null && !Array.isArray(plan.value)) {
+    throw new Error(
+      `The plan phase answered with ${typeof plan.value}. It has to answer with ` +
+        `a list of cases, or with null to say there is one unnamed case.`,
+    );
+  }
+  const cases = plan.value ?? ONE_UNNAMED_CASE;
   await record(job, [
     plan.log,
     `Planned ${cases.length} case${cases.length === 1 ? "" : "s"}.`,
@@ -306,6 +286,11 @@ const evaluate = async (job: string, runner: ScriptRunner) => {
     cases,
   });
   await record(job, [reduced.log]);
+
+  // `null` means the program has no opinion about how its cases add up, so the
+  // host applies its own. A competition that only scores one thing therefore
+  // never writes a reduce it does not have an opinion about.
+  if (reduced.value == null) return sumOf(results);
 
   return row(reduced.value, "reduce()");
 };

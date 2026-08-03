@@ -2,7 +2,7 @@
 
 Evaluates submissions with a program the organiser writes, instead of with a package.
 
-The program is one file. It goes into `competition.config.yaml` through `text()`, so there is nothing to install, nothing to mount, and no `node_modules` beside your competition.
+There is no shim and no adapter, so there is no list of supported languages. Your program reads one JSON file and writes another, which is something every language already does.
 
 ```yaml
 with:
@@ -14,107 +14,97 @@ competitions:
   - id: sorting
     runner:
       image: python:3.13-slim
-      runtime: python
-      program: ${{ text("./evaluate.py") }}
+      command: ["python3", "evaluate.py"]
+      include:
+        evaluate.py: ${{ text("./evaluate.py") }}
 ```
 
 ```python
-def evaluate(submission):
-    return {"score": len(submission.files)}
+import json
+
+req = json.load(open("/ock/request.json"))
+
+value = None
+if req["phase"] == "evaluate":
+    value = {"score": len(req["submission"]["files"])}
+
+json.dump({"ok": True, "value": value}, open(req["reply"], "w"))
 ```
 
-That is a working competition. Everything below is for competitions that need more.
+That is a working competition, and those five lines of protocol are all of it. Everything below is for the ones that need more.
 
-## Languages
+## The three phases
 
-`runtime:` picks the shim that turns the protocol into functions. Two ship: `python` and `node`.
+The command runs three times, each in a container of its own:
 
-```yaml
-runtime: node
-program: ${{ text("./evaluate.mjs") }}
-```
+| `phase` | when | answer with |
+|---|---|---|
+| `plan` | once, before anything | a list of cases, or `null` for one unnamed case |
+| `evaluate` | once per case | a flat object of scores for that case |
+| `reduce` | once, at the end | the leaderboard row, or `null` to have the numbers added up |
 
-```js
-export function evaluate({ submission }) {
-  return { score: submission.files.length };
+Answering `null` means you have no opinion about that phase, and the host fills in what it would have done. A competition that scores one thing therefore handles `evaluate` and ignores the rest.
+
+`plan` and `reduce` run with no submission in the container. A program that measures when it evaluates and marks when it reduces never puts its benchmarks within reach of the code being marked.
+
+## The request
+
+At `/ock/request.json`, every time:
+
+```json
+{
+  "protocol": 1,
+  "phase": "evaluate",
+  "job": "cm...",
+  "reply": "/tmp/ock-reply.json",
+  "params": { "questions": ["q1a"] },
+  "case": { "layout": "layouts/tinyMaze.lay" },
+  "submission": { "root": "/ock/submission", "files": ["solver.py"] }
 }
 ```
 
-It is not guessed from the program, which arrives as text with no filename to read an extension off. Sniffing a shebang would be a rule that works until the day it does not.
+`case` is whatever your own `plan` put in the list, handed back untouched. `results` and `cases` appear on `reduce` and hold every case's answer alongside the case it came from. `params` is your `params:` block, unchanged.
 
-Neither shim is the interface. Both read one JSON file and write another, and `command:` below lets a program in any language do the same without one.
+Write the reply to the path `reply` names rather than hardcoding it. A protocol that moves the file later then moves it without touching your program.
 
-## The three functions
+## The reply
 
-```python
-def plan(params):               # optional. What is there to do?
-def evaluate(case, submission): # required. Do one of them.
-def reduce(results):            # optional. Turn the answers into a row.
+```json
+{ "ok": true, "value": { "score": 4.5 } }
 ```
 
-Each runs in its own container. `plan` once, `evaluate` once per case, `reduce` once at the end.
+or
 
-Without `plan` there is a single case and `case` is `None`. Without `reduce` the numbers are added up and a `cases` count is added. So a competition that does not fan out writes one function and never thinks about the other two.
-
-| | `plan` | `evaluate` | `reduce` |
-|---|---|---|---|
-| `params` | yes | yes | yes |
-| `job` | yes | yes | yes |
-| `case` | | yes | |
-| `submission` | | yes | |
-| `results` | | | yes |
-| `cases` | | | yes |
-
-Python passes them by name, and gives each function only the ones it asks for. `def evaluate(case)` and `def evaluate(case, params, submission, job)` are both fine, and asking for a name that is not on offer fails with the list of names that are.
-
-JavaScript passes them as one object to destructure, because a function's parameter names are not reliably readable there. `case` is a reserved word, so it arrives as `case_`.
-
-```js
-export function evaluate({ case_, submission, params, job }) {}
+```json
+{ "ok": false, "error": "the submission would not compile" }
 ```
+
+`ok: false` fails that phase with your message. You do not have to catch anything, though: a program that throws leaves no reply behind, and the host reports the phase as failed with both output streams attached, which is where the traceback already is.
+
+`value` for `evaluate` and `reduce` is a flat object of scalars, because that is what a leaderboard row is. A board builds its columns from the top-level keys and stringifies anything else, so a nested object would arrive as JSON in a single cell with nothing to rank on. Returning one is an error naming the key rather than a quietly useless column.
+
+Print whatever you like. Both streams become the job's log, including anything a subprocess wrote, so a harness's own words reach the competitor unedited. The answer travels by file and cannot be confused with any of it.
 
 ## Why a container per case
 
-A submission that exhausts its memory, wedges its interpreter or spins forever takes its own container down and nothing else. One container for the whole evaluation would mean case three costing you cases four through forty, and a wall-clock limit generous enough for the entire suite, which is barely a limit.
+A submission that exhausts its memory, wedges its interpreter or spins forever takes its own container down and nothing else. One container for the whole evaluation would mean case three costing you cases four through forty, and a wall-clock limit generous enough for the entire suite, which is barely a limit at all.
 
-It also puts a boundary between cases where progress can be written. A container reports nothing until it exits, so without the fan-out a competitor watching a ten minute evaluation would see nothing at all until it ended.
-
-`plan` and `reduce` run with no submission in the container. A program that measures in `evaluate` and marks in `reduce` therefore never puts its benchmarks within reach of the code being marked.
-
-## What `submission` is
-
-The permitted files, on disk. The rest of the archive was discarded before the container started.
-
-| Python | JavaScript | |
-|---|---|---|
-| `submission.root` | `submission.root` | where they are |
-| `submission.files` | `submission.files` | the paths, relative to root |
-| `submission.path("a.py")` | `submission.path("a.py")` | one absolute path |
-| `submission.read("a.py")` | `submission.read("a.py")` | one file, as bytes |
-| `submission.copy_into("/app")` | `submission.copyInto("/app")` | lay them over a directory |
-
-The last one is what a competition whose image holds a harness wants: the files land on top of this container's copy of it, and the container is thrown away afterwards.
-
-## Returning results
-
-`evaluate` and `reduce` return a flat object of scalars, because that is what a leaderboard row is. A board builds its columns from the top-level keys and stringifies anything else, so a nested object arrives as JSON in a single cell with nothing to rank on. Returning one is an error naming the key rather than a quietly useless column.
-
-Print whatever you like. Both streams become the job's log, including anything a subprocess wrote, so a harness's own words reach the competitor unedited. The answer travels by file and cannot be confused with any of it.
+It also puts a boundary between cases where progress can be written. A container reports nothing until it exits, so without the fan-out a competitor watching a ten minute evaluation would see nothing until it ended.
 
 ## Configuration
 
 | Key | |
 |---|---|
-| `program` | The program, inlined. `${{ text("./evaluate.py") }}` |
-| `runtime` | `python` or `node`. Required with `program`, unless `command` is given |
-| `command` | Run this instead of a shim, and speak the protocol yourself |
+| `command` | What to run, once per phase, from the work directory |
+| `include` | The program and anything it reads, keyed by the path each lands at |
 | `image` | The image every phase runs in |
 | `build` | A `dockerfile:`, optional `context:` and `args:`, built on startup instead |
-| `include` | Files placed beside the program, keyed by relative path |
 | `params` | Passed to every phase untouched |
 | `submission.allow` | Paths a submission may supply, as literals or globs |
 | `timeoutMs` | Wall-clock limit for one phase |
 | `limits` | `memoryMb`, `cpus`, `pids`, `network` |
+
+There is no `program:` key. The program is a file like any other, and only `command:` decides which of them runs.
 
 ### Building the image
 
@@ -133,12 +123,13 @@ A build has network access, since a recipe that installs anything needs one. The
 
 ```yaml
 include:
+  evaluate.py: ${{ text("./evaluate.py") }}
   cases.yaml: ${{ text("./cases.yaml") }}
 ```
 
-Copied in beside the program and never opened. This is how a project keeps its own list of instances, its scoring table or its reference outputs without this package inventing a vocabulary for something it does not understand. `plan` reads the file; the kit only moves the bytes.
+Copied in and never opened. This is how a project keeps its own list of instances, its scoring table or its reference outputs, without this package inventing a vocabulary for something it does not understand. Your `plan` reads the file; the kit only moves the bytes.
 
-Anything in `include` is readable by a submission while a case is being evaluated, because they share a container. So is the program itself. Data that must stay secret does not belong in either, and a competition that needs that guarantee wants a package rather than a program.
+Anything here is readable by a submission while a case is being evaluated, because they share a container. Marking data that must not leak belongs outside the sandbox, which means a package rather than a program. Splitting measurement into `evaluate` and marking into `reduce` covers most of the gap, since `reduce` runs alone.
 
 ### The permitted files
 
@@ -151,25 +142,10 @@ submission:
 
 Everything else in the archive is dropped before any container starts. Leave it out and the whole archive is taken, which is right when the submission is the answer and wrong when it overlays a harness. In the second case this is the only thing between a competitor and an edited marking script.
 
-Patterns match by suffix, so the directory a GitHub archive wraps everything in does not need naming. `*` stops at a separator, `**` crosses them. A named file that is absent fails the submission, and every missing one is reported at once. A glob that matches nothing is not an error.
-
-### Any other language
-
-`command:` runs your program directly, with no shim between. This is why the package does not need to know your language exists: the protocol is two JSON files.
-
-```yaml
-image: golang:1.23
-include:
-  run.sh: ${{ text("./run.sh") }}
-command: ["sh", "./run.sh"]
-```
-
-Read `/ock/request.json`, write the reply to the path its `reply` field names. The request carries `phase` (`plan`, `evaluate` or `reduce`), `params`, `case`, `submission`, `results`, `cases`, and `program`, which is where your program was placed. Answer with `{"ok": true, "value": ...}`, or `{"ok": false, "error": "..."}` to fail the phase with a message.
-
-The command runs from the work directory, so a relative path finds a file placed by `include:`. The defaults a shim supplies are yours to write: no `plan` means returning `[null]`, and no `reduce` means summing the numbers.
+Patterns match by suffix, so the directory a GitHub archive wraps everything in never has to be named. `*` stops at a separator and `**` crosses them. A named file that is absent fails the submission, with every missing one reported at once; a glob that matches nothing is not an error.
 
 ## Requirements
 
-The image needs a writable `/tmp` and whatever runs your program: `python3` for the Python shim, `node` for the JavaScript one, the first word of your `command:` otherwise. Both shims use only their standard library.
+A writable `/tmp` in the image, and whatever the first word of your `command:` needs. Nothing else.
 
 Install `sandbox/docker` alongside this, and mount the Docker socket into the runner service.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { row } from "./row";
+import { row, sumOf } from "./row";
 
 describe("row", () => {
   it("keeps a flat object of scalars", () => {
@@ -56,5 +56,40 @@ describe("row", () => {
     expect(() => row({ a: {} }, "evaluate() on case 3/40")).toThrow(
       /evaluate\(\) on case 3\/40/,
     );
+  });
+});
+
+describe("sumOf", () => {
+  it("adds the numbers across cases and counts them", () => {
+    expect(sumOf([{ score: 1.5 }, { score: 2.5 }])).toEqual({
+      score: 4,
+      cases: 2,
+    });
+  });
+
+  it("leaves booleans out", () => {
+    // They add up as numbers in enough languages that `passed: true` on forty
+    // cases would report `passed: 40`, which reads like a count of something.
+    expect(sumOf([{ passed: true }, { passed: false }])).toEqual({ cases: 2 });
+  });
+
+  it("leaves strings out", () => {
+    expect(sumOf([{ layout: "a", score: 1 }, { layout: "b", score: 2 }])).toEqual({
+      score: 3,
+      cases: 2,
+    });
+  });
+
+  it("counts a case that scored nothing", () => {
+    // A case whose container died contributes an empty row. It still happened,
+    // so it still counts, and a total over four cases should not read as three.
+    expect(sumOf([{ score: 1 }, {}, { score: 2 }])).toEqual({
+      score: 3,
+      cases: 3,
+    });
+  });
+
+  it("answers for no cases at all", () => {
+    expect(sumOf([])).toEqual({ cases: 0 });
   });
 });

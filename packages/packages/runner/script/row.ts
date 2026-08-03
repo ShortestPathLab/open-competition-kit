@@ -71,3 +71,42 @@ export const row = (
 
   return out;
 };
+
+/**
+ * What a phase a program did not implement would have answered.
+ *
+ * A program says it has no opinion by replying with `null`, and these fill in.
+ * They are the host's rules rather than any competition's: a run with no plan is
+ * one case, and a score with no scoring is the numbers added up.
+ *
+ * Here rather than in the program because otherwise every program in every
+ * language writes them again, and the versions drift. It is also what keeps the
+ * smallest program small: handle the phase you care about, answer `null` to the
+ * rest, and never write a plan you have no opinion about.
+ */
+export const ONE_UNNAMED_CASE = [null];
+
+/**
+ * Sum the numbers, and count the cases.
+ *
+ * Deliberately the least clever thing that produces a rankable row. Anything
+ * past addition is a scoring decision, and those belong to the competition
+ * rather than to a default that has to guess.
+ *
+ * Booleans are excluded on purpose. They arrive as numbers in enough languages
+ * that a `passed: true` on forty cases would otherwise report `passed: 40`,
+ * which reads like a count of something and is not.
+ */
+export const sumOf = (
+  results: readonly Record<string, Scalar>[],
+): Record<string, Scalar> => {
+  const total: Record<string, Scalar> = {};
+  for (const result of results) {
+    for (const [key, value] of Object.entries(result)) {
+      if (typeof value !== "number") continue;
+      total[key] = ((total[key] as number | undefined) ?? 0) + value;
+    }
+  }
+  total.cases = results.length;
+  return total;
+};
