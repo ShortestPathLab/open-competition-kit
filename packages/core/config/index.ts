@@ -91,6 +91,11 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
        * importing the packages, and knowing which packages to import means
        * reading `with:` off the config. Splitting here breaks that loop without
        * either half having to know about the other.
+       *
+       * `transform` runs before `decode`, not after. A template is a string
+       * wherever it is written, so `competitions: [${{ yaml("./x.yaml") }}]` is a
+       * list of strings until it resolves, and a schema applied first would
+       * reject it for not being a list of competitions.
        */
       const raw = pipe(
         fs.readFileString(path),
@@ -98,8 +103,8 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
         // Straight after parsing, so a block we renamed is under its current
         // name before anything else looks at it.
         E.andThen(migrate),
-        E.andThen(decode),
         E.andThen((config) => transform(cwd, config)),
+        E.andThen(decode),
       );
 
       const resolve = createPackageResolver(path);
