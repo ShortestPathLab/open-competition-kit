@@ -3,6 +3,10 @@
   "private": false,
   "scripts": {
     "tsc:all": "bash ./tsc.sh",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "db:prisma:generate": "bun packages/packages/db/prisma/generate.ts",
     "db:prisma:studio": "DATABASE_URL=postgres://postgres:postgres@localhost:5433/postgres bunx prisma studio --config packages/packages/db/prisma/prisma.config.ts",
     "db:prisma:reset": "bunx prisma migrate reset --schema packages/packages/db/prisma/schemas/schema.prisma --config packages/packages/db/prisma/prisma.config.ts"
@@ -10,7 +14,9 @@
   "workspaces": [
     "packages/**"
   ],
-  "dependencies": {
-    "@typescript/native-preview": "^7.0.0-dev.20260707.2"
+  "devDependencies": {
+    "oxfmt": "^0.62.0",
+    "oxlint": "^1.77.0",
+    "typescript": "^7.0.2"
   }
 }
