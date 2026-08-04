@@ -1,25 +1,25 @@
-import { MePageHeader, type MeCrumb } from "*/components/me-page-header";
-import { PageBody } from "*/components/page-header-band";
-import { PageSkeleton } from "*/components/skeletons";
-import { SubmissionHeader } from "*/components/submission-detail/header";
-import { RunCard } from "*/components/submission-detail/parts";
+import { MePageHeader, type MeCrumb } from "@/components/me-page-header";
+import { PageBody } from "@/components/page-header-band";
+import { PageSkeleton } from "@/components/skeletons";
+import { SubmissionHeader } from "@/components/submission-detail/header";
+import { RunCard } from "@/components/submission-detail/parts";
 import {
   LogsPanel,
   OtherOutputsPanel,
   ResultPanel,
-} from "*/components/submission-detail/result-panel";
+} from "@/components/submission-detail/result-panel";
 import {
   SubmittedPanel,
   TrackLinksPanel,
-} from "*/components/submission-detail/submitted-panel";
-import { SurfaceSlot } from "*/components/surface-slot";
+} from "@/components/submission-detail/submitted-panel";
+import { SurfaceSlot } from "@/components/surface-slot";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
+} from "@/components/ui/empty";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
@@ -27,13 +27,13 @@ import { Inbox, Lock, SearchX } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { surface } from "@open-competition-kit/sdk/surface";
-import { authClient } from "src/lib/auth-client";
-import { authMiddleware } from "src/lib/auth-server";
-import { resolveId } from "src/lib/configure-user";
-import { ensureSubmissionVisible } from "src/lib/route-guards";
-import { useSubmissionDetail, type SubmissionJob } from "src/lib/submission-fn";
-import { readBody, readResult } from "src/lib/submission-readout";
-import { queryClient } from "src/router";
+import { authClient } from "@/lib/auth-client";
+import { authMiddleware } from "@/lib/auth-server";
+import { resolveId } from "@/lib/configure-user";
+import { ensureSubmissionVisible } from "@/lib/route-guards";
+import { useSubmissionDetail, type SubmissionJob } from "@/lib/submission-fn";
+import { readBody, readResult } from "@/lib/submission-readout";
+import { queryClient } from "@/router";
 import { z } from "zod";
 
 export const Route = createFileRoute("/me/submissions/$submissionId")({

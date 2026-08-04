@@ -1,33 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { SearchInput } from "*/components/search-input";
-import { Stat } from "*/components/stat-strip";
-import { isActionable, phaseOf, type Phase } from "*/components/submission-window";
-import { useCompetition } from "src/lib/competition-fn";
-import { TrackCard } from "*/components/track-card";
-import { Button } from "*/components/ui/button";
-import { Skeleton } from "*/components/ui/skeleton";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { SearchInput } from "@/components/search-input";
+import { Stat } from "@/components/stat-strip";
+import { isActionable, phaseOf, type Phase } from "@/components/submission-window";
+import { useCompetition } from "@/lib/competition-fn";
+import { TrackCard } from "@/components/track-card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
-import { cn } from "*/lib/utils";
+} from "@/components/ui/empty";
+import { cn } from "@/lib/utils";
 import { Layers3, SearchX } from "lucide-react";
 import { useDeferredValue, useMemo, useState, type ReactNode } from "react";
-import { authClient } from "src/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import {
   getCompetitionSummary,
   type TrackSummary,
-} from "src/lib/competition-data";
-import { describeDuration } from "src/lib/competition-window";
-import { useTracksWithReports } from "src/lib/gate-fn";
-import { useUserEnrolments } from "src/lib/enrolment-fn";
+} from "@/lib/competition-data";
+import { describeDuration } from "@/lib/competition-window";
+import { useTracksWithReports } from "@/lib/gate-fn";
+import { useUserEnrolments } from "@/lib/enrolment-fn";
 import { z } from "zod";
 
 export const Route = createFileRoute("/competitions/$id/tracks/")({

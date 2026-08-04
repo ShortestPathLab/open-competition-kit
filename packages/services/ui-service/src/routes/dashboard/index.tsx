@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
-import { ensureAdmin } from "src/lib/admin";
+import { ensureAdmin } from "@/lib/admin";
 
 const getFirstCompetitionId = createServerFn({ method: "GET" }).handler(
   async (): Promise<string | null> => {

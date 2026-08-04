@@ -1,11 +1,11 @@
-import { MePageHeader } from "*/components/me-page-header";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
-import { ListSkeleton } from "*/components/skeletons";
-import { Stat } from "*/components/stat-strip";
-import { phaseOf } from "*/components/submission-window";
-import { SurfaceSlot } from "*/components/surface-slot";
-import { Button } from "*/components/ui/button";
+import { MePageHeader } from "@/components/me-page-header";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/panel";
+import { ListSkeleton } from "@/components/skeletons";
+import { Stat } from "@/components/stat-strip";
+import { phaseOf } from "@/components/submission-window";
+import { SurfaceSlot } from "@/components/surface-slot";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,
@@ -13,15 +13,15 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
+} from "@/components/ui/empty";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { surface } from "@open-competition-kit/sdk/surface";
 import { ArrowRight, ClipboardList, Layers3, Lock } from "lucide-react";
 import { useMemo } from "react";
-import { authClient } from "src/lib/auth-client";
-import { useUserEnrolments } from "src/lib/enrolment-fn";
-import { useGateReports } from "src/lib/gate-fn";
-import { useUserSubmissions } from "src/lib/submission-fn";
+import { authClient } from "@/lib/auth-client";
+import { useUserEnrolments } from "@/lib/enrolment-fn";
+import { useGateReports } from "@/lib/gate-fn";
+import { useUserSubmissions } from "@/lib/submission-fn";
 
 export const Route = createFileRoute("/me/")({
   component: MeIndexPage,

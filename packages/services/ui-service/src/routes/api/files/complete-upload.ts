@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { z } from "zod";
-import { requireOwnedFile } from "src/lib/files.server";
+import { requireOwnedFile } from "@/lib/files.server";
 
 const body = z.object({ key: z.string().min(1) });
 

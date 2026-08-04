@@ -1,20 +1,20 @@
-import { CompetitionCard } from "*/components/competition-card";
-import { PageHeader } from "*/components/page-header";
-import { SearchInput } from "*/components/search-input";
-import { CardSkeleton } from "*/components/skeletons";
+import { CompetitionCard } from "@/components/competition-card";
+import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
+import { CardSkeleton } from "@/components/skeletons";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
+} from "@/components/ui/empty";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { SearchX, Trophy } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
-import { listCompetitionSummaries } from "src/lib/competition-data";
+import { listCompetitionSummaries } from "@/lib/competition-data";
 import { isDraft } from "@open-competition-kit/sdk/visibility";
 
 export const Route = createFileRoute("/competitions/")({

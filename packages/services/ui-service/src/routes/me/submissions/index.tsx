@@ -1,17 +1,17 @@
-import { MePageHeader } from "*/components/me-page-header";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { Stat } from "*/components/stat-strip";
-import { SubmissionBrowser } from "*/components/submission-browser";
-import { Button } from "*/components/ui/button";
+import { MePageHeader } from "@/components/me-page-header";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { Stat } from "@/components/stat-strip";
+import { SubmissionBrowser } from "@/components/submission-browser";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
-import { authClient } from "src/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import {
   useUserSubmissionOutcomes,
   useUserSubmissions,
-} from "src/lib/submission-fn";
-import { describeJobStatus } from "src/lib/submission-readout";
+} from "@/lib/submission-fn";
+import { describeJobStatus } from "@/lib/submission-readout";
 
 export const Route = createFileRoute("/me/submissions/")({
   component: MeSubmissionsPage,

@@ -1,18 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { Stat } from "*/components/stat-strip";
-import { PageSkeleton } from "*/components/skeletons";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { Stat } from "@/components/stat-strip";
+import { PageSkeleton } from "@/components/skeletons";
 import {
   Panel,
   PanelBody,
   PanelDescription,
   PanelHeader,
   PanelTitle,
-} from "*/components/panel";
+} from "@/components/panel";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useCompetition } from "src/lib/competition-fn";
+import { useCompetition } from "@/lib/competition-fn";
 
 export const Route = createFileRoute("/competitions/$id/rules")({
   component: CompetitionRulesPage,

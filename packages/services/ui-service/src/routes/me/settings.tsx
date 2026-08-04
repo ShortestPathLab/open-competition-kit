@@ -1,17 +1,17 @@
-import { MePageHeader } from "*/components/me-page-header";
-import { PageBody } from "*/components/page-header-band";
-import { SectionHeader } from "*/components/section-header";
-import { Button } from "*/components/ui/button";
+import { MePageHeader } from "@/components/me-page-header";
+import { PageBody } from "@/components/page-header-band";
+import { SectionHeader } from "@/components/section-header";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
-import { ListSkeleton } from "*/components/skeletons";
+} from "@/components/ui/empty";
+import { ListSkeleton } from "@/components/skeletons";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { authClient } from "src/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { Lock, LogOut } from "lucide-react";
 import { useState } from "react";
 

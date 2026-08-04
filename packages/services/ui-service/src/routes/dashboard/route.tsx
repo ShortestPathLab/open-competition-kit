@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { getAdminStatus } from "src/lib/admin";
+import { getAdminStatus } from "@/lib/admin";
 
 export const Route = createFileRoute("/dashboard")({
   // Guard in `beforeLoad`, not in the component: throwing here stops the child

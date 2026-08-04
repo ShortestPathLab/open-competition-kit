@@ -1,13 +1,13 @@
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { PageSkeleton } from "*/components/skeletons";
-import { Button } from "*/components/ui/button";
-import { Badge } from "*/components/ui/badge";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { PageSkeleton } from "@/components/skeletons";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Empty,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
+} from "@/components/ui/empty";
 import {
   Popover,
   PopoverContent,
@@ -15,16 +15,16 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
-} from "*/components/ui/popover";
-import { DeadlinePanel } from "*/components/deadline-panel";
-import { CompetitionIcon } from "*/components/entity-icon";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { Panel, PanelBody, PanelHeader, PanelTitle } from "*/components/panel";
-import { StandingsPanel } from "*/components/standings-panel";
-import { Stat } from "*/components/stat-strip";
-import { SurfaceSlot } from "*/components/surface-slot";
-import { TrackCard } from "*/components/track-card";
-import { YourCompetitionPanel } from "*/components/your-competition-panel";
+} from "@/components/ui/popover";
+import { DeadlinePanel } from "@/components/deadline-panel";
+import { CompetitionIcon } from "@/components/entity-icon";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/panel";
+import { StandingsPanel } from "@/components/standings-panel";
+import { Stat } from "@/components/stat-strip";
+import { SurfaceSlot } from "@/components/surface-slot";
+import { TrackCard } from "@/components/track-card";
+import { YourCompetitionPanel } from "@/components/your-competition-panel";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { surface } from "@open-competition-kit/sdk/surface";
 import { isDraft } from "@open-competition-kit/sdk/visibility";
@@ -40,16 +40,16 @@ import {
   useCompetition,
   useCompetitionEnrolmentCount,
   useCompetitionSubmissionCount,
-} from "src/lib/competition-fn";
+} from "@/lib/competition-fn";
 import {
   useCompetitionLeaderboards,
   useCompetitionStandings,
-} from "src/lib/leaderboard-fn";
-import { useUserEnrolments } from "src/lib/enrolment-fn";
-import { useCompetitionSubmissions } from "src/lib/submission-fn";
-import { authClient } from "src/lib/auth-client";
-import { useTracksWithReports } from "src/lib/gate-fn";
-import type { TrackSummary } from "src/lib/competition-data";
+} from "@/lib/leaderboard-fn";
+import { useUserEnrolments } from "@/lib/enrolment-fn";
+import { useCompetitionSubmissions } from "@/lib/submission-fn";
+import { authClient } from "@/lib/auth-client";
+import { useTracksWithReports } from "@/lib/gate-fn";
+import type { TrackSummary } from "@/lib/competition-data";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 

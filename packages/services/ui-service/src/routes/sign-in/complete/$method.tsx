@@ -1,8 +1,8 @@
-import { Loader } from "*/components/loader";
+import { Loader } from "@/components/loader";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { authClient } from "src/lib/auth-client";
-import { configureUser } from "src/lib/configure-user";
+import { authClient } from "@/lib/auth-client";
+import { configureUser } from "@/lib/configure-user";
 
 export const Route = createFileRoute("/sign-in/complete/$method")({
   component: RouteComponent,

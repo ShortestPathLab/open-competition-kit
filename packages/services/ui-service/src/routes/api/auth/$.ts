@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { auth } from "src/lib/get-auth";
+import { auth } from "@/lib/get-auth";
 
 /**
  * Auth setup — the pool, the migrations — used to fail silently: the request

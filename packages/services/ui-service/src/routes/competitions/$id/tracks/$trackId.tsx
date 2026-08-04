@@ -1,14 +1,14 @@
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { CompetitionIcon, TrackIcon } from "*/components/entity-icon";
-import { NotFoundPage } from "*/components/not-found-page";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { PageSkeleton } from "*/components/skeletons";
-import { Panel, PanelHeader, PanelTitle, PanelBody } from "*/components/panel";
-import { Stat } from "*/components/stat-strip";
-import { useNow } from "*/components/submission-window";
-import { SurfaceSlot } from "*/components/surface-slot";
-import { Button } from "*/components/ui/button";
-import { Skeleton } from "*/components/ui/skeleton";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { CompetitionIcon, TrackIcon } from "@/components/entity-icon";
+import { NotFoundPage } from "@/components/not-found-page";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { PageSkeleton } from "@/components/skeletons";
+import { Panel, PanelHeader, PanelTitle, PanelBody } from "@/components/panel";
+import { Stat } from "@/components/stat-strip";
+import { useNow } from "@/components/submission-window";
+import { SurfaceSlot } from "@/components/surface-slot";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { surface } from "@open-competition-kit/sdk/surface";
 import { formatInstant } from "@open-competition-kit/sdk/instant";
 import { nextInstant } from "@open-competition-kit/sdk/gate";
@@ -18,16 +18,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { authClient } from "src/lib/auth-client";
-import { useCompetition } from "src/lib/competition-fn";
-import { useTrackReports } from "src/lib/gate-fn";
-import { getEnrollmentStatus } from "src/lib/enrolment-fn";
-import { ensureTrack } from "src/lib/route-guards";
+import { authClient } from "@/lib/auth-client";
+import { useCompetition } from "@/lib/competition-fn";
+import { useTrackReports } from "@/lib/gate-fn";
+import { getEnrollmentStatus } from "@/lib/enrolment-fn";
+import { ensureTrack } from "@/lib/route-guards";
 import {
   useTrack,
   useTrackEnrolmentCount,
   useTrackSubmissionCount,
-} from "src/lib/track-fn";
+} from "@/lib/track-fn";
 
 export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
   // The competition layout above has already established that `id` is real and

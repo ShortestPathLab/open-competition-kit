@@ -1,9 +1,9 @@
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { PageBody } from "*/components/page-header-band";
-import { PageSkeleton } from "*/components/skeletons";
-import { SubmissionCreator } from "*/components/submission-creator";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { PageBody } from "@/components/page-header-band";
+import { PageSkeleton } from "@/components/skeletons";
+import { SubmissionCreator } from "@/components/submission-creator";
 import { createFileRoute } from "@tanstack/react-router";
-import { useCompetition } from "src/lib/competition-fn";
+import { useCompetition } from "@/lib/competition-fn";
 import { z } from "zod";
 
 const submissionsNewSearch = z.object({

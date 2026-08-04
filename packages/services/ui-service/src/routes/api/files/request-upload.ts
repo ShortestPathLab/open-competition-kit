@@ -5,7 +5,7 @@ import {
   UPLOAD_NAMESPACE,
   maxUploadBytes,
   requireUser,
-} from "src/lib/files.server";
+} from "@/lib/files.server";
 
 const body = z.object({
   name: z.string().min(1).max(200),

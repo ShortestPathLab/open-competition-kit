@@ -1,7 +1,7 @@
-import { Button } from "*/components/ui/button";
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { Stat } from "*/components/stat-strip";
+import { Button } from "@/components/ui/button";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { Stat } from "@/components/stat-strip";
 import {
   Empty,
   EmptyContent,
@@ -9,18 +9,18 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
-import { Skeleton } from "*/components/ui/skeleton";
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { createFileRoute, useLocation } from "@tanstack/react-router";
-import { useCompetition } from "src/lib/competition-fn";
+import { useCompetition } from "@/lib/competition-fn";
 import { TriangleAlert, Trophy } from "lucide-react";
 import { useEffect } from "react";
-import { useKitComponent } from "src/hooks/use-kit-component";
+import { useKitComponent } from "@/hooks/use-kit-component";
 import {
   getCompetitionLeaderboards,
   useLoadedLeaderboard,
   type LeaderboardSummary,
-} from "src/lib/leaderboard-fn";
+} from "@/lib/leaderboard-fn";
 
 export const Route = createFileRoute("/competitions/$id/leaderboards/")({
   component: LeaderboardsPage,

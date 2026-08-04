@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { ensureCompetition } from "src/lib/route-guards";
+import { ensureCompetition } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/competitions/$id")({
   // One gate for the whole subtree: every page under this route reads the same

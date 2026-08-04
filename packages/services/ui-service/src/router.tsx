@@ -3,8 +3,8 @@ import { createRouter } from "@tanstack/react-router";
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
 import { QueryClient } from "@tanstack/react-query";
-import { ErrorPage } from "*/components/error-page";
-import { NotFoundPage } from "*/components/not-found-page";
+import { ErrorPage } from "@/components/error-page";
+import { NotFoundPage } from "@/components/not-found-page";
 
 export const queryClient = new QueryClient();
 

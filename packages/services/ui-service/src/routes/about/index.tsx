@@ -1,5 +1,5 @@
-import { PageHeaderBand } from "*/components/page-header-band";
-import { Panel, PanelBody } from "*/components/panel";
+import { PageHeaderBand } from "@/components/page-header-band";
+import { Panel, PanelBody } from "@/components/panel";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";

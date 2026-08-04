@@ -12,10 +12,10 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
-import { PageSkeleton } from "*/components/skeletons";
-import { SectionHeader } from "*/components/section-header";
-import { ensureAdmin } from "src/lib/admin";
+} from "@/components/ui/empty";
+import { PageSkeleton } from "@/components/skeletons";
+import { SectionHeader } from "@/components/section-header";
+import { ensureAdmin } from "@/lib/admin";
 import { Info, SearchX } from "lucide-react";
 import { z } from "zod";
 

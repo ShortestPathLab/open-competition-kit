@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
-import { requireOwnedFile } from "src/lib/files.server";
+import { requireOwnedFile } from "@/lib/files.server";
 
 /**
  * Download a stored file.

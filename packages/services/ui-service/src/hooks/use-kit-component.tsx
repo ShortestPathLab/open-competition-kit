@@ -1,4 +1,4 @@
-import { Loader } from "*/components/loader";
+import { Loader } from "@/components/loader";
 import { getByPath, Path, PathValue } from "@clickbar/dot-diver";
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { CatchBoundary } from "@tanstack/react-router";

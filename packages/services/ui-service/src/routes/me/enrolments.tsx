@@ -1,23 +1,23 @@
 import {
   EnrolmentBrowser,
   type EnrolmentResult,
-} from "*/components/enrolment-browser";
-import { MePageHeader } from "*/components/me-page-header";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { Stat } from "*/components/stat-strip";
-import { phaseOf } from "*/components/submission-window";
-import { Button } from "*/components/ui/button";
+} from "@/components/enrolment-browser";
+import { MePageHeader } from "@/components/me-page-header";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { Stat } from "@/components/stat-strip";
+import { phaseOf } from "@/components/submission-window";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useMemo } from "react";
-import { authClient } from "src/lib/auth-client";
-import { useUserEnrolments } from "src/lib/enrolment-fn";
-import { useGateReports } from "src/lib/gate-fn";
+import { authClient } from "@/lib/auth-client";
+import { useUserEnrolments } from "@/lib/enrolment-fn";
+import { useGateReports } from "@/lib/gate-fn";
 import {
   useUserSubmissionOutcomes,
   type SubmissionOutcome,
-} from "src/lib/submission-fn";
-import { readResult } from "src/lib/submission-readout";
+} from "@/lib/submission-fn";
+import { readResult } from "@/lib/submission-readout";
 
 export const Route = createFileRoute("/me/enrolments")({
   component: MeEnrolmentsPage,

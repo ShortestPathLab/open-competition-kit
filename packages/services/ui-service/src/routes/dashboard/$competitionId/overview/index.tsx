@@ -2,25 +2,25 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
-import { PageHeader } from "*/components/page-header";
-import { StatCard } from "*/components/stat-card";
-import { ToggleTabs } from "*/components/toggle-tabs";
-import { SearchInput } from "*/components/search-input";
-import { DataTable } from "*/components/data-table";
-import type { Column } from "*/components/data-table";
+import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
+import { ToggleTabs } from "@/components/toggle-tabs";
+import { SearchInput } from "@/components/search-input";
+import { DataTable } from "@/components/data-table";
+import type { Column } from "@/components/data-table";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
-import { PageSkeleton } from "*/components/skeletons";
-import { SurfaceSlot } from "*/components/surface-slot";
+} from "@/components/ui/empty";
+import { PageSkeleton } from "@/components/skeletons";
+import { SurfaceSlot } from "@/components/surface-slot";
 import { surface } from "@open-competition-kit/sdk/surface";
 import { ClipboardList } from "lucide-react";
-import { authClient } from "src/lib/auth-client";
-import { ensureAdmin } from "src/lib/admin";
+import { authClient } from "@/lib/auth-client";
+import { ensureAdmin } from "@/lib/admin";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 

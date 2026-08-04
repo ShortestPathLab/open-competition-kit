@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { ensureLeaderboard } from "src/lib/route-guards";
+import { ensureLeaderboard } from "@/lib/route-guards";
 
 export const Route = createFileRoute(
   "/competitions/$id/leaderboards/$leaderboardId",

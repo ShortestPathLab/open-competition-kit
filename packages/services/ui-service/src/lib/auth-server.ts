@@ -1,6 +1,6 @@
 import { createMiddleware, createServerOnlyFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { auth } from "src/lib/get-auth";
+import { auth } from "@/lib/get-auth";
 
 export const getAuthSession = createServerOnlyFn(async () => {
   const headers = getRequestHeaders();

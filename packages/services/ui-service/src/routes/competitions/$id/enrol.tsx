@@ -1,7 +1,7 @@
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { PageBody } from "*/components/page-header-band";
-import { PageSkeleton } from "*/components/skeletons";
-import { Button } from "*/components/ui/button";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { PageBody } from "@/components/page-header-band";
+import { PageSkeleton } from "@/components/skeletons";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,
@@ -9,14 +9,14 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "*/components/ui/empty";
+} from "@/components/ui/empty";
 import {
   Panel,
   PanelBody,
   PanelDescription,
   PanelHeader,
   PanelTitle,
-} from "*/components/panel";
+} from "@/components/panel";
 import {
   Select,
   SelectContent,
@@ -25,22 +25,22 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "*/components/ui/select";
-import { SurfaceSlot } from "*/components/surface-slot";
+} from "@/components/ui/select";
+import { SurfaceSlot } from "@/components/surface-slot";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { ArrowRight, CircleCheck, Layers3, Loader2, Lock } from "lucide-react";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { surface } from "@open-competition-kit/sdk/surface";
-import { authClient } from "src/lib/auth-client";
-import { authMiddleware } from "src/lib/auth-server";
-import { useCompetition } from "src/lib/competition-fn";
-import { ensureTrackAvailable } from "src/lib/competition-data";
-import { queryClient } from "src/router";
+import { authClient } from "@/lib/auth-client";
+import { authMiddleware } from "@/lib/auth-server";
+import { useCompetition } from "@/lib/competition-fn";
+import { ensureTrackAvailable } from "@/lib/competition-data";
+import { queryClient } from "@/router";
 import { toast } from "sonner";
 import { z } from "zod";
-import { resolveId } from "src/lib/configure-user";
+import { resolveId } from "@/lib/configure-user";
 
 const enrolSearch = z.object({ trackId: z.string().optional() });
 

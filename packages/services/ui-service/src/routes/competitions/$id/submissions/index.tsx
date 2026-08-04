@@ -1,16 +1,16 @@
-import { CompetitionPageHeader } from "*/components/competition-page-header";
-import { HeaderStats, PageBody } from "*/components/page-header-band";
-import { Stat } from "*/components/stat-strip";
-import { PageSkeleton } from "*/components/skeletons";
-import { SubmissionBrowser } from "*/components/submission-browser";
-import { Button } from "*/components/ui/button";
+import { CompetitionPageHeader } from "@/components/competition-page-header";
+import { HeaderStats, PageBody } from "@/components/page-header-band";
+import { Stat } from "@/components/stat-strip";
+import { PageSkeleton } from "@/components/skeletons";
+import { SubmissionBrowser } from "@/components/submission-browser";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { authClient } from "src/lib/auth-client";
-import { useCompetition } from "src/lib/competition-fn";
+import { authClient } from "@/lib/auth-client";
+import { useCompetition } from "@/lib/competition-fn";
 import {
   useCompetitionSubmissions,
   useUserSubmissionOutcomes,
-} from "src/lib/submission-fn";
+} from "@/lib/submission-fn";
 
 export const Route = createFileRoute("/competitions/$id/submissions/")({
   component: CompetitionSubmissionsPage,
