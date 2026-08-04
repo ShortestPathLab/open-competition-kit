@@ -16,11 +16,20 @@ import { Effect as E } from "effect";
  * Old name, current name.
  *
  * `largeFiles` became `files` because that is the hook namespace it configures,
- * the way `db:` configures `db` and `sandbox:` configures `sandbox`. The "large"
+ * the way `db:` configures `db` and `machine:` configures `machine`. The "large"
  * described what the package was built for rather than what it does: the backend
  * behind it stores every file, whatever its size.
+ *
+ * `sandbox` became `machine` because the block is read by whatever runs a
+ * command, and only one of the things that can is a sandbox. The Docker machine
+ * confines what it runs; the local machine in `standard` starts a process on the
+ * host and confines almost none of it. A key called `sandbox:` above a memory
+ * limit that nothing enforces is a name doing the arguing.
  */
-const RENAMED = [["largeFiles", "files"]] as const;
+const RENAMED = [
+  ["largeFiles", "files"],
+  ["sandbox", "machine"],
+] as const;
 
 /**
  * Which warnings have already been said.

@@ -21,6 +21,13 @@ describe("migrate", () => {
     ).toEqual({ files: { root: "/new" } });
   });
 
+  test("moves a sandbox: ceiling onto the machine that enforces it", () => {
+    expect(run({ appName: "x", sandbox: { memoryMb: 2048 } })).toEqual({
+      appName: "x",
+      machine: { memoryMb: 2048 },
+    });
+  });
+
   test("leaves a config that never used the old name alone", () => {
     const config = { appName: "x", files: { root: "/data" } };
     expect(run(config)).toEqual(config);

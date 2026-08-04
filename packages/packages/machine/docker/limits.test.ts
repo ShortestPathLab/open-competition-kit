@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { sandbox } from "./config";
+import { machine } from "./config";
 import { atMost, clamp, permitted } from "./limits";
 
 describe("atMost", () => {
@@ -96,9 +96,9 @@ describe("clamp", () => {
   });
 });
 
-describe("the sandbox: block", () => {
+describe("the machine: block", () => {
   test("an absent block is a ceiling of nothing", () => {
-    const read = sandbox.safeParse({});
+    const read = machine.safeParse({});
     expect(read.success).toBe(true);
     expect(clamp({ timeoutMs: 600_000 }, read.data ?? {}).timeoutMs).toBe(
       600_000,
@@ -106,11 +106,11 @@ describe("the sandbox: block", () => {
   });
 
   test("a limit of zero is refused rather than read as unlimited", () => {
-    expect(sandbox.safeParse({ memoryMb: 0 }).success).toBe(false);
+    expect(machine.safeParse({ memoryMb: 0 }).success).toBe(false);
   });
 
   test("a fractional process count is refused", () => {
-    expect(sandbox.safeParse({ pids: 1.5 }).success).toBe(false);
-    expect(sandbox.safeParse({ cpus: 0.5 }).success).toBe(true);
+    expect(machine.safeParse({ pids: 1.5 }).success).toBe(false);
+    expect(machine.safeParse({ cpus: 0.5 }).success).toBe(true);
   });
 });

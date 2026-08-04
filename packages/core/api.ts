@@ -65,12 +65,13 @@ export type OpenCompetitionKitApi = {
     purge: unknown;
   };
   /**
-   * Running untrusted code, through the package implementing the `sandbox` hooks.
-   * This layer fills in confinement the caller left out, so a runner that passes
-   * no limits still gets some. The organiser's maximum is separate: written in the
-   * `sandbox:` block and enforced where the confining happens.
+   * Somewhere to run a command, through the package implementing the `machine`
+   * hooks. This layer fills in confinement the caller left out, so a runner that
+   * passes no limits still asks for some. The organiser's maximum is separate:
+   * written in the `machine:` block and enforced where the confining happens,
+   * which is also the only place that knows how much of it is possible.
    */
-  sandbox: {
+  machine: {
     /**
      * Make an image exist, from a recipe in the config. Idempotent and cheap on a
      * second call, so a caller may ask at every startup. Inputs never come from a
@@ -78,7 +79,7 @@ export type OpenCompetitionKitApi = {
      * judged in.
      */
     build: unknown;
-    /** Run a command in an isolated environment and collect its output. */
+    /** Run a command somewhere and collect its output. */
     run: unknown;
   };
   secrets: { global: { get: unknown }; user: unknown };

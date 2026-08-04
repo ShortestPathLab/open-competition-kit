@@ -1,6 +1,6 @@
 FROM oven/bun:latest
 
-# The Docker CLI, for the sandbox-docker package.
+# The Docker CLI, for the machine-docker package.
 #
 # The client only — not a daemon. It talks to the host's daemon over the socket,
 # so the containers it starts are siblings of this one rather than children.

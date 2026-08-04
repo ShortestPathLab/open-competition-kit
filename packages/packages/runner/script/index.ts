@@ -1,8 +1,8 @@
 import sdk, {
   jobs,
+  machine,
   outputs,
   reference,
-  sandbox,
   source,
   submissions,
   tracks,
@@ -26,10 +26,15 @@ import { ONE_UNNAMED_CASE, row, sumOf, type Scalar } from "./row";
  * Evaluating a competition with a program instead of a package.
  *
  * The organiser writes a program and a command that runs it. This package runs
- * that command three times, each in its own container: once to plan, once per
+ * that command three times, each as a run of its own: once to plan, once per
  * case, and once to reduce the results into the row a leaderboard reads. Each
  * run finds a JSON request at a fixed path and leaves a JSON reply at the path
  * that request names.
+ *
+ * Where those runs happen is the machine's business rather than this package's.
+ * With `machine-docker` installed each one is a container. With no machine
+ * package installed each one is a child process of the runner service, and the
+ * paragraph below about blast radius describes only the first of those.
  *
  * ## Why there is no shim
  *
@@ -44,18 +49,18 @@ import { ONE_UNNAMED_CASE, row, sumOf, type Scalar } from "./row";
  * extension. A Python script, a Go binary, a shell script and a language nobody
  * has heard of are the same thing from here.
  *
- * ## Why a container per case rather than one for the whole evaluation
+ * ## Why a run per case rather than one for the whole evaluation
  *
  * Because the alternative gives one submission the run of its own evaluation.
  * Case three exhausting its memory would take cases four through forty with it,
  * a wedged interpreter would strand the lot, and the wall-clock limit would have
  * to be generous enough for the entire suite, which makes it barely a limit.
- * Fanning out costs a container start per case and buys a blast radius of one.
+ * Fanning out costs a start per case and buys a blast radius of one.
  *
- * The plan and reduce runs have no submission in the container, which keeps the
- * scoring step out of reach of the code being scored. A program that measures
- * when it evaluates and marks when it reduces never puts its benchmarks where a
- * submission could read them.
+ * The plan and reduce runs have no submission anywhere near them, which keeps
+ * the scoring step out of reach of the code being scored. A program that
+ * measures when it evaluates and marks when it reduces never puts its benchmarks
+ * where a submission could read them.
  *
  * ## What this package does not know
  *
@@ -99,18 +104,21 @@ const settings = async (
 /**
  * The image to evaluate in, built when the config describes one.
  *
- * `sandbox.build` is idempotent and cheap once the image exists, so this is safe
+ * `machine.build` is idempotent and cheap once the image exists, so this is safe
  * per job as well as at startup, and it has to be both: an organiser who edits a
  * recipe should get the new image on the next submission rather than the next
  * restart, and a host whose images were pruned should recover on its own.
+ *
+ * Nothing is a valid answer. A runner with neither an image: nor a build: is one
+ * whose command runs wherever the machine puts it, which is what the local
+ * machine does and the only way to evaluate anything without a Docker socket.
+ * Whether that is a mistake depends on the machine, so the machine is what says
+ * so: this package cannot tell a missing image from one that was never needed.
  */
-const image = async (runner: ScriptRunner): Promise<string> => {
+const image = async (runner: ScriptRunner): Promise<string | undefined> => {
   if (runner.build) {
-    const built = await unsafe(sandbox.build(runner.build));
+    const built = await unsafe(machine.build(runner.build));
     return built.image;
-  }
-  if (!runner.image) {
-    throw new Error("This runner has neither an image: nor a build: to run in.");
   }
   return runner.image;
 };
@@ -127,26 +135,26 @@ const payload = (runner: ScriptRunner, request: Request) => {
 };
 
 /**
- * Run one phase and read the reply back out of the container.
+ * Run one phase and read the reply back out.
  *
  * Both streams are the log and the answer arrives as a file, so a program is
  * free to print whatever its harness printed without any of it being mistaken
  * for a result. No reply file means the program never got to write one, which is
- * the case worth naming: a wall-clock kill, an OOM kill and an image whose
+ * the case worth naming: a wall-clock kill, an OOM kill and a machine whose
  * interpreter is not there all look like this from here.
  */
 const invoke = async (
   runner: ScriptRunner,
-  built: string,
+  built: string | undefined,
   // Without `reply`, which is filled in below: a caller should not have to
   // repeat a path the protocol already fixes.
   request: Omit<Request, "reply">,
   submission?: Readonly<Record<string, Uint8Array>>,
 ): Promise<{ value: unknown; log: string }> => {
-  // The submission's paths go into the request as well as into the container, so
-  // a program is handed a list rather than a directory to go walking. A walk
-  // would find whatever else happened to be under that path, and would have to
-  // be written again in every language anybody evaluates in.
+  // The submission's paths go into the request as well as onto the disk, so a
+  // program is handed a list rather than a directory to go walking. A walk would
+  // find whatever else happened to be under that path, and would have to be
+  // written again in every language anybody evaluates in.
   const described: Request = {
     ...request,
     reply: REPLY,
@@ -163,7 +171,7 @@ const invoke = async (
   }
 
   const result = await unsafe(
-    sandbox.run({
+    machine.run({
       image: built,
       command: runner.command ?? [],
       files,
@@ -187,7 +195,7 @@ const invoke = async (
         `The ${where} phase ran out of time after ${runner.timeoutMs ?? "the default"}ms.`
       : `The ${where} phase exited with ${result.code} and left no reply at ` +
         `${REPLY}. A program that fails before it writes one looks like this, ` +
-        `and so does an image with no ${runner.command?.[0] ?? "command"} in ` +
+        `and so does a machine with no ${runner.command?.[0] ?? "command"} on ` +
         `it. Its output was:\n${log}`,
     );
   }
@@ -266,7 +274,7 @@ const evaluate = async (job: string, runner: ScriptRunner) => {
       results.push(flat);
       // Written as each case finishes rather than at the end, so a competitor
       // watching a long evaluation sees it move. It is also the only progress
-      // there is: a container reports nothing until it exits, and this is the
+      // there is: a run reports nothing until it exits, and this is the
       // boundary between two of them.
       await record(job, [outcome.log, `${label}: ${JSON.stringify(flat)}`]);
     } catch (e) {
@@ -298,7 +306,7 @@ const evaluate = async (job: string, runner: ScriptRunner) => {
 export default {
   name: "@open-competition-kit/runner-script",
   description:
-    "Evaluates submissions with a program the organiser inlines into the config, one case per container.",
+    "Evaluates submissions with a program the organiser inlines into the config, one case per run.",
   version: "0.0.10",
   config,
   runner: {
@@ -318,7 +326,7 @@ export default {
       if (!runner?.build) return;
 
       console.log(`[runner-script] ${competition}: preparing the evaluation image`);
-      const { image: tag, built } = await unsafe(sandbox.build(runner.build));
+      const { image: tag, built } = await unsafe(machine.build(runner.build));
       console.log(
         `[runner-script] ${competition}: ${tag} ${built ? "built" : "already present"}`,
       );

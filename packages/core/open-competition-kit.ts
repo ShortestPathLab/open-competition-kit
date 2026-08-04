@@ -8,11 +8,11 @@ import { MissingContextError } from "./kit/errors";
 import { createFileStore } from "./kit/file-store";
 import { createParticipation } from "./kit/participation";
 import { makeRuntime } from "./kit/runtime";
-import { createSandbox } from "./kit/sandbox";
+import { createMachine } from "./kit/machine";
 
 export * from "./kit/errors";
 export { withCollectionUtilities, withMergeConfig } from "./kit/collection-utils";
-export type { SandboxRequest } from "./kit/sandbox";
+export type { MachineRequest } from "./kit/machine";
 
 export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
   "open-competition-kit/OpenCompetitionKit",
@@ -24,7 +24,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
       const entities = createEntities(runtime);
       const participation = createParticipation(runtime, entities);
       const files = createFileStore(hooks, instance);
-      const sandbox = createSandbox(hooks);
+      const machine = createMachine(hooks);
 
       const secrets = {
         global: {
@@ -64,7 +64,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         ...entities,
         ...participation,
         files,
-        sandbox,
+        machine,
         hooks,
       } satisfies OpenCompetitionKitApi;
     }),

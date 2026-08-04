@@ -2,15 +2,24 @@ import { Schema as S } from "effect";
 import { hook } from "./hook";
 
 /**
- * Running untrusted code. Infrastructure like `db` and `files`: it needs a real
- * machine, so it cannot cross a language boundary. A runner describes what to run
- * and how tightly to confine it; the package decides how.
+ * Somewhere to run a command. Infrastructure like `db` and `files`: it needs a
+ * real machine, so it cannot cross a language boundary. A runner says what to
+ * run and how tightly to confine it; the machine decides how, and how much of
+ * that it can actually do.
  *
- * The defaults deny: no network, a memory cap, a process cap, a read-only root and
- * a wall-clock limit. A caller must opt back out, because the code being run was
- * written by someone the organiser has never met.
+ * Named for what it is rather than for what the first implementation of it
+ * happened to be. `sandbox` was the old name, and it made a promise on every
+ * implementation's behalf: the Docker machine confines what it runs, and the
+ * local machine in `standard` starts a process on the host and confines almost
+ * nothing. A name meaning "isolated" makes the second one look like a bug
+ * rather than the trade an organiser made by not installing the first.
+ *
+ * The limits below are still written as denials, and a machine that cannot
+ * apply one should say so rather than accept it quietly. A runner asking for no
+ * network is a runner that hands a stranger's code the network if nobody
+ * answers.
  */
-export const sandbox = S.Struct({
+export const machine = S.Struct({
   /**
    * Make an image exist, from a recipe the organiser wrote.
    *
@@ -21,6 +30,10 @@ export const sandbox = S.Struct({
    *
    * Should be idempotent and cheap on the second call: the caller asks on every
    * startup, and may ask again per job.
+   *
+   * A machine with no notion of an image should fail here rather than answer
+   * with something `run` will ignore. An organiser who wrote a recipe wants the
+   * recipe, and the useful thing to tell them is which package builds one.
    */
   build: hook<
     {
@@ -54,8 +67,13 @@ export const sandbox = S.Struct({
        * The image, already built. Either one the host has or whatever `build`
        * handed back. Nothing is built here: by the time a submission is in the
        * room, the image it runs in is settled.
+       *
+       * Optional, because whether a command needs an image to run in is the
+       * machine's business rather than the caller's. A machine that starts
+       * containers should refuse a request without one and name what to add; a
+       * machine that starts a process on the host has nowhere to put it.
        */
-      image: string;
+      image?: string;
       command: readonly string[];
       /**
        * Files to place inside before it starts, keyed by absolute path. This is how
@@ -74,7 +92,7 @@ export const sandbox = S.Struct({
        * the caller has better words for that.
        */
       collect?: readonly string[];
-      /** Wall-clock limit. The sandbox is killed, not asked, when it passes. */
+      /** Wall-clock limit. What is running is killed, not asked, when it passes. */
       timeoutMs?: number;
       limits?: {
         memoryMb?: number;

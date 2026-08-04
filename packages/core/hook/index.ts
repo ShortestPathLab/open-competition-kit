@@ -28,7 +28,7 @@ import { componentSource, type Source } from "./component";
 import { db } from "./db";
 import { files } from "./files";
 import { hook } from "./hook";
-import { sandbox } from "./sandbox";
+import { machine } from "./machine";
 
 type LeaderboardUiDef = Meta & {
   name?: string;
@@ -42,7 +42,7 @@ type LeaderboardUiDef = Meta & {
 export const Hooks = S.Struct({
   db,
   files,
-  sandbox,
+  machine,
   enrolments: S.Struct({
     enrol: hook<{ track: string; user: string }, string>(),
   }),

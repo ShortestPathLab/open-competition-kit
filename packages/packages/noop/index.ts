@@ -22,7 +22,7 @@ export default {
     link: noop,
     limit: noop,
   },
-  sandbox: { build: noop, run: noop },
+  machine: { build: noop, run: noop },
   user: {},
   form: { loader: noop, ui: noop, submit: {} },
   submissions: { submit: noop, gate: noop, status: noop },

@@ -6,7 +6,7 @@
  * gets, and it should be readable and testable without a daemon anywhere near
  * it.
  */
-import type { SandboxCeiling } from "./config";
+import type { MachineCeiling } from "./config";
 
 export type Confinement = {
   timeoutMs?: number;
@@ -54,14 +54,14 @@ export const permitted = (
  * A run's confinement, held to the ceiling.
  *
  * Returns only the fields it decides, for the caller to lay over the request.
- * Every field the sandbox acts on goes through here, the two booleans included:
+ * Every field this package acts on goes through here, the two booleans included:
  * a ceiling a runner can step around by setting `network: true` is not a
  * ceiling, and leaving those out would have made the numbers look stronger than
  * the arrangement really was.
  */
 export const clamp = (
   request: Confinement,
-  ceiling: SandboxCeiling,
+  ceiling: MachineCeiling,
 ): Confinement => ({
   timeoutMs: atMost(request.timeoutMs, ceiling.timeoutMs),
   limits: {

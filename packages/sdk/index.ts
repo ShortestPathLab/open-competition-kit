@@ -13,7 +13,7 @@ export const {
   jobs,
   leaderboards,
   outputs,
-  sandbox,
+  machine,
   secrets,
   submissions,
 } = kit;

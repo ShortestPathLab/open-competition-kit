@@ -234,19 +234,21 @@ export const DbNode = S.Struct({});
 export const FilesNode = S.Struct({});
 
 /**
- * Confinement settings for whichever package implements the `sandbox` hooks.
+ * Confinement settings for whichever package implements the `machine` hooks.
  *
- * Declared by that package, not here. Core hands numbers to a sandbox and has no
+ * Declared by that package, not here. Core hands numbers to a machine and has no
  * way to check that any of them were applied, so a ceiling held in core would be
- * a ceiling only the sandbox package could choose to honour. The package that
- * does the confining is the one that declares what it can be told, and the one
- * that clamps a greedy runner against it.
+ * a ceiling only the machine could choose to honour. The package that does the
+ * confining is the one that declares what it can be told, and the one that
+ * clamps a greedy runner against it.
  *
- * The gain from moving it is that an ignored setting stops being silent: write
- * `memoryMb` with a sandbox package that does not declare it and the app refuses
- * to start, naming the packages that were asked.
+ * The gain from that arrangement is that an ignored setting stops being silent:
+ * write `memoryMb` with a machine that does not declare it and the app refuses
+ * to start, naming the packages that were asked. It is also what makes the local
+ * machine in `standard` honest, since it declares almost nothing and so cannot
+ * be told to enforce what it has no way to enforce.
  */
-export const SandboxNode = S.Struct({});
+export const MachineNode = S.Struct({});
 
 export const Config = S.Struct({
   appName: S.String,
@@ -263,7 +265,7 @@ export const Config = S.Struct({
    */
   admins: S.optional(S.Array(S.String)),
   files: S.optional(FilesNode),
-  sandbox: S.optional(SandboxNode),
+  machine: S.optional(MachineNode),
   ...Extendable.fields,
 });
 

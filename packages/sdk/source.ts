@@ -134,7 +134,7 @@ export type FilesOptions = {
  * finds out about until it has already let something through.
  *
  * Keys have the wrapper directory removed, so they are the paths the allowlist
- * was written in and can be pasted straight into a sandbox's `files`.
+ * was written in and can be pasted straight into a machine's `files`.
  *
  * A literal path in `allow` that the archive does not contain is an error naming
  * every one that is missing at once, because a competitor who forgot two files
@@ -194,7 +194,7 @@ export const select = async (
 };
 
 /**
- * A job's submission, unpacked and filtered, ready to hand to a sandbox.
+ * A job's submission, unpacked and filtered, ready to hand to a machine.
  *
  * The one call a runner usually wants. The archive never touches a disk on the
  * way through: it is read into memory, the permitted files are taken out of it,

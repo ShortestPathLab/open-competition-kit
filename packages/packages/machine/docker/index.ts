@@ -3,11 +3,16 @@ import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { ensure, type BuildRequest } from "./build";
-import { config, sandbox, type SandboxCeiling } from "./config";
+import { config, machine, type MachineCeiling } from "./config";
 import { clamp, type Confinement } from "./limits";
 
 /**
- * Runs untrusted code in a Docker container.
+ * A machine that runs each command in a Docker container.
+ *
+ * The one to install when the code being run belongs to somebody the organiser
+ * has never met, which is every competition with competitors in it. The local
+ * machine in `standard` will start the same command with none of this, and is
+ * meant for the afternoon before there are any competitors.
  *
  * Requires a Docker daemon the host can reach — `docker` on PATH, and a socket
  * this process may talk to. In a container that means mounting
@@ -24,7 +29,7 @@ import { clamp, type Confinement } from "./limits";
  *
  * ## The organiser's ceiling
  *
- * The `sandbox:` block in the config is declared by this package and applied
+ * The `machine:` block in the config is declared by this package and applied
  * here, in `limits.ts`. It belongs with the code that talks to the daemon, since
  * that is the only place a limit turns into something the kernel enforces: a
  * ceiling held anywhere else would be one that only this package could choose to
@@ -46,11 +51,21 @@ type Run = Confinement & {
 };
 
 /**
+ * The same, before we have checked there is an image to run in.
+ *
+ * The hook makes `image` optional because a machine that starts a process on the
+ * host has nowhere to put one. This one has nothing to start without it, and the
+ * refusal below is the whole reason the field is optional rather than a hopeful
+ * empty string: the error can name what to add, which "" cannot.
+ */
+type Requested = Omit<Run, "image"> & { image?: string };
+
+/**
  * Docker, with no wall-clock limit.
  *
  * A build has no business being timed out by the same figure that stops a
  * runaway submission: installing a toolchain legitimately takes minutes, and the
- * `sandbox:` ceiling is written with a single evaluation in mind. A recipe that
+ * `machine:` ceiling is written with a single evaluation in mind. A recipe that
  * hangs forever is an organiser's mistake and shows up as a service that will
  * not finish starting, which is where it belongs.
  */
@@ -161,7 +176,7 @@ const run = async ({
   ]);
   if (created.code !== 0) {
     throw new Error(
-      `Could not create a sandbox from "${image}": ${created.stderr.trim()}`,
+      `Could not create a container from "${image}": ${created.stderr.trim()}`,
     );
   }
   const id = created.stdout.trim();
@@ -171,7 +186,7 @@ const run = async ({
   let staging: string | undefined;
   try {
     if (files && Object.keys(files).length) {
-      staging = await mkdtemp(join(tmpdir(), "ock-sandbox-"));
+      staging = await mkdtemp(join(tmpdir(), "ock-machine-"));
       for (const [path, body] of Object.entries(files)) {
         const local = join(staging, path.replace(/^\/+/, ""));
         await mkdir(dirname(local), { recursive: true });
@@ -206,7 +221,7 @@ const run = async ({
         const root = relative.split("/")[0];
         if (!root || root === relative) {
           throw new Error(
-            `Could not place "${path}" into the sandbox: ${copied.stderr.trim()}`,
+            `Could not place "${path}" into the container: ${copied.stderr.trim()}`,
           );
         }
         missing.add(root);
@@ -219,7 +234,7 @@ const run = async ({
         const copied = await sh(["cp", join(staging, root), `${id}:/`]);
         if (copied.code !== 0) {
           throw new Error(
-            `Could not create "/${root}" in the sandbox: ${copied.stderr.trim()}`,
+            `Could not create "/${root}" in the container: ${copied.stderr.trim()}`,
           );
         }
       }
@@ -273,36 +288,46 @@ const run = async ({
  * tighten a limit should tighten the next run rather than the next restart. The
  * read costs nothing next to starting a container.
  *
- * A `sandbox:` block that will not parse stops the run. Core checks it at boot
+ * A `machine:` block that will not parse stops the run. Core checks it at boot
  * against this same schema, so getting here means something changed underneath
  * the process, and the safe reading of an unreadable ceiling is that there is
  * one and we cannot see it.
  */
-const ceiling = async (): Promise<SandboxCeiling> => {
+const ceiling = async (): Promise<MachineCeiling> => {
   const c = await unsafe(kit.get());
-  const read = sandbox.safeParse(c.sandbox ?? {});
+  const read = machine.safeParse(c.machine ?? {});
   if (!read.success) {
     throw new Error(
-      `The sandbox: block in the config is not one this package can read, so no run can be confined to it: ${read.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`,
+      `The machine: block in the config is not one this package can read, so no run can be confined to it: ${read.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`,
     );
   }
   return read.data;
 };
 
 export default {
-  name: "@open-competition-kit/sandbox-docker",
+  name: "@open-competition-kit/machine-docker",
   description:
-    "Runs untrusted code in Docker containers. Requires a Docker daemon on the host.",
+    "Runs each command in a Docker container, confined. Requires a Docker daemon on the host.",
   version: "0.0.8",
   config,
-  sandbox: {
+  machine: {
     /**
-     * Not clamped, and deliberately so. The ceiling in the `sandbox:` block is
+     * Not clamped, and deliberately so. The ceiling in the `machine:` block is
      * about the code a competitor sends; a recipe came from the config beside it
      * and needs the network the ceiling exists to deny.
      */
     build: async (request: BuildRequest) => ensure(sh, request),
-    run: async (request: Run) =>
-      run({ ...request, ...clamp(request, await ceiling()) }),
+    run: async (request: Requested) => {
+      if (!request.image) {
+        throw new Error(
+          `This machine runs every command in a container and was given no ` +
+            `image to start one from. Add an image: or a build: to the runner. ` +
+            `Taking this package out of with: would also work, and would run ` +
+            `the command on the host with nothing confining it.`,
+        );
+      }
+      const image = request.image;
+      return run({ ...request, image, ...clamp(request, await ceiling()) });
+    },
   },
 } satisfies Package;

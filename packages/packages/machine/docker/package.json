@@ -1,6 +1,6 @@
 {
   "version": "0.0.10",
-  "name": "@open-competition-kit/sandbox-docker",
+  "name": "@open-competition-kit/machine-docker",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },

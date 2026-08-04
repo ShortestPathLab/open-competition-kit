@@ -1,11 +1,16 @@
 /**
- * The `sandbox:` block, as this package reads it.
+ * The `machine:` block, as this package reads it.
  *
  * An organiser's ceiling rather than a runner's preference: a runner may ask for
  * less than this but never for more. Declared here because this is the package
- * that applies it. Core can pass a number to a sandbox but has no way to check
+ * that applies it. Core can pass a number to a machine but has no way to check
  * that Docker was told about it, so a limit held anywhere but inside the thing
  * doing the confining is a limit that only the confining thing can honour.
+ *
+ * It is also why every field below is declared by *this* package and not by
+ * core: install a machine that cannot cap memory and `memoryMb:` stops being a
+ * setting that quietly does nothing and starts being a config the app refuses to
+ * boot with.
  *
  * Every field is optional, and an absent one is no ceiling at all rather than a
  * ceiling of zero. A host that configures nothing behaves as it did before this
@@ -15,7 +20,7 @@
 import type { ConfigExtensions } from "@open-competition-kit/sdk";
 import { z } from "zod";
 
-export const sandbox = z.object({
+export const machine = z.object({
   /** Longest wall-clock run, in milliseconds. */
   timeoutMs: z.number().positive().optional(),
   /** Most memory one container may have, in megabytes. */
@@ -36,12 +41,12 @@ export const sandbox = z.object({
   writable: z.boolean().optional(),
 });
 
-export type SandboxCeiling = z.infer<typeof sandbox>;
+export type MachineCeiling = z.infer<typeof machine>;
 
 export const config = {
-  sandbox: {
-    schema: sandbox,
-    group: { id: "sandbox", label: "Sandbox ceiling" },
+  machine: {
+    schema: machine,
+    group: { id: "machine", label: "Machine ceiling" },
     shape: [
       {
         id: "timeoutMs",

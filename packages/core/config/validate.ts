@@ -21,8 +21,8 @@ import {
   FormFieldNode,
   FormNode,
   LeaderboardNode,
+  MachineNode,
   RunnerNode,
-  SandboxNode,
   TrackNode,
 } from "./schema";
 import {
@@ -38,7 +38,7 @@ import { walkNodes, type Node } from "./walk";
  * What core itself declares at each node kind.
  *
  * Read off the schema rather than listed by hand, so a field added to `Config`
- * cannot become an unrecognised field here. `db`, `files` and `sandbox` declare
+ * cannot become an unrecognised field here. `db`, `files` and `machine` declare
  * nothing at all, which is the point of them: every key inside belongs to
  * whichever package implements that backend, and a key no installed package
  * claims is an error rather than a setting quietly doing nothing.
@@ -53,7 +53,7 @@ export const CORE_KEYS: Record<NodeKind, readonly string[]> = {
   runner: Object.keys(RunnerNode.fields),
   db: Object.keys(DbNode.fields),
   files: Object.keys(FilesNode.fields),
-  sandbox: Object.keys(SandboxNode.fields),
+  machine: Object.keys(MachineNode.fields),
 };
 
 export type Resolve<R = never> = (
