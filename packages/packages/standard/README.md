@@ -13,6 +13,16 @@ with:
 
 This package expects another package or integration to place submission source code into job context under the standard source-code zip reference. The GitHub classic integration does that by downloading the selected repository ref before the runner executes.
 
+## The local machine
+
+A runner that evaluates by running a command needs a machine to run it on. This package provides the one you get when you have not chosen: it starts the command as a child process of the runner service and hands back what it printed.
+
+That is enough to write an evaluation and score your own submissions the same afternoon, without a Docker socket, an image or a second package. It is not enough to accept anybody else's code. Nothing is confined: the memory, CPU and process limits a runner asks for are ignored, `network: false` is ignored, and the command can read whatever the runner service can read. The wall-clock limit is real, and is the only thing here protecting the queue from a program that hangs.
+
+Two more things follow from running on a host rather than in a container. Runs are queued one at a time, because a container gets its own filesystem and a host does not, and two evaluations writing their request to the same path would score each other's work. And a `build:` recipe or an `image:` is refused rather than ignored, because a competition scored in the wrong image looks exactly like one scored in the right image.
+
+Install `@open-competition-kit/machine-docker` and the same runner gets a container per case, with the limits applied. Nothing else about the competition changes.
+
 ## Leaderboards
 
 This package also implements `leaderboard.loader`, which is what turns job

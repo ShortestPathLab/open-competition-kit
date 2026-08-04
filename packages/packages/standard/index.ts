@@ -13,6 +13,7 @@ import Zip from "jszip";
 import { config, runnerBody } from "./config";
 import { standardRefusals, standardReports } from "./gates";
 import { load as loadLeaderboard } from "./leaderboard";
+import { local, type Run } from "./machine";
 
 export default {
   name: "@open-competition-kit/standard",
@@ -28,6 +29,26 @@ export default {
       const existing = await unsafe(enrolments.list(payload));
       return (existing[0] ?? (await unsafe(enrolments.create(payload)))).id;
     },
+  },
+  /**
+   * Somewhere to run a command, for a deployment that has not said where.
+   *
+   * Last in the chain rather than first: anything installed after this one is a
+   * machine the organiser chose, and `next` is how it keeps it. The check is
+   * `inherited` rather than the usual position argument because `noop` answers
+   * with nothing, so a chain that reaches the bottom lands here whichever order
+   * the two were listed in.
+   *
+   * Being the fallback is the whole point. A competition can be written, run and
+   * scored before anybody decides how it will be deployed, and the decision that
+   * is deferred is the one about containers rather than the one about what a
+   * good evaluation is.
+   */
+  machine: {
+    build: async (recipe, next) =>
+      (await next?.(recipe)) ?? (await local.build()),
+    run: async (request: Run, next) =>
+      (await next?.(request)) ?? (await local.run(request)),
   },
   leaderboard: {
     loader: async ({ def, competition }, next) => {

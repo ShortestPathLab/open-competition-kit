@@ -7,13 +7,11 @@ There is no shim and no adapter, so there is no list of supported languages. You
 ```yaml
 with:
   - /packages/packages/standard
-  - /packages/packages/sandbox/docker
   - /packages/packages/runner/script
 
 competitions:
   - id: sorting
     runner:
-      image: python:3.13-slim
       command: ["python3", "evaluate.py"]
       include:
         evaluate.py: ${{ text("./evaluate.py") }}
@@ -33,9 +31,24 @@ json.dump({"ok": True, "value": value}, open(req["reply"], "w"))
 
 That is a working competition, and those five lines of protocol are all of it. Everything below is for the ones that need more.
 
+With no machine package installed, the command runs as a child process of the runner service, using whatever that service already has. That is enough to write an evaluation and score your own submissions this afternoon. It is not enough to score anybody else's: nothing is confined, and a submission can reach whatever the service can. Add `machine/docker` and an `image:` before you open the competition, and the same program runs in a container per case.
+
+```yaml
+with:
+  - /packages/packages/standard
+  - /packages/packages/machine/docker
+  - /packages/packages/runner/script
+
+competitions:
+  - id: sorting
+    runner:
+      image: python:3.13-slim
+      command: ["python3", "evaluate.py"]
+```
+
 ## The three phases
 
-The command runs three times, each in a container of its own:
+The command runs three times, each as a run of its own:
 
 | `phase` | when | answer with |
 |---|---|---|
@@ -45,7 +58,7 @@ The command runs three times, each in a container of its own:
 
 Answering `null` means you have no opinion about that phase, and the host fills in what it would have done. A competition that scores one thing therefore handles `evaluate` and ignores the rest.
 
-`plan` and `reduce` run with no submission in the container. A program that measures when it evaluates and marks when it reduces never puts its benchmarks within reach of the code being marked.
+`plan` and `reduce` run with no submission anywhere near them. A program that measures when it evaluates and marks when it reduces never puts its benchmarks within reach of the code being marked.
 
 ## The request
 
@@ -85,11 +98,11 @@ or
 
 Print whatever you like. Both streams become the job's log, including anything a subprocess wrote, so a harness's own words reach the competitor unedited. The answer travels by file and cannot be confused with any of it.
 
-## Why a container per case
+## Why a run per case
 
-A submission that exhausts its memory, wedges its interpreter or spins forever takes its own container down and nothing else. One container for the whole evaluation would mean case three costing you cases four through forty, and a wall-clock limit generous enough for the entire suite, which is barely a limit at all.
+With `machine/docker`, a submission that exhausts its memory, wedges its interpreter or spins forever takes its own container down and nothing else. One container for the whole evaluation would mean case three costing you cases four through forty, and a wall-clock limit generous enough for the entire suite, which is barely a limit at all.
 
-It also puts a boundary between cases where progress can be written. A container reports nothing until it exits, so without the fan-out a competitor watching a ten minute evaluation would see nothing until it ended.
+It also puts a boundary between cases where progress can be written. A run reports nothing until it exits, so without the fan-out a competitor watching a ten minute evaluation would see nothing until it ended. That half holds whichever machine is installed.
 
 ## Configuration
 
@@ -97,7 +110,7 @@ It also puts a boundary between cases where progress can be written. A container
 |---|---|
 | `command` | What to run, once per phase, from the work directory |
 | `include` | The program and anything it reads, keyed by the path each lands at |
-| `image` | The image every phase runs in |
+| `image` | The image every phase runs in, if the installed machine has images |
 | `build` | A `dockerfile:`, optional `context:` and `args:`, built on startup instead |
 | `params` | Passed to every phase untouched |
 | `submission.allow` | Paths a submission may supply, as literals or globs |
@@ -117,7 +130,9 @@ build:
 
 Built when the runner service starts, and named after the contents of the recipe and its arguments. Editing the Dockerfile changes the name, and a changed name rebuilds. A fixed tag cannot do that, which is how a competition ends up scored against last month's harness with nothing anywhere reporting a problem.
 
-A build has network access, since a recipe that installs anything needs one. The `sandbox:` ceiling governs runs, not builds. What protects you is where the inputs come from: the config, and never a submission.
+A build has network access, since a recipe that installs anything needs one. The `machine:` ceiling governs runs, not builds. What protects you is where the inputs come from: the config, and never a submission.
+
+A `build:` needs a machine that can build. Without one the runner service says so while preparing, at startup, rather than leaving it to be found as somebody's failed submission.
 
 ### Files the kit does not read
 
@@ -129,7 +144,7 @@ include:
 
 Copied in and never opened. This is how a project keeps its own list of instances, its scoring table or its reference outputs, without this package inventing a vocabulary for something it does not understand. Your `plan` reads the file; the kit only moves the bytes.
 
-Anything here is readable by a submission while a case is being evaluated, because they share a container. Marking data that must not leak belongs outside the sandbox, which means a package rather than a program. Splitting measurement into `evaluate` and marking into `reduce` covers most of the gap, since `reduce` runs alone.
+Anything here is readable by a submission while a case is being evaluated, because they share a run. Marking data that must not leak belongs somewhere a submission never gets to, which means a package rather than a program. Splitting measurement into `evaluate` and marking into `reduce` covers most of the gap, since `reduce` runs alone.
 
 ### The permitted files
 
@@ -140,12 +155,12 @@ submission:
     - agents/agent.py
 ```
 
-Everything else in the archive is dropped before any container starts. Leave it out and the whole archive is taken, which is right when the submission is the answer and wrong when it overlays a harness. In the second case this is the only thing between a competitor and an edited marking script.
+Everything else in the archive is dropped before anything starts. Leave it out and the whole archive is taken, which is right when the submission is the answer and wrong when it overlays a harness. In the second case this is the only thing between a competitor and an edited marking script.
 
 Patterns match by suffix, so the directory a GitHub archive wraps everything in never has to be named. `*` stops at a separator and `**` crosses them. A named file that is absent fails the submission, with every missing one reported at once; a glob that matches nothing is not an error.
 
 ## Requirements
 
-A writable `/tmp` in the image, and whatever the first word of your `command:` needs. Nothing else.
+A writable `/tmp` where the command runs, and whatever the first word of your `command:` needs. Nothing else.
 
-Install `sandbox/docker` alongside this, and mount the Docker socket into the runner service.
+For a competition with competitors in it, install `machine/docker` alongside this and mount the Docker socket into the runner service.

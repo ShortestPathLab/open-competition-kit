@@ -81,6 +81,12 @@ const shape = z
      * Either a tag the host already has, or the one `build` produces. When both
      * are given, `build` wins and this is ignored: an organiser who wrote a
      * recipe meant the recipe.
+     *
+     * Optional, and the machine decides what its absence means. `machine-docker`
+     * has nothing to start without one and refuses; the local machine in
+     * `standard` has nowhere to put one and runs the command on the host. So a
+     * runner with no image: is the smallest evaluation that works, and gets a
+     * container the day a machine that starts containers is installed.
      */
     image: z.string().min(1).optional(),
     build: build.optional(),
@@ -137,13 +143,15 @@ const shape = z
     timeoutMs: z.number().positive().optional(),
     limits: limits.optional(),
   })
-  // A command with no image has nowhere to run, and an image with no command has
-  // nothing to run. Either alone is a half-written runner, and finding out at
-  // boot beats finding out when the first submission arrives.
-  .refine((c) => !c.command || c.image || c.build, {
-    message: "a command needs either an image: or a build: to run in",
-    path: ["image"],
-  })
+  // An image with no command has nothing to run, which is a half-written runner
+  // and worth finding out about at boot rather than when the first submission
+  // arrives.
+  //
+  // The other way round is not an error any more. A command with no image runs
+  // wherever the installed machine puts it, which for the local machine in
+  // `standard` is a child process of the runner service. That is the whole of
+  // what an organiser needs for a first evaluation, and refusing it here would
+  // mean the smallest working config was one that needed a Docker socket.
   .refine((c) => !(c.image || c.build) || c.command, {
     message: "an image with no command: has nothing to run",
     path: ["command"],
@@ -183,7 +191,7 @@ export const config = {
         label: "Image",
         kind: "text",
         description:
-          "The image every phase runs in. Ignored when a build recipe is given.",
+          "The image every phase runs in. Ignored when a build recipe is given. Leave it out and the command runs wherever the installed machine puts it, which without a machine package is a child process of the runner service.",
       },
       {
         id: "build",
@@ -225,7 +233,7 @@ export const config = {
         label: "Resource limits",
         kind: "object",
         description:
-          "Memory, CPU and process caps for one phase, plus whether it may reach the network. Held to the sandbox ceiling on top of this.",
+          "Memory, CPU and process caps for one phase, plus whether it may reach the network. Held to the machine ceiling on top of this, and applied only as far as the installed machine can apply them.",
       },
     ],
   },
