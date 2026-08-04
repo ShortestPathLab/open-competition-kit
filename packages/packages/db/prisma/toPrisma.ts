@@ -1,6 +1,6 @@
 import { write } from "bun";
 import { Match as M, Schema as S } from "effect";
-import { capitalize, entries } from "lodash-es";
+import { capitalize } from "es-toolkit";
 import { hook } from "@open-competition-kit/sdk";
 
 const { schemas, Id, Number, Boolean, Date, String, Int, Json, CreatedAt } =
@@ -12,7 +12,7 @@ const is =
     a === b;
 
 function one(name: string, s: (typeof schemas)[keyof typeof schemas]) {
-  const lines = entries(s.fields)
+  const lines = Object.entries(s.fields)
     .map(([k, v]) => {
       const type = M.value(v as S.SchemaClass<string, string, never>).pipe(
         M.when(is(Id), () => "String @id @default(cuid())"),
@@ -41,13 +41,13 @@ export async function toPrisma(db: Config) {
   const a1 = [
     clause(
       "datasource db",
-      entries(db.datasource).map(([k, v]) => `${k} = "${v}"`),
+      Object.entries(db.datasource).map(([k, v]) => `${k} = "${v}"`),
     ),
     clause("generator client", [
       'provider = "prisma-client"',
       `output = "${import.meta.dir}/generated"`,
     ]),
-    ...entries(schemas).map(([k, v]) => one(k, v)),
+    ...Object.entries(schemas).map(([k, v]) => one(k, v)),
   ];
   await write(`${import.meta.dir}/schemas/schema.prisma`, a1.join("\n\n"));
 }

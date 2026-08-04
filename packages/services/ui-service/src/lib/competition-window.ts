@@ -1,18 +1,15 @@
 /**
  * A competition's schedule, derived from what its tracks report.
  *
- * Nothing in the config gives a competition a date. Only a track takes
- * submissions, so a competition-level deadline has to be read off the tracks
- * underneath it, and the tracks themselves get their dates from whichever
- * package gates them.
- *
- * That last part is why none of this mentions a window any more. A report has a
- * state, a label and possibly an instant; the same code builds a countdown out of
- * closing dates, quota resets, or whatever a package installed next year decides
- * to report. Free of heavy imports for the same reason it always was: this runs
- * in the browser on every tick.
+ * Nothing in the config dates a competition. Only a track takes submissions, so
+ * competition-level dates are read off the tracks below it, and those tracks get
+ * their dates from whichever package gates them. Working over gate reports rather
+ * than windows means the same code builds a countdown out of closing dates, quota
+ * resets, or whatever a package installed next year reports. Kept free of heavy
+ * imports because this runs in the browser on every tick.
  */
 import { worstOf, type GateReport } from "@open-competition-kit/sdk/gate";
+import { groupBy, maxBy, minBy, sortBy } from "es-toolkit";
 
 export { describeDuration, splitRemaining, type Remaining } from "@open-competition-kit/sdk/instant";
 
@@ -26,23 +23,21 @@ export type TrackReports = {
 /**
  * How much a track is in the way, as one word.
  *
- * `closing` is the interesting one. It is not a state any rule has; it is what a
- * gate reports when it wants attention without refusing yet, and it exists
- * because a track with two days left and a track with two months left are
- * otherwise the same colour.
+ * `closing` is not a state any rule has. It is what a gate reports when it wants
+ * attention without refusing yet, so that a track with two days left and one with
+ * two months left are not the same colour.
  *
- * A blocked track splits by whether anything it reported is still ahead. One with
- * a future instant is waiting on something (it opens on Monday, the quota frees
- * at 11:40); one without is finished. That is the same distinction the old code
- * drew between `upcoming` and `closed`, reached without knowing what either word
- * meant.
+ * A blocked track splits on whether anything it reported is still ahead. A future
+ * instant means it is waiting on something (it opens on Monday, the quota frees at
+ * 11:40); no instant means it is finished.
  */
 export type Phase = "open" | "closing" | "upcoming" | "closed";
 
 const futureInstants = (reports: readonly GateReport[], now: number) =>
-  reports
-    .filter((report) => report.at && Date.parse(report.at) > now)
-    .sort((a, b) => Date.parse(a.at!) - Date.parse(b.at!));
+  sortBy(
+    reports.filter((report) => report.at && Date.parse(report.at) > now),
+    [(report) => Date.parse(report.at!)],
+  );
 
 export function phaseOf(reports: readonly GateReport[], now: number): Phase {
   switch (worstOf(reports)) {
@@ -72,12 +67,9 @@ export type Milestone = {
 
 export type CompetitionSchedule = {
   /**
-   * The competition as one state.
-   *
-   * `open` when any track is, because a competition with one track still
-   * accepting work has not closed. `upcoming` when every track is blocked and
-   * something is still ahead, `closed` when every track is blocked and nothing
-   * is.
+   * The competition as one state. `open` when any track is, since a competition
+   * with one track still accepting work has not closed. `upcoming` when every
+   * track is blocked and something is still ahead, `closed` when nothing is.
    */
   status: "open" | "upcoming" | "closed";
   /** What a countdown should run down to. Absent once nothing is left ahead. */
@@ -95,24 +87,13 @@ const datedReports = (tracks: readonly TrackReports[]): Dated[] =>
   );
 
 /**
- * What makes two dated reports the same event.
- *
- * The gate they came from, what happens at the instant, and the instant itself.
- * Two tracks closing at the same moment is one date; a track closing exactly
- * when another opens is two, and the gate id alone cannot tell those apart since
- * both are the same gate speaking.
+ * What makes two dated reports the same event: the gate they came from, what
+ * happens at the instant, and the instant itself. Two tracks closing at the same
+ * moment is one date. A track closing exactly when another opens is two, and the
+ * gate id alone cannot tell those apart since both are the same gate speaking.
  */
 const eventKey = (entry: Dated) =>
   `${entry.report.gate}:${entry.report.atLabel ?? ""}:${entry.at}`;
-
-const byEvent = (dated: readonly Dated[]) => {
-  const groups = new Map<string, Dated[]>();
-  for (const entry of dated) {
-    const key = eventKey(entry);
-    groups.set(key, [...(groups.get(key) ?? []), entry]);
-  }
-  return groups;
-};
 
 const SEVERITY = { ok: 0, pending: 1, blocked: 2 } as const;
 
@@ -127,8 +108,8 @@ export function competitionSchedule(
   const dated = datedReports(tracks);
   if (!dated.length) return undefined;
 
-  const milestones = [...byEvent(dated)]
-    .map(([key, sharing]) => {
+  const milestones = sortBy(
+    Object.entries(groupBy(dated, eventKey)).map(([key, sharing]) => {
       const first = sharing[0]!;
       const name = first.report.atLabel ?? first.report.label;
 
@@ -138,7 +119,7 @@ export function competitionSchedule(
       const label =
         sharing.length === tracks.length ? name
         : sharing.length === 1 ?
-          `${sharing[0]!.track.name} ${name.toLowerCase()}`
+          `${first.track.name} ${name.toLowerCase()}`
         : `${sharing.length} tracks ${name.toLowerCase()}`;
 
       return {
@@ -146,16 +127,12 @@ export function competitionSchedule(
         label,
         at: first.at,
         past: now >= Date.parse(first.at),
-        state: sharing.reduce<GateReport["state"]>(
-          (worst, entry) =>
-            SEVERITY[entry.report.state] > SEVERITY[worst] ?
-              entry.report.state
-            : worst,
-          "ok",
-        ),
+        state: maxBy(sharing, (entry) => SEVERITY[entry.report.state])!.report
+          .state,
       };
-    })
-    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+    }),
+    [(milestone) => Date.parse(milestone.at)],
+  );
 
   return {
     status: statusOf(tracks, now),
@@ -165,12 +142,11 @@ export function competitionSchedule(
 }
 
 /**
- * One track open keeps the competition open.
+ * One open track keeps the competition open.
  *
- * The old rule said a competition-level bound counts only when every track sets
- * one, because a track that never closes keeps the competition from closing.
- * This is that rule restated over states rather than over dates, which makes it
- * true of any gate rather than only of a window.
+ * A competition-level bound counts only when every track sets one, because a
+ * track that never closes keeps the competition from closing. Stated over states
+ * rather than dates, which makes it true of any gate rather than only of a window.
  */
 function statusOf(
   tracks: readonly TrackReports[],
@@ -182,30 +158,22 @@ function statusOf(
 }
 
 /**
- * The next instant worth counting down to.
- *
- * The soonest one still ahead, not the last: with one track closing on Friday
- * and another a month later, Friday is the number a competitor needs. It is named
- * without qualification only when every track shares it, since "Closes in" over a
- * date that belongs to one track out of four is a lie the milestone list below
- * then contradicts.
+ * The next instant worth counting down to: the soonest still ahead, not the last.
+ * With one track closing on Friday and another a month later, Friday is the number
+ * a competitor needs. Named without qualification only when every track shares it,
+ * since "Closes in" over a date belonging to one track out of four is a lie the
+ * milestone list then contradicts.
  */
 function countdownTo(
   tracks: readonly TrackReports[],
   dated: readonly Dated[],
   now: number,
 ): CompetitionSchedule["countdown"] {
-  const ahead = dated
-    .filter((entry) => Date.parse(entry.at) > now)
-    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
-
-  const next = ahead[0];
+  const ahead = dated.filter((entry) => Date.parse(entry.at) > now);
+  const next = minBy(ahead, (entry) => Date.parse(entry.at));
   if (!next) return undefined;
 
-  const sharing = ahead.filter(
-    (entry) => eventKey(entry) === eventKey(next),
-  );
-
+  const sharing = ahead.filter((entry) => eventKey(entry) === eventKey(next));
   const name = next.report.atLabel ?? next.report.label;
   const label =
     sharing.length === tracks.length ? `${name} in` : "Next deadline in";

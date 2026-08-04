@@ -7,16 +7,16 @@ import sdk, {
   users,
   type Leaderboard,
 } from "@open-competition-kit/sdk";
+import { groupBy as groupRows } from "es-toolkit";
 import { leaderboardSource, type LeaderboardSource } from "./config";
 
 type Value = string | number | boolean | null;
 export type Row = Record<string, Value>;
 
 /**
- * A job only contributes to a leaderboard once it has come to rest. Runners are
- * free to invent their own vocabulary for success — `standard` says "completed",
- * the FIT5047 runner says "done" — so rather than maintain a list of the words
- * that mean success, we exclude the ones that mean "not yet" or "never".
+ * A job counts once it has come to rest. Runners invent their own vocabulary for
+ * success (`standard` says "completed", the FIT5047 runner says "done"), so we
+ * exclude the words meaning "not yet" or "never" instead of listing the rest.
  */
 const UNFINISHED = new Set(["pending", "running", "queued", "prepared"]);
 const FAILED = new Set(["failed", "error", "cancelled", "timeout"]);
@@ -35,15 +35,14 @@ const toIso = (v: unknown) =>
 /**
  * Turn one job output into zero or more leaderboard rows.
  *
- * Runners store outputs with whatever shape suits them, so we accept the three
- * that occur in practice: a scalar, an object of scalars, or an array of either
- * (a runner that evaluates a submission against N test cases emits N rows).
- * Nested values are stringified rather than dropped, so nothing silently
- * disappears from a board.
+ * Runners store outputs in whatever shape suits them, so we accept the three that
+ * occur in practice: a scalar, an object of scalars, or an array of either (a
+ * runner evaluating against N test cases emits N rows). Nested values are
+ * stringified rather than dropped, so nothing vanishes from a board unnoticed.
  */
 export function toRows(value: unknown): Row[] {
-  // Outputs are often stored as a JSON string (`standard` writes them with
-  // JSON.stringify), so unwrap one layer before deciding what we have.
+  // Often stored as a JSON string (`standard` writes them with JSON.stringify),
+  // so unwrap one layer before deciding what we have.
   if (typeof value === "string") {
     try {
       return toRows(JSON.parse(value) as unknown);
@@ -134,9 +133,9 @@ async function collect(competition: string, from: LeaderboardSource) {
     }
   }
 
-  // Finished jobs and still nothing to show means `output:` names a reference
-  // no runner on these tracks writes. Every other layer treats an empty board
-  // as a legitimate answer, so this is the only place that can tell anyone.
+  // Finished jobs but nothing to show means `output:` names a reference no runner
+  // on these tracks writes. Every other layer treats an empty board as a valid
+  // answer, so this is the only place that can say otherwise.
   if (finished && !rows.length) {
     console.warn(
       `[standard] ${finished} finished job(s) on ${trackIds.join(", ")} but ` +
@@ -151,15 +150,10 @@ async function collect(competition: string, from: LeaderboardSource) {
 export function select(rows: Row[], from: LeaderboardSource) {
   if ((from.groupBy ?? "user") === "none") return rows;
 
-  const groups = new Map<string, Row[]>();
-  for (const row of rows) {
-    const key = groupKeyOf(row, from.groupBy) ?? "";
-    groups.set(key, [...(groups.get(key) ?? []), row]);
-  }
-
+  const groups = groupRows(rows, (row) => groupKeyOf(row, from.groupBy) ?? "");
   const descending = (from.rank?.order ?? "desc") === "desc";
 
-  return [...groups.values()].map((group) => {
+  return Object.values(groups).map((group) => {
     if (group.length === 1) return group[0]!;
 
     if ((from.select ?? "best") === "latest") {
@@ -197,8 +191,8 @@ export function rank(
 
   const limited = from.limit && from.limit > 0 ? rows.slice(0, from.limit) : rows;
 
-  // A `rank` column is the one thing a row can't compute for itself — it only
-  // exists relative to the others. Fill it in unless the runner already did.
+  // A `rank` column is the one thing a row cannot compute for itself, since it
+  // only exists relative to the others. Fill it in unless the runner already did.
   const wantsRank = shape.some((s) => s.id === "rank");
   return limited.map((row, i) =>
     wantsRank && row.rank === undefined ? { ...row, rank: i + 1 } : row,
@@ -211,10 +205,9 @@ export function rank(
  * static and computed boards can coexist.
  */
 export async function load(def: Leaderboard, competition: string) {
-  // `from` is this package's field rather than core's, so it is read back with
-  // the schema that declared it instead of off a core type that no longer
-  // mentions it. A board configured for some other loader simply has no `from`
-  // here, and falls through to its literal rows.
+  // `from` is this package's field, not core's, so it is read back through the
+  // schema that declared it. A board configured for some other loader has no
+  // `from` here and falls through to its literal rows.
   const parsed = leaderboardSource.optional().safeParse(
     (def as { from?: unknown }).from,
   );

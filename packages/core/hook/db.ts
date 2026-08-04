@@ -1,5 +1,5 @@
 import { Effect as E, Schema as S } from "effect";
-import { mapValues } from "lodash-es";
+import { mapValues } from "es-toolkit";
 import { hook } from "./hook";
 import { _ } from "../utils/flow";
 import { type Namespace } from "../namespace";

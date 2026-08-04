@@ -1,6 +1,7 @@
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import sdk, { enrolments, unsafe, type $props } from "@open-competition-kit/sdk";
+import { uniq } from "es-toolkit";
 import { z } from "zod";
 import { getAuthSession } from "./auth-server";
 import { resolveId } from "./configure-user";
@@ -35,20 +36,18 @@ const participantIdOf = (row: Record<string, Cell>): string | undefined => {
 /**
  * What to call each competitor, instead of what the kit files them under.
  *
- * `resolveId` keys a user by their email address, so a board grouped by user
- * arrives holding a column of them, and a public leaderboard is the last place
- * an email belongs. `users` carries the name the entrant signed up with.
- *
- * A user with no name keeps their id, which is what the row already said. That
- * only happens for someone who has never signed in through the app that upserts
- * the name, so it is rare rather than routine.
+ * `resolveId` keys a user by email, so a board grouped by user arrives holding a
+ * column of them, and a public leaderboard is the last place an email belongs.
+ * `users` carries the name the entrant signed up with. A user with no name keeps
+ * their id, which only happens for someone who never signed in through the app
+ * that upserts the name.
  */
 async function participantNames(
   rows: Record<string, Cell>[],
 ): Promise<Map<string, string>> {
-  // Asked for by id rather than by listing everyone: a board is capped at its
-  // own `limit`, where the user table grows with the whole cohort.
-  const ids = [...new Set(rows.flatMap((row) => participantIdOf(row) ?? []))];
+  // By id rather than by listing everyone: a board is capped at its own `limit`,
+  // where the user table grows with the whole cohort.
+  const ids = uniq(rows.flatMap((row) => participantIdOf(row) ?? []));
 
   const named = await Promise.all(
     ids.map(async (id) => {

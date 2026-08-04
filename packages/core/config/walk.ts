@@ -8,7 +8,7 @@
  * mapping would drift, and the second one to drift would be the one that decides
  * whether an organiser's config boots.
  */
-import { uniq } from "lodash-es";
+import { uniq } from "es-toolkit";
 import type { NodeKind } from "./extension";
 
 export type Node = Record<string, unknown>;

@@ -9,7 +9,7 @@ import {
   Schema as S,
 } from "effect";
 import { load as _load, YAMLException } from "js-yaml";
-import { mapValues, uniq } from "lodash-es";
+import { mapValues, uniq } from "es-toolkit";
 import { createPackageResolver } from "../resolve";
 import { describeConfig } from "./describe";
 import { migrate } from "./migrate";
@@ -35,16 +35,15 @@ export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
     onSome: (t) => uniq([...w, ...t.with]),
   });
   return M.value(t).pipe(
-    // Array case
     M.when(M.instanceOf(Array), (t) =>
       t.map((v) => propagateExtendable(v, ctx)),
     ),
-    // Object case
     M.when(M.instanceOf(Object), (t) => ({
-      ...mapValues(t, (v: string) => propagateExtendable(v, ctx)),
+      ...mapValues(t as Record<string, unknown>, (v) =>
+        propagateExtendable(v, ctx),
+      ),
       with: ctx,
     })),
-    // Primitive case
     M.orElse(() => t),
   ) as T;
 };
