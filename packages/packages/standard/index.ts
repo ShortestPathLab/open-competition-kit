@@ -124,6 +124,10 @@ export default {
         // is whatever runner package is installed. Ours takes a `body:`, so ours
         // is what reads it back out.
         const { body } = runnerBody.parse(competition.runner);
+        // Evaluating the configured body is what this runner is for: the
+        // competition author supplies the script and we run it. Not user input
+        // from a submission.
+        // oxlint-disable-next-line no-eval
         const result = eval(body ?? "");
         const unzipped = await Zip.loadAsync(archive, {
           base64: typeof archive === "string",

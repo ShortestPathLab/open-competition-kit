@@ -22,6 +22,6 @@ function RouteComponent() {
       }
     };
     g();
-  }, [data, method]);
+  }, [data, method, navigate]);
   return <Loader />;
 }

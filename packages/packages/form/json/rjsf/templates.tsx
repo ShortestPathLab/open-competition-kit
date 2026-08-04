@@ -1,7 +1,6 @@
 import React from "react";
 import { RichDescription } from "@rjsf/core";
 import {
-  ariaDescribedByIds,
   buttonId,
   canExpand,
   descriptionId,

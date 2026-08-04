@@ -66,6 +66,9 @@ const upsert = <TCreate, TUpdate extends { id: string }, TFull, E, C>(
 export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitCollections>()(
   "open-competition-kit/OpenCompetitionKitCollections",
   {
+    // Building this service needs no effects of its own, so the generator has
+    // nothing to yield. E.gen is still the shape Service expects.
+    // oxlint-disable-next-line require-yield
     effect: E.gen(function* () {
       return (...a: Parameters<OpenCompetitionKitHooks["get"]>) =>
         E.gen(function* () {

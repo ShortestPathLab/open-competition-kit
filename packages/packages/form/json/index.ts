@@ -1,8 +1,4 @@
-import {
-  lazyComponent,
-  type Package,
-  type PropTypes,
-} from "@open-competition-kit/sdk";
+import { lazyComponent, type Package } from "@open-competition-kit/sdk";
 import form from "./form";
 
 export default {
