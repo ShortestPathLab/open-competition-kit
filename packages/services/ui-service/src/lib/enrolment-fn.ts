@@ -1,6 +1,6 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import { listUserEnrolments } from "./competition-data";
+import { ensureTrackAvailable, listUserEnrolments } from "./competition-data";
 import { z } from "zod";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { authMiddleware } from "./auth-server";
@@ -40,3 +40,16 @@ export const getEnrollmentStatus = createServerFn({ method: "GET" })
   .handler(({ data, context: { session } }) =>
     unsafe(sdk.enrolments.isEnrolled(resolveId(session.user), data.trackId)),
   );
+
+/**
+ * Behind `ensureTrackAvailable` because enrolling does not go through any of the
+ * read paths: it takes a track id and acts on it, so a track id leaked while a
+ * competition was still a draft would otherwise still accept entrants.
+ */
+export const enrolInTrack = createServerFn({ method: "POST" })
+  .inputValidator(enrolmentInput)
+  .middleware([authMiddleware])
+  .handler(async ({ data, context: { session } }) => {
+    await ensureTrackAvailable(data.trackId);
+    return unsafe(sdk.enrolments.enrol(resolveId(session.user), data.trackId));
+  });
