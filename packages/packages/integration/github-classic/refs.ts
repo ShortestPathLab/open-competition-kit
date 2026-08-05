@@ -13,10 +13,7 @@ const githubRefSelection = z.object({
 
 export type GithubRefSelection = z.infer<typeof githubRefSelection>;
 
-const selectedRefValue = z.union([
-  z.string(),
-  z.object({ [GITHUB_REF_FIELD_KEY]: z.string() }),
-]);
+const selectedRefValue = z.union([z.string(), z.object({ [GITHUB_REF_FIELD_KEY]: z.string() })]);
 
 /** Every shape a submission body has used to carry the chosen ref. */
 const selectedRefBody = z
@@ -28,14 +25,10 @@ const selectedRefBody = z
   .transform((body) => {
     if (typeof body === "string") return body;
     if (GITHUB_REF_FIELD_KEY in body) return body[GITHUB_REF_FIELD_KEY];
-    return typeof body.value === "string" ?
-        body.value
-      : body.value[GITHUB_REF_FIELD_KEY];
+    return typeof body.value === "string" ? body.value : body.value[GITHUB_REF_FIELD_KEY];
   });
 
-export async function listLatestRefsForUser(
-  user: string,
-): Promise<GithubRefOption[]> {
+export async function listLatestRefsForUser(user: string): Promise<GithubRefOption[]> {
   const { owner, repo } = await repositoryFor(user);
   const branches = await branchesFor(owner, repo);
 
@@ -82,9 +75,7 @@ export async function resolveSelectedRef(
 export async function refOfSubmission(id: string) {
   const submission = await unsafe(kit.submissions.get(id));
   const { owner, repo } = await repositoryFor(submission.user);
-  const selected = await resolveSelectedRef(submission.body, owner, repo).catch(
-    () => undefined,
-  );
+  const selected = await resolveSelectedRef(submission.body, owner, repo).catch(() => undefined);
   if (!selected) return undefined;
 
   return {

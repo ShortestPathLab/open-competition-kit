@@ -1,7 +1,4 @@
-import {
-  EnrolmentBrowser,
-  type EnrolmentResult,
-} from "@/components/enrolment-browser";
+import { EnrolmentBrowser, type EnrolmentResult } from "@/components/enrolment-browser";
 import { MePageHeader } from "@/components/me-page-header";
 import { HeaderStats, PageBody } from "@/components/page-header-band";
 import { Stat } from "@/components/stat-strip";
@@ -13,10 +10,7 @@ import { useMemo } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useUserEnrolments } from "@/lib/enrolment-fn";
 import { useGateReports } from "@/lib/gate-fn";
-import {
-  useUserSubmissionOutcomes,
-  type SubmissionOutcome,
-} from "@/lib/submission-fn";
+import { useUserSubmissionOutcomes, type SubmissionOutcome } from "@/lib/submission-fn";
 import { readResult } from "@/lib/submission-readout";
 
 export const Route = createFileRoute("/me/enrolments")({
@@ -53,9 +47,7 @@ function latestResult(
 
 function MeEnrolmentsPage() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
-  const { data: enrolments = [], isLoading } = useUserEnrolments(
-    session?.user?.id,
-  );
+  const { data: enrolments = [], isLoading } = useUserEnrolments(session?.user?.id);
   // A second query rather than a heavier first one: the list paints from the
   // enrolments, and the result column fills in when this lands.
   const { data: outcomes } = useUserSubmissionOutcomes(session?.user?.id);
@@ -68,19 +60,13 @@ function MeEnrolmentsPage() {
 
   const stats = useMemo(() => {
     const now = Date.now();
-    const phases = enrolments.map((enrolment) =>
-      phaseOf(reports?.[enrolment.track.id] ?? [], now),
-    );
+    const phases = enrolments.map((enrolment) => phaseOf(reports?.[enrolment.track.id] ?? [], now));
 
     return {
       tracks: enrolments.length,
-      open: phases.filter((phase) => phase === "open" || phase === "closing")
-        .length,
+      open: phases.filter((phase) => phase === "open" || phase === "closing").length,
       closing: phases.filter((phase) => phase === "closing").length,
-      submissions: enrolments.reduce(
-        (total, enrolment) => total + enrolment.submissions.length,
-        0,
-      ),
+      submissions: enrolments.reduce((total, enrolment) => total + enrolment.submissions.length, 0),
     };
   }, [enrolments, reports]);
 
@@ -101,31 +87,23 @@ function MeEnrolmentsPage() {
         title="Enrolments"
         description="Tracks you are participating in, grouped by the competition they belong to."
         actions={
-          <Button
-            size="lg"
-            className="h-10 px-5"
-            render={<Link to="/competitions" />}
-          >
+          <Button size="lg" className="h-10 px-5" render={<Link to="/competitions" />}>
             Browse competitions
             <ArrowRight />
           </Button>
         }
         meta={
-          session?.user && enrolments.length > 0 ?
+          session?.user && enrolments.length > 0 ? (
             <HeaderStats>
               <Stat label="Enrolled tracks" value={stats.tracks} />
               <Stat label="Open now" value={stats.open} />
-              <Stat
-                label="Closing soon"
-                value={stats.closing}
-                emphasis={stats.closing > 0}
-              />
+              <Stat label="Closing soon" value={stats.closing} emphasis={stats.closing > 0} />
               <Stat label="Submissions" value={stats.submissions} />
               {/* TODO(standings): the mockup also shows a best rank here. It
                   needs a per-user read across every leaderboard the reader
                   appears on, which no server function does yet. */}
             </HeaderStats>
-          : undefined
+          ) : undefined
         }
         tabs
       />

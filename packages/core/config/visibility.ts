@@ -15,8 +15,7 @@ export type HasVisibility = { readonly visibility?: string | undefined };
  * Absence means published. Every competition configured before this field
  * existed has no `visibility`, and none of them should disappear on upgrade.
  */
-export const isDraft = (competition: HasVisibility) =>
-  competition.visibility === "draft";
+export const isDraft = (competition: HasVisibility) => competition.visibility === "draft";
 
 /**
  * A draft belongs to its organisers.

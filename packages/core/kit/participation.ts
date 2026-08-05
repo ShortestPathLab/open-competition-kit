@@ -8,10 +8,7 @@ import { SubmissionRefusedError } from "./errors";
 import type { Runtime } from "./runtime";
 
 /** What competitors do: enrol, submit, and have their work run. */
-export const createParticipation = (
-  { hooks, instance }: Runtime,
-  { tracks, users }: Entities,
-) => {
+export const createParticipation = ({ hooks, instance }: Runtime, { tracks, users }: Entities) => {
   const namespaced = createNamespacedContext(instance);
 
   const enrolments = {
@@ -60,10 +57,9 @@ export const createParticipation = (
      */
     gate: (user: string, track: string) =>
       E.gen(function* () {
-        const refusals = yield* hooks.do(
-          (h) => h.submissions.gate({ user, track, refusals: [] }),
-          { competitions: { tracks: track } },
-        );
+        const refusals = yield* hooks.do((h) => h.submissions.gate({ user, track, refusals: [] }), {
+          competitions: { tracks: track },
+        });
         return verdictOf(refusals ?? []);
       }),
     /**
@@ -74,10 +70,9 @@ export const createParticipation = (
      */
     status: (track: string, user?: string) =>
       E.gen(function* () {
-        const reports = yield* hooks.do(
-          (h) => h.submissions.status({ track, user, reports: [] }),
-          { competitions: { tracks: track } },
-        );
+        const reports = yield* hooks.do((h) => h.submissions.status({ track, user, reports: [] }), {
+          competitions: { tracks: track },
+        });
         return reports ?? [];
       }),
     submit: (user: string, body: string, track: string) =>
@@ -91,10 +86,9 @@ export const createParticipation = (
             refusals: verdict.refusals,
           });
         }
-        return yield* hooks.do(
-          (h) => h.submissions.submit({ user, track, body }),
-          { competitions: { tracks: track } },
-        );
+        return yield* hooks.do((h) => h.submissions.submit({ user, track, body }), {
+          competitions: { tracks: track },
+        });
       }),
   };
 
@@ -117,11 +111,7 @@ export const createParticipation = (
       E.gen(function* () {
         const c = yield* jobs
           .get(job)
-          .pipe(
-            E.andThen(jobs.owner),
-            E.andThen(submissions.owner),
-            E.andThen(tracks.owner),
-          );
+          .pipe(E.andThen(jobs.owner), E.andThen(submissions.owner), E.andThen(tracks.owner));
         yield* hooks.do((h) => h.runner.setup({ job }), {
           competitions: c.id,
         });
@@ -138,23 +128,16 @@ export const createParticipation = (
       instance.context,
       (ctx) =>
         M.value(ctx).pipe(
-          M.when({ namespace: "open-competition-kit/namespace/job" }, (c) =>
-            jobs.get(c.owner),
-          ),
-          M.when({ namespace: "open-competition-kit/namespace/user" }, (c) =>
+          M.when({ namespace: "open-competition-kit/namespace/job" }, (c) => jobs.get(c.owner)),
+          M.when({ namespace: "open-competition-kit/namespace/user" }, (c) => users.get(c.owner)),
+          M.when({ namespace: "open-competition-kit/namespace/user/secret" }, (c) =>
             users.get(c.owner),
           ),
-          M.when(
-            { namespace: "open-competition-kit/namespace/user/secret" },
-            (c) => users.get(c.owner),
+          M.when({ namespace: "open-competition-kit/namespace/job/output" }, (c) =>
+            jobs.get(c.owner),
           ),
-          M.when(
-            { namespace: "open-competition-kit/namespace/job/output" },
-            (c) => jobs.get(c.owner),
-          ),
-          M.when(
-            { namespace: "open-competition-kit/namespace/submission" },
-            (c) => submissions.get(c.owner),
+          M.when({ namespace: "open-competition-kit/namespace/submission" }, (c) =>
+            submissions.get(c.owner),
           ),
           M.exhaustive,
         ),

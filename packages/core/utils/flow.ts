@@ -1,9 +1,5 @@
 export function chain<T, R1>(t: T, f1: (t: T) => R1): R1;
-export function chain<T, R1, R2>(
-  t: T,
-  f1: (t: T) => R1,
-  f2: (r1: R1) => R2,
-): R2;
+export function chain<T, R1, R2>(t: T, f1: (t: T) => R1, f2: (r1: R1) => R2): R2;
 export function chain<T, R1, R2, R3>(
   t: T,
   f1: (t: T) => R1,

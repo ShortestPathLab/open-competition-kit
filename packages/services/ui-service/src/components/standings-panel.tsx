@@ -11,10 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Trophy } from "lucide-react";
-import type {
-  CompetitionStandings,
-  StandingsEntry,
-} from "@/lib/leaderboard-fn";
+import type { CompetitionStandings, StandingsEntry } from "@/lib/leaderboard-fn";
 
 /**
  * A score, shortened enough to sit in a rail without lying about itself.
@@ -30,8 +27,8 @@ function formatScore(score: StandingsEntry["score"]) {
   const numeric = typeof score === "number" ? score : Number(score);
   if (Number.isNaN(numeric)) return String(score);
 
-  return Number.isInteger(numeric) ?
-      numeric.toLocaleString()
+  return Number.isInteger(numeric)
+    ? numeric.toLocaleString()
     : numeric.toLocaleString(undefined, { maximumFractionDigits: 4 });
 }
 
@@ -54,12 +51,7 @@ function StandingsRow({ entry }: { entry: StandingsEntry }) {
       >
         {entry.rank}
       </span>
-      <span
-        className={cn(
-          "truncate text-sm font-medium",
-          entry.isYou && "text-primary",
-        )}
-      >
+      <span className={cn("truncate text-sm font-medium", entry.isYou && "text-primary")}>
         {entry.isYou ? `You · ${entry.competitor}` : entry.competitor}
       </span>
       <span className="font-mono text-xs font-semibold tabular-nums">
@@ -108,14 +100,12 @@ export function StandingsPanel({
     <Panel>
       <PanelHeader>
         <PanelTitle>Standings</PanelTitle>
-        {standings.caption ?
-          <span className="text-xs text-muted-foreground">
-            {standings.caption}
-          </span>
-        : null}
+        {standings.caption ? (
+          <span className="text-xs text-muted-foreground">{standings.caption}</span>
+        ) : null}
       </PanelHeader>
 
-      {standings.top.length ?
+      {standings.top.length ? (
         <>
           <div className="p-2">
             <div className="divide-y divide-border">
@@ -123,14 +113,14 @@ export function StandingsPanel({
                 <StandingsRow key={entry.rank} entry={entry} />
               ))}
             </div>
-            {standings.you ?
+            {standings.you ? (
               // Spliced in below the top rows rather than dropped, so a
               // competitor in 40th still sees where they are without opening
               // the full board.
               <div className="mt-1 border-t border-border pt-1">
                 <StandingsRow entry={standings.you} />
               </div>
-            : null}
+            ) : null}
           </div>
           <div className="border-t border-border px-4 py-2.5">
             <Button
@@ -145,14 +135,15 @@ export function StandingsPanel({
                 />
               }
             >
-              {standings.total > standings.top.length ?
-                `All ${standings.total} competitors`
-              : "Full leaderboard"}
+              {standings.total > standings.top.length
+                ? `All ${standings.total} competitors`
+                : "Full leaderboard"}
               <ArrowRight />
             </Button>
           </div>
         </>
-      : <PanelBody>
+      ) : (
+        <PanelBody>
           <Empty className="border border-dashed border-border">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -160,13 +151,12 @@ export function StandingsPanel({
               </EmptyMedia>
               <EmptyTitle>No scores yet</EmptyTitle>
               <EmptyDescription>
-                {standings.leaderboardName} fills in as submissions are
-                evaluated.
+                {standings.leaderboardName} fills in as submissions are evaluated.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
         </PanelBody>
-      }
+      )}
     </Panel>
   );
 }

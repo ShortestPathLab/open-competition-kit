@@ -62,9 +62,7 @@ function lightnessOf(pixels: Uint8ClampedArray): number {
   }
 
   const luminance = counted ? total / counted : 0;
-  return luminance <= 0.008856 ?
-      903.3 * luminance
-    : 116 * Math.cbrt(luminance) - 16;
+  return luminance <= 0.008856 ? 903.3 * luminance : 116 * Math.cbrt(luminance) - 16;
 }
 
 /** Whether the bytes are somebody else's to hand over. */
@@ -154,9 +152,7 @@ async function sampleBanner(src: string): Promise<SampledBanner> {
 function useBannerCompetition(): string | undefined {
   return useRouterState({
     select: (state) => {
-      const match = state.matches.find(
-        (match) => match.routeId === "/competitions/$id",
-      );
+      const match = state.matches.find((match) => match.routeId === "/competitions/$id");
       return (match?.params as { id?: string } | undefined)?.id;
     },
   });
@@ -219,8 +215,8 @@ export function useHasBanner(): boolean {
  * value; it rides on a `data-banner-tone` attribute the stylesheet matches.
  */
 export function bannerVars(banner: SampledBanner | undefined) {
-  return banner ?
-      ({
+  return banner
+    ? ({
         "--banner-image": `url("${banner.src}")`,
         "--banner-ratio": String(banner.ratio),
       } as CSSProperties)

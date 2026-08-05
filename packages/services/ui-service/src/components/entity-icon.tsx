@@ -36,24 +36,17 @@ interface EntityIconProps {
 function EntityIcon({ src, seed, fit = "cover", className }: EntityIconProps) {
   return (
     <span className={cn("block shrink-0 overflow-hidden bg-muted", className)}>
-      {src ?
+      {src ? (
         // No alt text. Every one of these sits beside the name it stands for,
         // so a screen reader that read both would say everything twice.
         <img
           src={src}
           alt=""
-          className={cn(
-            "h-full w-full",
-            fit === "cover" ? "object-cover" : "object-contain",
-          )}
+          className={cn("h-full w-full", fit === "cover" ? "object-cover" : "object-contain")}
         />
-      : <BoringAvatar
-          name={seed}
-          square
-          preserveAspectRatio="none"
-          className="h-full w-full"
-        />
-      }
+      ) : (
+        <BoringAvatar name={seed} square preserveAspectRatio="none" className="h-full w-full" />
+      )}
     </span>
   );
 }

@@ -8,13 +8,7 @@ import { formatBytes, type readBody } from "@/lib/submission-readout";
 import { RawDisclosure } from "./parts";
 
 /** The entrant's own answers, as they were sent. */
-export function SubmittedPanel({
-  body,
-  raw,
-}: {
-  body: ReturnType<typeof readBody>;
-  raw: unknown;
-}) {
+export function SubmittedPanel({ body, raw }: { body: ReturnType<typeof readBody>; raw: unknown }) {
   return (
     <Panel>
       <PanelHeader>
@@ -25,20 +19,18 @@ export function SubmittedPanel({
           <div key={field.key} className="min-w-0">
             {/* A body that is a single unnamed answer has nothing to put here,
                 and the panel's own heading already names it. */}
-            {field.label ?
+            {field.label ? (
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                 {field.label}
               </p>
-            : null}
-            {field.file ?
+            ) : null}
+            {field.file ? (
               <div className="mt-1.5 flex items-center gap-3 rounded-lg border border-border bg-muted px-3 py-2.5">
                 <span className="grid size-7 shrink-0 place-items-center rounded-md bg-brand-subtle font-mono text-[10px] font-bold text-primary">
                   FILE
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">
-                    {field.file.name}
-                  </span>
+                  <span className="block truncate text-sm font-medium">{field.file.name}</span>
                   <span className="block font-mono text-xs text-muted-foreground">
                     {formatBytes(field.file.size)}
                   </span>
@@ -49,11 +41,9 @@ export function SubmittedPanel({
                   <Download className="size-3.5" />
                 </Button>
               </div>
-            : <ValueTree
-                className={cn(field.label && "mt-1")}
-                value={field.value}
-              />
-            }
+            ) : (
+              <ValueTree className={cn(field.label && "mt-1")} value={field.value} />
+            )}
           </div>
         ))}
       </PanelBody>

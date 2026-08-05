@@ -9,10 +9,8 @@ const zip = async (paths: readonly string[]) => {
   return await JSZip.loadAsync(await archive.generateAsync({ type: "uint8array" }));
 };
 
-const paths = async (
-  entries: readonly string[],
-  allow?: readonly string[],
-) => Object.keys(await select(await zip(entries), { allow })).sort();
+const paths = async (entries: readonly string[], allow?: readonly string[]) =>
+  Object.keys(await select(await zip(entries), { allow })).sort();
 
 describe("select", () => {
   it("takes the whole archive when nothing is allowlisted", async () => {
@@ -45,10 +43,7 @@ describe("select", () => {
     // The combination that matters: a GitHub zip, and a pattern the organiser
     // wrote against the repository rather than against the download.
     expect(
-      await paths(
-        ["agent-main/problems/q1a.py", "agent-main/problems/q1b.py"],
-        ["problems/*.py"],
-      ),
+      await paths(["agent-main/problems/q1a.py", "agent-main/problems/q1b.py"], ["problems/*.py"]),
     ).toEqual(["problems/q1a.py", "problems/q1b.py"]);
   });
 
@@ -68,18 +63,15 @@ describe("select", () => {
 
   it("crosses directories only for a double star", async () => {
     expect(
-      await paths(
-        ["problems/q1a.py", "problems/vendor/nested.py"],
-        ["problems/**.py"],
-      ),
+      await paths(["problems/q1a.py", "problems/vendor/nested.py"], ["problems/**.py"]),
     ).toEqual(["problems/q1a.py", "problems/vendor/nested.py"]);
   });
 
   it("names every missing literal at once", async () => {
     // A competitor who forgot two files should learn that in one submission.
-    expect(
-      select(await zip(["a.py"]), { allow: ["a.py", "b.py", "c.py"] }),
-    ).rejects.toThrow(/b\.py, c\.py/);
+    expect(select(await zip(["a.py"]), { allow: ["a.py", "b.py", "c.py"] })).rejects.toThrow(
+      /b\.py, c\.py/,
+    );
   });
 
   it("does not mind a glob that matches nothing", async () => {
@@ -96,9 +88,7 @@ describe("select", () => {
     const archive = new JSZip();
     archive.folder("empty");
     archive.file("a.py", "x");
-    const loaded = await JSZip.loadAsync(
-      await archive.generateAsync({ type: "uint8array" }),
-    );
+    const loaded = await JSZip.loadAsync(await archive.generateAsync({ type: "uint8array" }));
 
     expect(Object.keys(await select(loaded))).toEqual(["a.py"]);
   });

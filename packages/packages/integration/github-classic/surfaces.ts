@@ -1,9 +1,5 @@
 import { kit, surface, surfaces, unsafe } from "@open-competition-kit/sdk";
-import {
-  GITHUB_REF_SELECT_KIND,
-  GITHUB_WEB,
-  REPOSITORY_CARD,
-} from "./constants";
+import { GITHUB_REF_SELECT_KIND, GITHUB_WEB, REPOSITORY_CARD } from "./constants";
 import {
   branchesFor,
   githubOrg,
@@ -33,9 +29,7 @@ async function hasEnrolment(user: string, competition: string) {
  */
 async function usesGithubRef(track: string) {
   const form = await unsafe(kit.forms.get(track));
-  return form.shape.some(
-    (field: { kind?: string }) => field.kind === GITHUB_REF_SELECT_KIND,
-  );
+  return form.shape.some((field: { kind?: string }) => field.kind === GITHUB_REF_SELECT_KIND);
 }
 
 /**
@@ -101,22 +95,22 @@ export const content = surfaces({
             state: "ok",
             detail: `${owner}/${repo}`,
           },
-          canPush ?
-            { label: "Push access active", state: "ok" as const }
-          : {
-              label: "Push access pending",
-              state: "pending" as const,
-              detail:
-                "GitHub emailed you an invitation to this repository. " +
-                "Until you accept it you cannot push, and the submission " +
-                "form will list no branches.",
-              action: {
-                label: "Accept the invitation",
-                href: `${GITHUB_WEB}/${owner}/${repo}/invitations`,
-                external: true,
-                icon: "github",
+          canPush
+            ? { label: "Push access active", state: "ok" as const }
+            : {
+                label: "Push access pending",
+                state: "pending" as const,
+                detail:
+                  "GitHub emailed you an invitation to this repository. " +
+                  "Until you accept it you cannot push, and the submission " +
+                  "form will list no branches.",
+                action: {
+                  label: "Accept the invitation",
+                  href: `${GITHUB_WEB}/${owner}/${repo}/invitations`,
+                  external: true,
+                  icon: "github",
+                },
               },
-            },
         ],
       },
     ];
@@ -135,9 +129,7 @@ export const content = surfaces({
         body:
           `You have push access to \`${owner}/${repo}\`. Commit your work ` +
           `to a branch, then choose that branch when you submit.`,
-        actions: [
-          { label: "Open repository", href: url, external: true, icon: "github" },
-        ],
+        actions: [{ label: "Open repository", href: url, external: true, icon: "github" }],
       },
       {
         kind: "code",
@@ -164,9 +156,7 @@ export const content = surfaces({
           `This track takes a branch of \`${owner}/${repo}\`. Push your work ` +
           `first: the form lists the branches that exist when it loads, and ` +
           `the runner takes an archive of whichever one you pick.`,
-        actions: [
-          { label: "Open repository", href: url, external: true, icon: "github" },
-        ],
+        actions: [{ label: "Open repository", href: url, external: true, icon: "github" }],
       },
     ];
   },

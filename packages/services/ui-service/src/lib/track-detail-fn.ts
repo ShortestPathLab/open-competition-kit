@@ -4,11 +4,7 @@ import { authClient } from "./auth-client";
 import { useCompetition } from "./competition-fn";
 import { getEnrollmentStatus } from "./enrolment-fn";
 import { useTrackReports } from "./gate-fn";
-import {
-  useTrack,
-  useTrackEnrolmentCount,
-  useTrackSubmissionCount,
-} from "./track-fn";
+import { useTrack, useTrackEnrolmentCount, useTrackSubmissionCount } from "./track-fn";
 
 /**
  * One track, the competition it belongs to, and where the reader stands in it.
@@ -27,10 +23,7 @@ export function useTrackDetail(competitionId: string, trackId: string) {
 
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
-    queryFn:
-      session?.user?.id
-        ? () => fetchEnrollmentStatus({ data: { trackId } })
-        : skipToken,
+    queryFn: session?.user?.id ? () => fetchEnrollmentStatus({ data: { trackId } }) : skipToken,
   });
 
   const { reports } = useTrackReports(trackId, session?.user?.id);

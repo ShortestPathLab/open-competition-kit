@@ -23,9 +23,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-6 border-b border-border py-3 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium text-foreground">
-        {value}
-      </span>
+      <span className="text-right text-sm font-medium text-foreground">{value}</span>
     </div>
   );
 }
@@ -52,7 +50,7 @@ function MeSettingsPage() {
         title="Settings"
         description="Your account, as competition organisers see it."
         actions={
-          user ?
+          user ? (
             <Button
               variant="outline"
               size="lg"
@@ -63,14 +61,14 @@ function MeSettingsPage() {
               <LogOut />
               {signingOut ? "Signing out..." : "Sign out"}
             </Button>
-          : undefined
+          ) : undefined
         }
         tabs
       />
       <PageBody>
-        {isPending ?
+        {isPending ? (
           <ListSkeleton aria-label="Loading your account details..." />
-        : !user ?
+        ) : !user ? (
           <Empty className="rounded-2xl border border-dashed border-border">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -82,7 +80,8 @@ function MeSettingsPage() {
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
-        : <section className="space-y-4">
+        ) : (
+          <section className="space-y-4">
             <SectionHeader
               title="Account"
               description="How you appear to competition organisers."
@@ -93,24 +92,22 @@ function MeSettingsPage() {
               <Row
                 label="Email verified"
                 value={
-                  user.emailVerified ?
+                  user.emailVerified ? (
                     <span className="text-success">Verified</span>
-                  : <span className="text-warning">Not verified</span>
+                  ) : (
+                    <span className="text-warning">Not verified</span>
+                  )
                 }
               />
-              <Row
-                label="User ID"
-                value={<code className="font-mono text-xs">{user.id}</code>}
-              />
+              <Row label="User ID" value={<code className="font-mono text-xs">{user.id}</code>} />
             </div>
             {/* Profile details come from the identity provider, so this
                 deployment has nowhere to write an edit back to. */}
             <p className="text-xs text-muted-foreground">
-              Your name and email are managed by the provider you signed in
-              with.
+              Your name and email are managed by the provider you signed in with.
             </p>
           </section>
-        }
+        )}
       </PageBody>
     </>
   );

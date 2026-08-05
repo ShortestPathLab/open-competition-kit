@@ -18,11 +18,10 @@ import { formatInstant } from "@open-competition-kit/sdk/instant";
  */
 const deadlineOf = (reports: readonly GateReport[], now: number) => {
   const deciding =
-    reports.find((report) => report.state === "blocked" && report.at) ??
-    nextInstant(reports, now);
+    reports.find((report) => report.state === "blocked" && report.at) ?? nextInstant(reports, now);
 
-  return deciding?.at ?
-      {
+  return deciding?.at
+    ? {
         label: deciding.atLabel ?? deciding.label,
         at: deciding.at,
         closed: deciding.state === "blocked",
@@ -57,11 +56,7 @@ export function TrackStats({
       {deadline ? (
         <Stat
           label={deadline.label}
-          value={
-            <span className="font-sans text-base">
-              {formatInstant(deadline.at)}
-            </span>
-          }
+          value={<span className="font-sans text-base">{formatInstant(deadline.at)}</span>}
           tone={deadline.closed ? "destructive" : undefined}
         />
       ) : null}
@@ -75,9 +70,7 @@ export function TrackStats({
           ) : enrollmentLoading ? (
             <Skeleton className="h-7 w-28" />
           ) : (
-            <span className="font-sans text-base">
-              {isEnrolled ? "Enrolled" : "Not enrolled"}
-            </span>
+            <span className="font-sans text-base">{isEnrolled ? "Enrolled" : "Not enrolled"}</span>
           )
         }
         emphasis={isEnrolled}

@@ -1,18 +1,22 @@
-import { X, SlidersHorizontal } from "lucide-react"
-import { SearchInput } from "./search-input"
+import { X, SlidersHorizontal } from "lucide-react";
+import { SearchInput } from "./search-input";
 
 export interface FilterChip {
-  id: string
-  label: string
+  id: string;
+  label: string;
 }
 
 interface FilterBarProps {
-  filters?: FilterChip[]
-  onRemoveFilter?: (id: string) => void
-  searchPlaceholder?: string
+  filters?: FilterChip[];
+  onRemoveFilter?: (id: string) => void;
+  searchPlaceholder?: string;
 }
 
-export function FilterBar({ filters = [], onRemoveFilter, searchPlaceholder = "Search" }: FilterBarProps) {
+export function FilterBar({
+  filters = [],
+  onRemoveFilter,
+  searchPlaceholder = "Search",
+}: FilterBarProps) {
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-2">
@@ -33,5 +37,5 @@ export function FilterBar({ filters = [], onRemoveFilter, searchPlaceholder = "S
       </div>
       <SearchInput placeholder={searchPlaceholder} className="w-64" />
     </div>
-  )
+  );
 }

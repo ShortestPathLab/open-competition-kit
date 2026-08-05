@@ -41,11 +41,7 @@ export function TrackActions({
         size="lg"
         className="h-10 px-5"
         render={
-          <Link
-            to="/competitions/$id/enrol"
-            params={{ id: competitionId }}
-            search={{ trackId }}
-          />
+          <Link to="/competitions/$id/enrol" params={{ id: competitionId }} search={{ trackId }} />
         }
       >
         Enrol in this track
@@ -74,12 +70,7 @@ export function TrackActions({
         size="lg"
         className="h-10 px-5"
         variant="outline"
-        render={
-          <Link
-            to="/competitions/$id/submissions"
-            params={{ id: competitionId }}
-          />
-        }
+        render={<Link to="/competitions/$id/submissions" params={{ id: competitionId }} />}
       >
         Your submissions
       </Button>

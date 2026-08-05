@@ -1,12 +1,13 @@
 {
-  "version": "0.0.11",
   "name": "@open-competition-kit/large-files-s3",
+  "version": "0.0.11",
+  "private": false,
+  "type": "module",
+  "module": "index.ts",
+  "types": "index.ts",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "module": "index.ts",
-  "types": "index.ts",
-  "type": "module",
   "dependencies": {
     "@open-competition-kit/sdk": "workspace:*",
     "es-toolkit": "^1.46.1",
@@ -17,6 +18,5 @@
   },
   "peerDependencies": {
     "typescript": "^5 || ^6 || ^7"
-  },
-  "private": false
+  }
 }

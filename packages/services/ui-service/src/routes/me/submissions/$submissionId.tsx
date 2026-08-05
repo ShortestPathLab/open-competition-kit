@@ -8,10 +8,7 @@ import {
   OtherOutputsPanel,
   ResultPanel,
 } from "@/components/submission-detail/result-panel";
-import {
-  SubmittedPanel,
-  TrackLinksPanel,
-} from "@/components/submission-detail/submitted-panel";
+import { SubmittedPanel, TrackLinksPanel } from "@/components/submission-detail/submitted-panel";
 import { SurfaceSlot } from "@/components/surface-slot";
 import {
   Empty,
@@ -46,9 +43,7 @@ export const Route = createFileRoute("/me/submissions/$submissionId")({
 });
 
 /** Where this page sits: below the submissions list, which is a section. */
-const SUBMISSIONS_TRAIL: MeCrumb[] = [
-  { label: "Submissions", section: "submissions" },
-];
+const SUBMISSIONS_TRAIL: MeCrumb[] = [{ label: "Submissions", section: "submissions" }];
 
 const rerunSubmission = createServerFn({ method: "POST" })
   .inputValidator(z.object({ submissionId: z.string() }))
@@ -75,11 +70,7 @@ function DetailNotice({
 }) {
   return (
     <>
-      <MePageHeader
-        title="Submission"
-        crumb="Submission"
-        trail={SUBMISSIONS_TRAIL}
-      />
+      <MePageHeader title="Submission" crumb="Submission" trail={SUBMISSIONS_TRAIL} />
       <PageBody>
         <Empty className="rounded-2xl border border-dashed border-border">
           <EmptyHeader>
@@ -99,10 +90,7 @@ function SubmissionDetailPage() {
   // No assertion on the session: it is undefined on the first render of every
   // visit, and throwing there took the whole page down before the signed-out
   // branch below ever got a chance to render.
-  const { data: detail, isLoading } = useSubmissionDetail(
-    session?.user?.id,
-    submissionId,
-  );
+  const { data: detail, isLoading } = useSubmissionDetail(session?.user?.id, submissionId);
   const rerunSubmissionFn = useServerFn(rerunSubmission);
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>();
 
@@ -153,8 +141,7 @@ function SubmissionDetailPage() {
       <DetailNotice icon={<SearchX />} title="Submission not found">
         {/* The one place the id belongs: somebody following a link that does not
             work needs to see what was looked up. */}
-        Nothing here belongs to you under{" "}
-        <code className="font-mono">{submissionId}</code>.
+        Nothing here belongs to you under <code className="font-mono">{submissionId}</code>.
       </DetailNotice>
     );
   }
@@ -181,12 +168,11 @@ function SubmissionDetailPage() {
             Evaluation history
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Every run scores this same submission. Pick one to read its result and
-            logs.
+            Every run scores this same submission. Pick one to read its result and logs.
           </p>
         </div>
 
-        {jobs.length === 0 ?
+        {jobs.length === 0 ? (
           <Empty className="rounded-xl border border-dashed border-border">
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -198,7 +184,8 @@ function SubmissionDetailPage() {
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
-        : <div
+        ) : (
+          <div
             role="group"
             aria-label="Runs for this submission"
             className="flex gap-2.5 overflow-x-auto pb-1"
@@ -213,21 +200,17 @@ function SubmissionDetailPage() {
               />
             ))}
           </div>
-        }
+        )}
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)]">
           <div className="space-y-4">
-            <ResultPanel
-              job={selectedJob}
-              readout={readout}
-              runNumber={selectedIndex + 1}
-            />
+            <ResultPanel job={selectedJob} readout={readout} runNumber={selectedIndex + 1} />
             <LogsPanel job={selectedJob} />
 
             {/* Keyed by the run, so a package that keeps something per attempt (a
                 workflow, an artefact, a log elsewhere) points at this one rather
                 than at the submission behind all of them. */}
-            {selectedJob ?
+            {selectedJob ? (
               <>
                 <SurfaceSlot
                   surface={surface.std.jobDetail}
@@ -236,7 +219,7 @@ function SubmissionDetailPage() {
                 />
                 <OtherOutputsPanel job={selectedJob} />
               </>
-            : null}
+            ) : null}
           </div>
 
           <div className="space-y-4">
@@ -250,10 +233,7 @@ function SubmissionDetailPage() {
               subject={{ submission: detail.id }}
             />
 
-            <TrackLinksPanel
-              competitionId={detail.competitionId}
-              trackId={detail.trackId}
-            />
+            <TrackLinksPanel competitionId={detail.competitionId} trackId={detail.trackId} />
           </div>
         </div>
       </PageBody>

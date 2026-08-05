@@ -1,28 +1,14 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { authFetchOptions, authRequestErrorMessage } from "@/lib/auth-request";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
-export function SignupForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function SignupForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -47,9 +33,7 @@ export function SignupForm({
         authFetchOptions,
       );
       if (error) {
-        setError(
-          error.message ?? "Could not create your account. Please try again.",
-        );
+        setError(error.message ?? "Could not create your account. Please try again.");
         setLoading(false);
         return;
       }
@@ -82,9 +66,7 @@ export function SignupForm({
       <Card>
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
-          <CardDescription>
-            Enter your information below to create your account
-          </CardDescription>
+          <CardDescription>Enter your information below to create your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
@@ -111,8 +93,7 @@ export function SignupForm({
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 <FieldDescription>
-                  We&apos;ll use this to contact you. We will not share your
-                  email with anyone else.
+                  We&apos;ll use this to contact you. We will not share your email with anyone else.
                 </FieldDescription>
               </Field>
               <Field>
@@ -124,14 +105,10 @@ export function SignupForm({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <FieldDescription>
-                  Must be at least 8 characters long.
-                </FieldDescription>
+                <FieldDescription>Must be at least 8 characters long.</FieldDescription>
               </Field>
               <Field>
-                <FieldLabel htmlFor="confirm-password">
-                  Confirm Password
-                </FieldLabel>
+                <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -139,9 +116,7 @@ export function SignupForm({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
-                <FieldDescription>
-                  Please confirm your password.
-                </FieldDescription>
+                <FieldDescription>Please confirm your password.</FieldDescription>
               </Field>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Field>

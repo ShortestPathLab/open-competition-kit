@@ -112,9 +112,7 @@ export const nextInstant = (
   reports: readonly GateReport[],
   now: number,
 ): GateReport | undefined => {
-  const ahead = reports.filter(
-    (report) => report.at && Date.parse(report.at) > now,
-  );
+  const ahead = reports.filter((report) => report.at && Date.parse(report.at) > now);
 
   return (
     minBy(
@@ -142,5 +140,4 @@ export const verdictOf = (refusals: readonly Refusal[]): GateVerdict => ({
 
 /** One sentence for all of it, for an error message or a log line. */
 export const describeRefusals = (refusals: readonly Refusal[]) =>
-  refusals.map((refusal) => refusal.reason).join(" ") ||
-  "This submission was refused.";
+  refusals.map((refusal) => refusal.reason).join(" ") || "This submission was refused.";

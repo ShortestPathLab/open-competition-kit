@@ -31,20 +31,14 @@ export type FileMeta = {
 };
 
 /** Anything a backend is expected to be able to store. */
-export type FileBody =
-  | Uint8Array
-  | ArrayBuffer
-  | Blob
-  | ReadableStream<Uint8Array>
-  | string;
+export type FileBody = Uint8Array | ArrayBuffer | Blob | ReadableStream<Uint8Array> | string;
 
 const isFileRef = S.is(FileRef);
 
 export const isFile = (value: unknown): value is FileRef => isFileRef(value);
 
 /** Accept either a ref or a bare key wherever a file is addressed. */
-export const keyOf = (file: FileRef | string) =>
-  typeof file === "string" ? file : file.key;
+export const keyOf = (file: FileRef | string) => (typeof file === "string" ? file : file.key);
 
 export const toFileRef = (meta: FileMeta, name?: string): FileRef => ({
   $type: FILE_REF,

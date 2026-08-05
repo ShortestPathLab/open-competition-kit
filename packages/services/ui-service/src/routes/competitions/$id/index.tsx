@@ -47,11 +47,7 @@ function CompetitionOverviewPage() {
             />
           </div>
 
-          <OverviewRail
-            competitionId={id}
-            leaderboards={leaderboards}
-            {...rail}
-          />
+          <OverviewRail competitionId={id} leaderboards={leaderboards} {...rail} />
         </div>
       </PageBody>
     </>

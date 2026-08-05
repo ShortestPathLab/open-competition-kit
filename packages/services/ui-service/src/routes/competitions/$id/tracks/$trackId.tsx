@@ -22,22 +22,14 @@ export const Route = createFileRoute("/competitions/$id/tracks/$trackId")({
   // boundary and takes the whole app shell down with it. From the loader the
   // 404 stays scoped to this route, so a wrong track id leaves the navbar in
   // place to find a real one from.
-  loader: ({ params, context }) =>
-    ensureTrack(context.competition, params.trackId),
+  loader: ({ params, context }) => ensureTrack(context.competition, params.trackId),
   component: TrackDetailsPage,
 });
 
 function TrackDetailsPage() {
   const { id: competitionId, trackId } = Route.useParams();
-  const {
-    competition,
-    track,
-    trackLoading,
-    isSignedIn,
-    isEnrolled,
-    enrollmentLoading,
-    ...stats
-  } = useTrackDetail(competitionId, trackId);
+  const { competition, track, trackLoading, isSignedIn, isEnrolled, enrollmentLoading, ...stats } =
+    useTrackDetail(competitionId, trackId);
 
   if (trackLoading) return <PageSkeleton />;
   // The guard above rules out an unconfigured id, so reaching this means the

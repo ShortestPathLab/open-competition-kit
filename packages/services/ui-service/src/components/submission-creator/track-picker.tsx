@@ -53,9 +53,7 @@ export function TrackPicker({
         </SelectContent>
       </Select>
       {selectedTrack ? (
-        <p className="text-sm text-muted-foreground">
-          {selectedTrack.description}
-        </p>
+        <p className="text-sm text-muted-foreground">{selectedTrack.description}</p>
       ) : null}
       {selectedTrack ? <SubmissionWindowSummary reports={reports} /> : null}
     </div>

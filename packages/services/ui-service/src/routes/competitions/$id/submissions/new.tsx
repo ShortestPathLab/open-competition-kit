@@ -22,9 +22,7 @@ function CompetitionSubmissionCreatePage() {
 
   if (!competition) return <PageSkeleton />;
 
-  const track = competition.tracks.find(
-    (candidate) => candidate.id === trackId,
-  );
+  const track = competition.tracks.find((candidate) => candidate.id === trackId);
 
   return (
     <>

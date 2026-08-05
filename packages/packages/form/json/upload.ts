@@ -65,18 +65,11 @@ async function errorOf(res: Response) {
  * XHR rather than fetch: `fetch` cannot report upload progress, and a participant
  * pushing a large archive over a slow connection needs to see that it is moving.
  */
-function send(
-  url: string,
-  file: File,
-  onProgress?: (p: UploadProgress) => void,
-) {
+function send(url: string, file: File, onProgress?: (p: UploadProgress) => void) {
   return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url, true);
-    xhr.setRequestHeader(
-      "content-type",
-      file.type || "application/octet-stream",
-    );
+    xhr.setRequestHeader("content-type", file.type || "application/octet-stream");
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
@@ -85,9 +78,9 @@ function send(
     };
 
     xhr.onload = () =>
-      xhr.status >= 200 && xhr.status < 300 ?
-        resolve()
-      : reject(new Error(`Upload failed (${xhr.status})`));
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new Error(`Upload failed (${xhr.status})`));
 
     xhr.onerror = () => reject(new Error("Upload failed: network error"));
     xhr.send(file);

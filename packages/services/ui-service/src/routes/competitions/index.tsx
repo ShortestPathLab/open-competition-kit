@@ -83,9 +83,7 @@ function CompetitionsPage() {
                 <SearchX />
               </EmptyMedia>
               <EmptyTitle>No competitions match your search</EmptyTitle>
-              <EmptyDescription>
-                Try a different name or organiser.
-              </EmptyDescription>
+              <EmptyDescription>Try a different name or organiser.</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

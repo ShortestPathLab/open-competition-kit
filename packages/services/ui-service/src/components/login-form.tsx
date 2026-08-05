@@ -1,18 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { authClient } from "@/lib/auth-client";
@@ -23,13 +12,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-const providerLabel = (provider: string) =>
-  provider.charAt(0).toUpperCase() + provider.slice(1);
+const providerLabel = (provider: string) => provider.charAt(0).toUpperCase() + provider.slice(1);
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter();
   const fetchAuthConfig = useServerFn(getAuthConfig);
   const { data: authConfig } = useQuery({
@@ -49,14 +34,9 @@ export function LoginForm({
     setError(null);
     setPending("email");
     try {
-      const { error } = await authClient.signIn.email(
-        { email, password },
-        authFetchOptions,
-      );
+      const { error } = await authClient.signIn.email({ email, password }, authFetchOptions);
       if (error) {
-        setError(
-          error.message ?? "Sign in failed. Check your details and try again.",
-        );
+        setError(error.message ?? "Sign in failed. Check your details and try again.");
         setPending(null);
         return;
       }
@@ -85,10 +65,7 @@ export function LoginForm({
         authFetchOptions,
       );
       if (error) {
-        setError(
-          error.message ??
-            `Couldn't sign in with ${providerLabel(provider)}. Try again.`,
-        );
+        setError(error.message ?? `Couldn't sign in with ${providerLabel(provider)}. Try again.`);
         setPending(null);
       }
       // On success the browser is handed off to the provider, so the form is on
@@ -108,9 +85,7 @@ export function LoginForm({
         <CardHeader>
           <CardTitle>Sign in to your account</CardTitle>
           <CardDescription>
-            {emailEnabled ?
-              "Enter your email below to sign in"
-            : "Choose a sign-in method"}
+            {emailEnabled ? "Enter your email below to sign in" : "Choose a sign-in method"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -153,9 +128,7 @@ export function LoginForm({
             {emailEnabled && socialProviders.length > 0 && (
               <div className="flex items-center gap-4">
                 <Separator className="flex-1" />
-                <span className="text-xs text-muted-foreground uppercase">
-                  Or
-                </span>
+                <span className="text-xs text-muted-foreground uppercase">Or</span>
                 <Separator className="flex-1" />
               </div>
             )}
@@ -168,9 +141,9 @@ export function LoginForm({
                 disabled={busy}
                 onClick={() => handleSocialSignIn(provider)}
               >
-                {pending === `social:${provider}` ?
-                  `Connecting to ${providerLabel(provider)}...`
-                : `Sign in with ${providerLabel(provider)}`}
+                {pending === `social:${provider}`
+                  ? `Connecting to ${providerLabel(provider)}...`
+                  : `Sign in with ${providerLabel(provider)}`}
               </Button>
             ))}
             {emailEnabled && (

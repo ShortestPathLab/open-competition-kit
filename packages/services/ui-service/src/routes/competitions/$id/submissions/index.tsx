@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 import { useCompetition } from "@/lib/competition-fn";
-import {
-  useCompetitionSubmissions,
-  useUserSubmissionOutcomes,
-} from "@/lib/submission-fn";
+import { useCompetitionSubmissions, useUserSubmissionOutcomes } from "@/lib/submission-fn";
 
 export const Route = createFileRoute("/competitions/$id/submissions/")({
   component: CompetitionSubmissionsPage,
@@ -20,13 +17,16 @@ function CompetitionSubmissionsPage() {
   const { id } = Route.useParams();
   const { data: competition } = useCompetition(id);
   const { data: session, isPending: sessionLoading } = authClient.useSession();
-  const { data: submissions = [], isLoading: submissionsLoading } =
-    useCompetitionSubmissions(session?.user?.id, id);
+  const { data: submissions = [], isLoading: submissionsLoading } = useCompetitionSubmissions(
+    session?.user?.id,
+    id,
+  );
   // Every submission the reader owns, of which this page shows one
   // competition's worth. One query serves both lists and stays cached between
   // them.
-  const { data: outcomes, isLoading: outcomesLoading } =
-    useUserSubmissionOutcomes(session?.user?.id);
+  const { data: outcomes, isLoading: outcomesLoading } = useUserSubmissionOutcomes(
+    session?.user?.id,
+  );
 
   if (!competition) return <PageSkeleton />;
 
@@ -47,9 +47,7 @@ function CompetitionSubmissionsPage() {
           <Button
             size="lg"
             className="h-10 px-5"
-            render={
-              <Link to="/competitions/$id/submissions/new" params={{ id }} />
-            }
+            render={<Link to="/competitions/$id/submissions/new" params={{ id }} />}
           >
             New submission
           </Button>

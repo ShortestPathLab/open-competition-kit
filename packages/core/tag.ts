@@ -9,8 +9,7 @@ export const stem = "open-competition-kit/tag" as const;
  * same word, and a board pointed at the other spelling reads nothing and
  * renders empty with no error to explain it.
  */
-export const output = <T extends string>(name: T) =>
-  `${stem}/output/${name}` as const;
+export const output = <T extends string>(name: T) => `${stem}/output/${name}` as const;
 
 /**
  * A collection of standard reference codes recommended for

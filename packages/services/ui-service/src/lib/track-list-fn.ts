@@ -44,22 +44,14 @@ export function useTrackList(competitionId: string) {
   const { data: enrolments = [] } = useUserEnrolments(session?.user?.id);
   // What the installed gates say about each track: the pill, the sort order and
   // the section a row lands in all come from here.
-  const withReports = useTracksWithReports(
-    tracks as TrackSummary[],
-    session?.user?.id,
-  );
+  const withReports = useTracksWithReports(tracks as TrackSummary[], session?.user?.id);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<TrackFilter>("all");
   const deferredSearch = useDeferredValue(search);
 
   const rows = useMemo(
-    () =>
-      buildRows(
-        withReports,
-        submissionCountsByTrack(enrolments, competitionId),
-        Date.now(),
-      ),
+    () => buildRows(withReports, submissionCountsByTrack(enrolments, competitionId), Date.now()),
     [enrolments, competitionId, withReports],
   );
 

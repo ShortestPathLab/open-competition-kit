@@ -59,10 +59,7 @@ export const permitted = (
  * ceiling, and leaving those out would have made the numbers look stronger than
  * the arrangement really was.
  */
-export const clamp = (
-  request: Confinement,
-  ceiling: MachineCeiling,
-): Confinement => ({
+export const clamp = (request: Confinement, ceiling: MachineCeiling): Confinement => ({
   timeoutMs: atMost(request.timeoutMs, ceiling.timeoutMs),
   limits: {
     memoryMb: atMost(request.limits?.memoryMb, ceiling.memoryMb),

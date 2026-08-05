@@ -22,9 +22,7 @@ const daemon = (has: string[] = []) => {
 
 describe("tagFor", () => {
   it("is stable for the same inputs", async () => {
-    expect(await tagFor({ dockerfile: RECIPE })).toBe(
-      await tagFor({ dockerfile: RECIPE }),
-    );
+    expect(await tagFor({ dockerfile: RECIPE })).toBe(await tagFor({ dockerfile: RECIPE }));
   });
 
   it("changes when the recipe changes", async () => {
@@ -36,21 +34,19 @@ describe("tagFor", () => {
   it("changes when a build argument changes", async () => {
     // Two harnesses out of one recipe. A hash that ignored these would serve a
     // competition the branch a different competition asked for.
-    expect(
-      await tagFor({ dockerfile: RECIPE, args: { REF: "a1" } }),
-    ).not.toBe(await tagFor({ dockerfile: RECIPE, args: { REF: "main" } }));
+    expect(await tagFor({ dockerfile: RECIPE, args: { REF: "a1" } })).not.toBe(
+      await tagFor({ dockerfile: RECIPE, args: { REF: "main" } }),
+    );
   });
 
   it("does not care what order arguments were written in", async () => {
-    expect(
-      await tagFor({ dockerfile: RECIPE, args: { A: "1", B: "2" } }),
-    ).toBe(await tagFor({ dockerfile: RECIPE, args: { B: "2", A: "1" } }));
+    expect(await tagFor({ dockerfile: RECIPE, args: { A: "1", B: "2" } })).toBe(
+      await tagFor({ dockerfile: RECIPE, args: { B: "2", A: "1" } }),
+    );
   });
 
   it("keeps the requested name as a readable prefix", async () => {
-    expect(await tagFor({ dockerfile: RECIPE, tag: "pacman" })).toStartWith(
-      "pacman:",
-    );
+    expect(await tagFor({ dockerfile: RECIPE, tag: "pacman" })).toStartWith("pacman:");
   });
 
   it("sanitises a name Docker would refuse", async () => {
@@ -104,9 +100,9 @@ describe("ensure", () => {
 
   it("reports the log when a recipe fails", async () => {
     const docker: Docker = async (args) =>
-      args[0] === "build" ?
-        { stdout: "", stderr: "E: Unable to locate package nope", code: 1 }
-      : { stdout: "", stderr: "", code: 1 };
+      args[0] === "build"
+        ? { stdout: "", stderr: "E: Unable to locate package nope", code: 1 }
+        : { stdout: "", stderr: "", code: 1 };
 
     // Docker writes progress and failures to stderr, so a message built from
     // stdout alone would be empty for every case worth reading.

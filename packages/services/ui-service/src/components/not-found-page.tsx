@@ -40,26 +40,17 @@ export function NotFoundPage({ subject, data }: NotFoundPageProps) {
       description={
         <>
           There is nothing at{" "}
-          <code className="font-mono break-all text-foreground">{pathname}</code>
-          . The link may be out of date, or the {missing} may have been removed.
+          <code className="font-mono break-all text-foreground">{pathname}</code>. The link may be
+          out of date, or the {missing} may have been removed.
         </>
       }
       actions={
         <>
-          <Button
-            size="lg"
-            className="h-10 px-5"
-            render={<Link to="/competitions" />}
-          >
+          <Button size="lg" className="h-10 px-5" render={<Link to="/competitions" />}>
             Browse competitions
             <ArrowRight />
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="h-10 px-5"
-            render={<Link to="/" />}
-          >
+          <Button variant="outline" size="lg" className="h-10 px-5" render={<Link to="/" />}>
             Go home
           </Button>
         </>

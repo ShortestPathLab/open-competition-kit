@@ -29,9 +29,7 @@ export const isNode = (value: unknown): value is Node =>
 
 /** The `with:` list a node authored, added to the one it inherited. */
 const withAt = (node: Node, inherited: readonly string[]) =>
-  Array.isArray(node.with) ?
-    uniq([...inherited, ...(node.with as string[])])
-  : inherited;
+  Array.isArray(node.with) ? uniq([...inherited, ...(node.with as string[])]) : inherited;
 
 /**
  * A findable name for a node.

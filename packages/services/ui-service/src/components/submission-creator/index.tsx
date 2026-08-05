@@ -14,10 +14,7 @@ interface SubmissionCreatorProps {
   initialTrackId?: string;
 }
 
-export function SubmissionCreator({
-  competition,
-  initialTrackId,
-}: SubmissionCreatorProps) {
+export function SubmissionCreator({ competition, initialTrackId }: SubmissionCreatorProps) {
   const {
     tracks,
     trackId,
@@ -77,13 +74,9 @@ export function SubmissionCreator({
 
               {isEligible && gateLoading ? <FormSkeleton fields={4} /> : null}
 
-              {isEligible && gate && !gate.allowed ? (
-                <GateRefusals gate={gate} />
-              ) : null}
+              {isEligible && gate && !gate.allowed ? <GateRefusals gate={gate} /> : null}
 
-              {isEligible && isOpen ? (
-                <FormPanel {...form} trackName={selectedTrack.name} />
-              ) : null}
+              {isEligible && isOpen ? <FormPanel {...form} trackName={selectedTrack.name} /> : null}
             </>
           )}
         </div>

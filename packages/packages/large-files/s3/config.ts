@@ -49,15 +49,13 @@ export const config = {
         id: "endpoint",
         label: "Endpoint",
         kind: "text",
-        description:
-          "Falls back to S3_ENDPOINT. Set this for MinIO or any non-AWS implementation.",
+        description: "Falls back to S3_ENDPOINT. Set this for MinIO or any non-AWS implementation.",
       },
       {
         id: "virtualHostedStyle",
         label: "Virtual hosted style",
         kind: "boolean",
-        description:
-          "Needed by MinIO and most non-AWS S3 implementations. Leave off for AWS.",
+        description: "Needed by MinIO and most non-AWS S3 implementations. Leave off for AWS.",
       },
       {
         id: "expiresIn",

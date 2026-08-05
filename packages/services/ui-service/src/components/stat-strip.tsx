@@ -50,13 +50,7 @@ interface StatProps {
   className?: string;
 }
 
-export function Stat({
-  label,
-  value,
-  emphasis = false,
-  tone,
-  className,
-}: StatProps) {
+export function Stat({ label, value, emphasis = false, tone, className }: StatProps) {
   return (
     <div
       className={cn(
@@ -71,9 +65,7 @@ export function Stat({
       <div
         className={cn(
           "mt-1.5 font-mono text-xl font-semibold tracking-tight tabular-nums",
-          tone ? TONE_VALUES[tone]
-          : emphasis ? "text-primary"
-          : "text-foreground",
+          tone ? TONE_VALUES[tone] : emphasis ? "text-primary" : "text-foreground",
         )}
       >
         {value}

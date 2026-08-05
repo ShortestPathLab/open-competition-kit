@@ -75,16 +75,16 @@ export function FieldTemplate({
       data-invalid={invalid ? "true" : undefined}
       data-disabled={disabled ? "true" : undefined}
     >
-      {displayLabel && label ?
+      {displayLabel && label ? (
         <FieldLabel htmlFor={id}>
           {label}
-          {required ?
+          {required ? (
             <span aria-hidden="true" className="text-destructive">
               *
             </span>
-          : null}
+          ) : null}
         </FieldLabel>
-      : null}
+      ) : null}
       {children}
       {displayLabel && rawDescription ? description : null}
       {errors}
@@ -111,18 +111,14 @@ export function ObjectFieldTemplate({
 }: ObjectFieldTemplateProps) {
   const uiOptions = getUiOptions(uiSchema);
   const TitleFieldTemplate = getTemplate("TitleFieldTemplate", registry, uiOptions);
-  const DescriptionFieldTemplate = getTemplate(
-    "DescriptionFieldTemplate",
-    registry,
-    uiOptions,
-  );
+  const DescriptionFieldTemplate = getTemplate("DescriptionFieldTemplate", registry, uiOptions);
   const {
     ButtonTemplates: { AddButton },
   } = registry.templates;
 
   return (
     <FieldSet>
-      {title ?
+      {title ? (
         <TitleFieldTemplate
           id={titleId(fieldPathId)}
           title={title}
@@ -130,12 +126,10 @@ export function ObjectFieldTemplate({
           schema={schema}
           uiSchema={uiSchema}
           registry={registry}
-          optionalDataControl={
-            !readonly && !disabled ? optionalDataControl : undefined
-          }
+          optionalDataControl={!readonly && !disabled ? optionalDataControl : undefined}
         />
-      : null}
-      {description ?
+      ) : null}
+      {description ? (
         <DescriptionFieldTemplate
           id={descriptionId(fieldPathId)}
           description={description}
@@ -143,14 +137,14 @@ export function ObjectFieldTemplate({
           uiSchema={uiSchema}
           registry={registry}
         />
-      : null}
+      ) : null}
       <FieldGroup>
         {/* `FieldTemplate` hides a hidden property itself, so this can render
             every one of them the same way. */}
         {properties.map((element, index) => (
           <React.Fragment key={index}>{element.content}</React.Fragment>
         ))}
-        {canExpand(schema, uiSchema, formData) ?
+        {canExpand(schema, uiSchema, formData) ? (
           <div className="flex">
             <AddButton
               id={buttonId(fieldPathId, "add")}
@@ -161,7 +155,7 @@ export function ObjectFieldTemplate({
               registry={registry}
             />
           </div>
-        : null}
+        ) : null}
       </FieldGroup>
     </FieldSet>
   );
@@ -172,12 +166,7 @@ export function ObjectFieldTemplate({
  * `ObjectFieldTemplate` is the one caller that puts it there, and the schemas
  * this package builds are flat objects, so there is no other path to it.
  */
-export function TitleFieldTemplate({
-  id,
-  title,
-  uiSchema,
-  optionalDataControl,
-}: TitleFieldProps) {
+export function TitleFieldTemplate({ id, title, uiSchema, optionalDataControl }: TitleFieldProps) {
   const uiOptions = getUiOptions(uiSchema);
   const text = uiOptions.title || title;
 
@@ -209,11 +198,7 @@ export function DescriptionFieldTemplate({
 
   return (
     <FieldDescription id={id}>
-      <RichDescription
-        description={description}
-        registry={registry}
-        uiSchema={uiSchema}
-      />
+      <RichDescription description={description} registry={registry} uiSchema={uiSchema} />
     </FieldDescription>
   );
 }
@@ -225,14 +210,15 @@ export function FieldErrorTemplate({ errors = [], fieldPathId }: FieldErrorProps
 
   return (
     <FieldError id={errorId(fieldPathId)}>
-      {errors.length === 1 ?
+      {errors.length === 1 ? (
         errors[0]
-      : <ul className="ml-4 flex list-disc flex-col gap-1">
+      ) : (
+        <ul className="ml-4 flex list-disc flex-col gap-1">
           {errors.map((error, index) => (
             <li key={index}>{error}</li>
           ))}
         </ul>
-      }
+      )}
     </FieldError>
   );
 }
@@ -246,9 +232,7 @@ export function ErrorListTemplate({ errors, registry }: ErrorListProps) {
       role="alert"
       className="mb-5 flex flex-col gap-1.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
     >
-      <p className="font-medium">
-        {translateString(TranslatableString.ErrorsLabel)}
-      </p>
+      <p className="font-medium">{translateString(TranslatableString.ErrorsLabel)}</p>
       <ul className="ml-4 flex list-disc flex-col gap-1">
         {errors.map((error, index) => (
           <li key={index}>{error.stack}</li>
@@ -259,11 +243,7 @@ export function ErrorListTemplate({ errors, registry }: ErrorListProps) {
 }
 
 export function SubmitButton(props: SubmitButtonProps) {
-  const {
-    submitText,
-    norender,
-    props: submitButtonProps,
-  } = getSubmitButtonOptions(props.uiSchema);
+  const { submitText, norender, props: submitButtonProps } = getSubmitButtonOptions(props.uiSchema);
 
   if (norender) {
     return null;
@@ -279,11 +259,7 @@ export function SubmitButton(props: SubmitButtonProps) {
 }
 
 /** Clears a text input. Off unless `ui:options.allowClearTextInputs` is set. */
-export function ClearButton({
-  className,
-  registry,
-  ...props
-}: IconButtonProps) {
+export function ClearButton({ className, registry, ...props }: IconButtonProps) {
   const { translateString } = registry;
   const label = translateString(TranslatableString.ClearLabel);
 

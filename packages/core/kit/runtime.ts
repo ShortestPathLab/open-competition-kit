@@ -18,15 +18,8 @@ export const makeRuntime = E.gen(function* () {
   const hooksService = yield* OpenCompetitionKitHooks;
 
   const hooks = {
-    do: <U>(
-      call: (h: Hooks) => Promise<U>,
-      ...w: Parameters<typeof hooksService.get>
-    ) =>
-      E.provideService(
-        hooksService.get(...w).pipe(E.andThen(call)),
-        Path.Path,
-        path,
-      ),
+    do: <U>(call: (h: Hooks) => Promise<U>, ...w: Parameters<typeof hooksService.get>) =>
+      E.provideService(hooksService.get(...w).pipe(E.andThen(call)), Path.Path, path),
   };
 
   const db = yield* OpenCompetitionKitCollections;

@@ -18,10 +18,7 @@ export function Panel({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export function PanelHeader({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function PanelHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
@@ -33,20 +30,12 @@ export function PanelHeader({
   );
 }
 
-export function PanelTitle({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function PanelTitle({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("text-sm font-semibold", className)} {...props} />;
 }
 
-export function PanelDescription({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  return (
-    <div className={cn("text-sm text-muted-foreground", className)} {...props} />
-  );
+export function PanelDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("text-sm text-muted-foreground", className)} {...props} />;
 }
 
 export function PanelBody({ className, ...props }: React.ComponentProps<"div">) {

@@ -120,16 +120,10 @@ async function readJob(job: { id: string; status: string }): Promise<SubmissionJ
   return {
     id: job.id,
     status: job.status,
-    result:
-      outputs.find((output) => output.reference === reference.std.output)
-        ?.value ?? null,
-    logs: readLogLines(
-      outputs.find((output) => output.reference === LOGS_REFERENCE)?.value,
-    ),
+    result: outputs.find((output) => output.reference === reference.std.output)?.value ?? null,
+    logs: readLogLines(outputs.find((output) => output.reference === LOGS_REFERENCE)?.value),
     outputs: outputs.filter(
-      (output) =>
-        output.reference !== reference.std.output &&
-        output.reference !== LOGS_REFERENCE,
+      (output) => output.reference !== reference.std.output && output.reference !== LOGS_REFERENCE,
     ),
   };
 }
@@ -145,16 +139,12 @@ const getCompetitionSubmissions = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ data, context: { session } }) => {
     const submissions = await listUserSubmissions(resolveId(session.user));
-    return submissions.filter(
-      (submission) => submission.competitionId === data.competitionId,
-    );
+    return submissions.filter((submission) => submission.competitionId === data.competitionId);
   });
 
 const getUserSubmissions = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .handler(({ context: { session } }) =>
-    listUserSubmissions(resolveId(session.user)),
-  );
+  .handler(({ context: { session } }) => listUserSubmissions(resolveId(session.user)));
 
 const getSubmissionDetail = createServerFn({ method: "GET" })
   .inputValidator(submissionDetailInput)
@@ -176,9 +166,7 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
       unsafe(jobs.list({ submission: submission.id })),
       unsafe(submissions.list({ user: userId })),
     ]);
-    const submissionCompetition = await unsafe(
-      competitions.get(track.competition),
-    );
+    const submissionCompetition = await unsafe(competitions.get(track.competition));
 
     const jobsWithOutputs = await Promise.all(submissionJobs.map(readJob));
 
@@ -207,45 +195,34 @@ const getSubmissionDetail = createServerFn({ method: "GET" })
  */
 const getUserSubmissionOutcomes = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .handler(
-    async ({
-      context: { session },
-    }): Promise<Record<string, SubmissionOutcome>> => {
-      const userSubmissions = await listUserSubmissions(
-        resolveId(session.user),
-      );
+  .handler(async ({ context: { session } }): Promise<Record<string, SubmissionOutcome>> => {
+    const userSubmissions = await listUserSubmissions(resolveId(session.user));
 
-      const entries = await Promise.all(
-        userSubmissions.map(async (submission) => {
-          const submissionJobs = await unsafe(
-            jobs.list({ submission: submission.id }),
-          );
-          const newest = submissionJobs.at(-1);
+    const entries = await Promise.all(
+      userSubmissions.map(async (submission) => {
+        const submissionJobs = await unsafe(jobs.list({ submission: submission.id }));
+        const newest = submissionJobs.at(-1);
 
-          return [
-            submission.id,
-            {
-              runs: submissionJobs.length,
-              status: newest?.status,
-              result: newest ? (await readJob(newest)).result : null,
-            },
-          ] as const;
-        }),
-      );
+        return [
+          submission.id,
+          {
+            runs: submissionJobs.length,
+            status: newest?.status,
+            result: newest ? (await readJob(newest)).result : null,
+          },
+        ] as const;
+      }),
+    );
 
-      return Object.fromEntries(entries);
-    },
-  );
+    return Object.fromEntries(entries);
+  });
 
 /**
  * `sessionUserId` never reaches the server. It separates one signed-in user's
  * cached submissions from the next's, and holds each query back until the
  * session has loaded.
  */
-export function useCompetitionSubmissions(
-  sessionUserId?: string,
-  competitionId?: string,
-) {
+export function useCompetitionSubmissions(sessionUserId?: string, competitionId?: string) {
   const getCompetitionSubmissionsFn = useServerFn(getCompetitionSubmissions);
   return useQuery({
     queryKey: ["competitionSubmissions", sessionUserId, competitionId],
@@ -268,20 +245,13 @@ export function useUserSubmissionOutcomes(sessionUserId?: string) {
   const getUserSubmissionOutcomesFn = useServerFn(getUserSubmissionOutcomes);
   return useQuery({
     queryKey: ["userSubmissionOutcomes", sessionUserId],
-    queryFn:
-      sessionUserId
-        ? () =>
-            getUserSubmissionOutcomesFn() as Promise<
-              Record<string, SubmissionOutcome>
-            >
-        : skipToken,
+    queryFn: sessionUserId
+      ? () => getUserSubmissionOutcomesFn() as Promise<Record<string, SubmissionOutcome>>
+      : skipToken,
   });
 }
 
-export function useSubmissionDetail(
-  sessionUserId?: string,
-  submissionId?: string,
-) {
+export function useSubmissionDetail(sessionUserId?: string, submissionId?: string) {
   const getSubmissionDetailFn = useServerFn(getSubmissionDetail);
   return useQuery({
     queryKey: ["submissionDetail", sessionUserId, submissionId],
@@ -341,10 +311,7 @@ export function useSubmissionGate(userId?: string, trackId?: string) {
     // A window opens or a rate limit expires while the page is sitting there, so
     // the answer goes stale on its own without anybody touching anything.
     refetchInterval: 30_000,
-    queryFn:
-      userId && trackId ?
-        () => getSubmissionGateFn({ data: { trackId } })
-      : skipToken,
+    queryFn: userId && trackId ? () => getSubmissionGateFn({ data: { trackId } }) : skipToken,
   });
 }
 
@@ -354,10 +321,7 @@ export const createSubmission = createServerFn({ method: "POST" })
   .handler(async ({ data, context: { session } }) => {
     await ensureTrackAvailable(data.trackId);
 
-    const enrolmentStatus = await sdk.enrolments.isEnrolled(
-      resolveId(session.user),
-      data.trackId,
-    );
+    const enrolmentStatus = await sdk.enrolments.isEnrolled(resolveId(session.user), data.trackId);
     if (enrolmentStatus.error) throw enrolmentStatus.error;
     if (!enrolmentStatus.value) {
       throw new Error("You must enrol in this track before submitting.");

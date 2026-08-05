@@ -11,7 +11,11 @@
 import { worstOf, type GateReport } from "@open-competition-kit/sdk/gate";
 import { groupBy, maxBy, minBy, sortBy } from "es-toolkit";
 
-export { describeDuration, splitRemaining, type Remaining } from "@open-competition-kit/sdk/instant";
+export {
+  describeDuration,
+  splitRemaining,
+  type Remaining,
+} from "@open-competition-kit/sdk/instant";
 
 /** A track, and what the installed gates say about it. */
 export type TrackReports = {
@@ -51,8 +55,7 @@ export function phaseOf(reports: readonly GateReport[], now: number): Phase {
 }
 
 /** Whether a competitor can act on this track right now. */
-export const isActionable = (phase: Phase) =>
-  phase === "open" || phase === "closing";
+export const isActionable = (phase: Phase) => phase === "open" || phase === "closing";
 
 export type Milestone = {
   /** Stable across renders so React can keep rows identified. */
@@ -92,8 +95,7 @@ const datedReports = (tracks: readonly TrackReports[]): Dated[] =>
  * moment is one date. A track closing exactly when another opens is two, and the
  * gate id alone cannot tell those apart since both are the same gate speaking.
  */
-const eventKey = (entry: Dated) =>
-  `${entry.report.gate}:${entry.report.atLabel ?? ""}:${entry.at}`;
+const eventKey = (entry: Dated) => `${entry.report.gate}:${entry.report.atLabel ?? ""}:${entry.at}`;
 
 const SEVERITY = { ok: 0, pending: 1, blocked: 2 } as const;
 
@@ -117,18 +119,18 @@ export function competitionSchedule(
       // without qualification. Anything narrower has to say whose date it is, or
       // two rows a week apart read as a contradiction.
       const label =
-        sharing.length === tracks.length ? name
-        : sharing.length === 1 ?
-          `${first.track.name} ${name.toLowerCase()}`
-        : `${sharing.length} tracks ${name.toLowerCase()}`;
+        sharing.length === tracks.length
+          ? name
+          : sharing.length === 1
+            ? `${first.track.name} ${name.toLowerCase()}`
+            : `${sharing.length} tracks ${name.toLowerCase()}`;
 
       return {
         key,
         label,
         at: first.at,
         past: now >= Date.parse(first.at),
-        state: maxBy(sharing, (entry) => SEVERITY[entry.report.state])!.report
-          .state,
+        state: maxBy(sharing, (entry) => SEVERITY[entry.report.state])!.report.state,
       };
     }),
     [(milestone) => Date.parse(milestone.at)],
@@ -148,10 +150,7 @@ export function competitionSchedule(
  * track that never closes keeps the competition from closing. Stated over states
  * rather than dates, which makes it true of any gate rather than only of a window.
  */
-function statusOf(
-  tracks: readonly TrackReports[],
-  now: number,
-): CompetitionSchedule["status"] {
+function statusOf(tracks: readonly TrackReports[], now: number): CompetitionSchedule["status"] {
   const phases = tracks.map((track) => phaseOf(track.reports, now));
   if (phases.some(isActionable)) return "open";
   return phases.some((phase) => phase === "upcoming") ? "upcoming" : "closed";
@@ -175,8 +174,7 @@ function countdownTo(
 
   const sharing = ahead.filter((entry) => eventKey(entry) === eventKey(next));
   const name = next.report.atLabel ?? next.report.label;
-  const label =
-    sharing.length === tracks.length ? `${name} in` : "Next deadline in";
+  const label = sharing.length === tracks.length ? `${name} in` : "Next deadline in";
 
   return { label, at: next.at };
 }

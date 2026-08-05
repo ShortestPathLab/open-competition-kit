@@ -1,10 +1,7 @@
 import { assert, isNotNil, isNumber, memoize, once } from "es-toolkit";
 import { Octokit } from "octokit";
 import { kit, secrets, unsafe } from "@open-competition-kit/sdk";
-import {
-  DEFAULT_MAX_SUBMISSION_ARCHIVE_BYTES,
-  GITHUB_WEB,
-} from "./constants";
+import { DEFAULT_MAX_SUBMISSION_ARCHIVE_BYTES, GITHUB_WEB } from "./constants";
 
 export const octokit = once(async () => {
   return new Octokit({
@@ -23,22 +20,13 @@ export const githubOrg = once(async () => {
  */
 export const maxArchiveBytes = once(async () => {
   const limit = await unsafe(kit.files.limit());
-  return typeof limit === "number" && limit > 0 ?
-      limit
-    : DEFAULT_MAX_SUBMISSION_ARCHIVE_BYTES;
+  return typeof limit === "number" && limit > 0 ? limit : DEFAULT_MAX_SUBMISSION_ARCHIVE_BYTES;
 });
 
 export const username = memoize(async (id: string) => {
-  const a = await unsafe(
-    secrets.user.get({ owner: id, reference: "auth/github/id" }),
-  );
-  assert(
-    isNotNil(a) && isNumber(+a),
-    `GitHub ID is malformed: ${JSON.stringify(a)}`,
-  );
-  const { data } = await (
-    await octokit()
-  ).request("GET /user/{account_id}", { account_id: +a });
+  const a = await unsafe(secrets.user.get({ owner: id, reference: "auth/github/id" }));
+  assert(isNotNil(a) && isNumber(+a), `GitHub ID is malformed: ${JSON.stringify(a)}`);
+  const { data } = await (await octokit()).request("GET /user/{account_id}", { account_id: +a });
   return data.login;
 });
 
@@ -56,10 +44,7 @@ export async function repositoryFor(user: string) {
 
 export type Branch = { name: string; sha: string };
 
-export async function branchesFor(
-  owner: string,
-  repo: string,
-): Promise<Branch[]> {
+export async function branchesFor(owner: string, repo: string): Promise<Branch[]> {
   const client = await octokit();
   const { data } = await client.request("GET /repos/{owner}/{repo}/branches", {
     owner,
@@ -89,11 +74,7 @@ export async function repositoryExists(owner: string, repo: string) {
  * branches, and nothing anywhere explains why. A pending invitation reads as 404
  * here, which is what makes the distinction visible at all.
  */
-export async function hasPushAccess(
-  owner: string,
-  repo: string,
-  login: string,
-) {
+export async function hasPushAccess(owner: string, repo: string, login: string) {
   const client = await octokit();
   try {
     await client.request("GET /repos/{owner}/{repo}/collaborators/{username}", {

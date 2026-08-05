@@ -19,10 +19,13 @@ const scalar = (value: unknown): value is Scalar =>
   typeof value === "boolean";
 
 const describe = (value: unknown) =>
-  Array.isArray(value) ? "a list"
-  : value === undefined ? "nothing"
-  : typeof value === "object" ? "an object"
-  : typeof value;
+  Array.isArray(value)
+    ? "a list"
+    : value === undefined
+      ? "nothing"
+      : typeof value === "object"
+        ? "an object"
+        : typeof value;
 
 /**
  * Check that a result is one flat row, and hand it back.
@@ -30,10 +33,7 @@ const describe = (value: unknown) =>
  * `where` names the phase and the case in the message, because a competition
  * with forty cases needs to know which one returned the wrong shape.
  */
-export const row = (
-  value: unknown,
-  where: string,
-): Record<string, Scalar> => {
+export const row = (value: unknown, where: string): Record<string, Scalar> => {
   if (value === null || value === undefined) return {};
 
   if (typeof value !== "object" || Array.isArray(value)) {
@@ -97,9 +97,7 @@ export const ONE_UNNAMED_CASE = [null];
  * that a `passed: true` on forty cases would otherwise report `passed: 40`,
  * which reads like a count of something and is not.
  */
-export const sumOf = (
-  results: readonly Record<string, Scalar>[],
-): Record<string, Scalar> => {
+export const sumOf = (results: readonly Record<string, Scalar>[]): Record<string, Scalar> => {
   const total: Record<string, Scalar> = {};
   for (const result of results) {
     for (const [key, value] of Object.entries(result)) {

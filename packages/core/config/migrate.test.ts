@@ -16,9 +16,9 @@ describe("migrate", () => {
     // Mid-edit, which is the state a half-finished rename leaves a file in. The
     // current name wins and the warning says the other one is being dropped,
     // rather than the two being merged into something the organiser never wrote.
-    expect(
-      run({ largeFiles: { root: "/old" }, files: { root: "/new" } }),
-    ).toEqual({ files: { root: "/new" } });
+    expect(run({ largeFiles: { root: "/old" }, files: { root: "/new" } })).toEqual({
+      files: { root: "/new" },
+    });
   });
 
   test("moves a sandbox: ceiling onto the machine that enforces it", () => {

@@ -72,9 +72,7 @@ const getDashboardData = createServerFn({ method: "GET" })
         else if (latest) evaluated++;
 
         if (!names.has(submission.user)) {
-          const user = await unsafe(sdk.users.get(submission.user)).catch(
-            () => undefined,
-          );
+          const user = await unsafe(sdk.users.get(submission.user)).catch(() => undefined);
           names.set(submission.user, user?.name || submission.user);
         }
 
@@ -84,17 +82,12 @@ const getDashboardData = createServerFn({ method: "GET" })
           track: track.name ?? track.id,
           trackId: track.id,
           status,
-          submittedAt:
-            submission.createdAt ?
-              new Date(submission.createdAt).toISOString()
-            : null,
+          submittedAt: submission.createdAt ? new Date(submission.createdAt).toISOString() : null,
         });
       }
     }
 
-    submissions.sort((a, b) =>
-      (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""),
-    );
+    submissions.sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
 
     return {
       tracks: competition.tracks.map((t) => t.name ?? t.id),
@@ -109,16 +102,16 @@ const getDashboardData = createServerFn({ method: "GET" })
   });
 
 function StatusPill({ status }: { status: string }) {
-  const tone =
-    FAILED.has(status) ? "bg-destructive/10 text-destructive"
-    : UNFINISHED.has(status) ? "bg-warning/10 text-warning"
-    : status === "no job" ? "bg-muted text-muted-foreground"
-    : "bg-success/10 text-success";
+  const tone = FAILED.has(status)
+    ? "bg-destructive/10 text-destructive"
+    : UNFINISHED.has(status)
+      ? "bg-warning/10 text-warning"
+      : status === "no job"
+        ? "bg-muted text-muted-foreground"
+        : "bg-success/10 text-success";
 
   return (
-    <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tone}`}
-    >
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tone}`}>
       {status}
     </span>
   );
@@ -188,9 +181,7 @@ function AdminOverviewPage() {
         description="Here's how your competition is going."
       />
 
-      {tracks.length > 1 ?
-        <ToggleTabs tabs={tracks} onChange={setTrack} />
-      : null}
+      {tracks.length > 1 ? <ToggleTabs tabs={tracks} onChange={setTrack} /> : null}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {stats.map((stat) => (
@@ -218,21 +209,22 @@ function AdminOverviewPage() {
         />
       </div>
 
-      {submissions.length ?
+      {submissions.length ? (
         <DataTable columns={columns} data={submissions} />
-      : <Empty className="rounded-lg border border-dashed border-border">
+      ) : (
+        <Empty className="rounded-lg border border-dashed border-border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <ClipboardList />
             </EmptyMedia>
             <EmptyTitle>No submissions yet</EmptyTitle>
             <EmptyDescription>
-              Submissions across this competition's tracks will appear here once
-              competitors start entering.
+              Submissions across this competition's tracks will appear here once competitors start
+              entering.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      }
+      )}
     </div>
   );
 }

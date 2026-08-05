@@ -5,8 +5,8 @@ import type { SerialisableValue } from "../serialisable";
 import { MissingContextError, MissingNamespaceError } from "./errors";
 import type { Instance } from "./runtime";
 
-type OptionalNamespace<T, U extends Record<string, any>> =
-  T extends undefined ? { namespace: Namespace } & U
+type OptionalNamespace<T, U extends Record<string, any>> = T extends undefined
+  ? { namespace: Namespace } & U
   : { namespace?: never } & U;
 
 /**
@@ -24,10 +24,7 @@ export const createNamespacedContext =
       owner,
       reference,
       value,
-    }: OptionalNamespace<
-      T,
-      { owner: string; reference: string; value: SerialisableValue }
-    >) =>
+    }: OptionalNamespace<T, { owner: string; reference: string; value: SerialisableValue }>) =>
       E.gen(function* () {
         if (!namespace) return yield* E.fail(new MissingNamespaceError());
         const existing = yield* instance.context.list({
@@ -47,9 +44,7 @@ export const createNamespacedContext =
           return { context: [created.id] };
         }
 
-        yield* E.forEach(existing, (entry) =>
-          instance.context.update({ id: entry.id, value }),
-        );
+        yield* E.forEach(existing, (entry) => instance.context.update({ id: entry.id, value }));
 
         return { context: existing.map((entry) => entry.id) };
       }),

@@ -78,27 +78,20 @@ export function YourCompetitionPanel({
     const entered = enrolledTrackIds.length;
     // A rank exists whether or not they were pushed out of the top rows, so
     // both places have to be checked.
-    const rank =
-      standings?.top.find((entry) => entry.isYou)?.rank ?? standings?.you?.rank;
+    const rank = standings?.top.find((entry) => entry.isYou)?.rank ?? standings?.you?.rank;
 
     return (
       <div className="flex flex-col gap-3.5">
         <div className="flex items-center gap-3">
           <span className="size-9 shrink-0 overflow-hidden rounded-full">
-            <BoringAvatar
-              name={name ?? "you"}
-              variant="beam"
-              className="h-full w-full"
-            />
+            <BoringAvatar name={name ?? "you"} variant="beam" className="h-full w-full" />
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold">
-              {name ?? "You"}
-            </span>
+            <span className="block truncate text-sm font-semibold">{name ?? "You"}</span>
             <span className="block text-xs text-muted-foreground">
-              {entered === 0 ?
-                "not entered yet"
-              : `entered ${entered} ${entered === 1 ? "track" : "tracks"}`}
+              {entered === 0
+                ? "not entered yet"
+                : `entered ${entered} ${entered === 1 ? "track" : "tracks"}`}
             </span>
           </span>
         </div>
@@ -107,12 +100,10 @@ export function YourCompetitionPanel({
             no ranked board to place them on, and the grid reflows to one box. */}
         <div className="grid grid-cols-2 gap-2 [&:has(>:only-child)]:grid-cols-1">
           <Box label="Submissions" value={submissionCount} />
-          {standings ?
-            <Box label="Best rank" value={rank ? `#${rank}` : "-"} />
-          : null}
+          {standings ? <Box label="Best rank" value={rank ? `#${rank}` : "-"} /> : null}
         </div>
 
-        {entered > 0 ?
+        {entered > 0 ? (
           <Button
             className="w-full"
             render={
@@ -126,19 +117,15 @@ export function YourCompetitionPanel({
             New submission
             <Plus />
           </Button>
-        : <Button
+        ) : (
+          <Button
             className="w-full"
-            render={
-              <Link
-                to="/competitions/$id/tracks"
-                params={{ id: competitionId }}
-              />
-            }
+            render={<Link to="/competitions/$id/tracks" params={{ id: competitionId }} />}
           >
             Enter a track
             <ArrowRight />
           </Button>
-        }
+        )}
 
         {/* Under the action, not above it: whatever an integration has to say
             here is about how the reader works on their entry, which only matters

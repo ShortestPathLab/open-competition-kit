@@ -149,9 +149,7 @@ export function DataBrowser<T>({
             <EmptyMedia variant="icon">
               {items.length === 0 ? <ClipboardList /> : <SearchX />}
             </EmptyMedia>
-            <EmptyTitle>
-              {items.length === 0 ? emptyTitle : noResultsTitle}
-            </EmptyTitle>
+            <EmptyTitle>{items.length === 0 ? emptyTitle : noResultsTitle}</EmptyTitle>
             <EmptyDescription>
               {items.length === 0 ? emptyDescription : noResultsDescription}
             </EmptyDescription>

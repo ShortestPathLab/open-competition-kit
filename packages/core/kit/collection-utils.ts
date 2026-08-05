@@ -25,8 +25,7 @@ export function withCollectionUtilities<
     on: noop,
     of,
     owner,
-    find: (...a: Parameters<typeof table.list>) =>
-      table.list(...a).pipe(E.andThen((e) => e[0])),
+    find: (...a: Parameters<typeof table.list>) => table.list(...a).pipe(E.andThen((e) => e[0])),
     upsert: (a: TUpdate & TCreate) =>
       E.gen(function* () {
         const prev = yield* E.either(table.get(a.id));

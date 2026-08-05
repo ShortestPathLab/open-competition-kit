@@ -1,17 +1,11 @@
 {
-  "version": "0.0.11",
   "name": "@open-competition-kit/core",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
+  "version": "0.0.11",
+  "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5 || ^6 || ^7"
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "dependencies": {
     "@effect/platform": "^0.92.1",
@@ -20,5 +14,11 @@
     "effect": "^3.18.4",
     "es-toolkit": "^1.46.1",
     "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5 || ^6 || ^7"
   }
 }

@@ -10,12 +10,8 @@ const note = (id: string, weight?: number): SurfaceNote => ({
 
 describe("region ids", () => {
   test("are namespaced under the stem", () => {
-    expect(std.competitionYou).toBe(
-      "open-competition-kit/surface/competition/you",
-    );
-    expect(region("acme/thing")).toBe(
-      "open-competition-kit/surface/acme/thing",
-    );
+    expect(std.competitionYou).toBe("open-competition-kit/surface/competition/you");
+    expect(region("acme/thing")).toBe("open-competition-kit/surface/acme/thing");
   });
 });
 
@@ -29,9 +25,7 @@ describe("audienceOf", () => {
   // else's.
   test("reads everything else as a competitor's", () => {
     expect(audienceOf(std.competitionYou)).toBe("participant");
-    expect(audienceOf("open-competition-kit/surface/not/a/region")).toBe(
-      "participant",
-    );
+    expect(audienceOf("open-competition-kit/surface/not/a/region")).toBe("participant");
   });
 });
 
@@ -47,11 +41,7 @@ describe("orderItems", () => {
   // an organiser can see.
   test("keeps chain order when weights tie", () => {
     const ordered = orderItems([note("first"), note("second"), note("third")]);
-    expect(ordered.map((item) => item.id)).toEqual([
-      "first",
-      "second",
-      "third",
-    ]);
+    expect(ordered.map((item) => item.id)).toEqual(["first", "second", "third"]);
   });
 
   test("keeps the first of two contributions sharing an id", () => {

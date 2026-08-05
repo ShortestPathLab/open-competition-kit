@@ -50,11 +50,11 @@ competitions:
 
 The command runs three times, each as a run of its own:
 
-| `phase` | when | answer with |
-|---|---|---|
-| `plan` | once, before anything | a list of cases, or `null` for one unnamed case |
-| `evaluate` | once per case | a flat object of scores for that case |
-| `reduce` | once, at the end | the leaderboard row, or `null` to have the numbers added up |
+| `phase`    | when                  | answer with                                                 |
+| ---------- | --------------------- | ----------------------------------------------------------- |
+| `plan`     | once, before anything | a list of cases, or `null` for one unnamed case             |
+| `evaluate` | once per case         | a flat object of scores for that case                       |
+| `reduce`   | once, at the end      | the leaderboard row, or `null` to have the numbers added up |
 
 Answering `null` means you have no opinion about that phase, and the host fills in what it would have done. A competition that scores one thing therefore handles `evaluate` and ignores the rest.
 
@@ -106,16 +106,16 @@ It also puts a boundary between cases where progress can be written. A run repor
 
 ## Configuration
 
-| Key | |
-|---|---|
-| `command` | What to run, once per phase, from the work directory |
-| `include` | The program and anything it reads, keyed by the path each lands at |
-| `image` | The image every phase runs in, if the installed machine has images |
-| `build` | A `dockerfile:`, optional `context:` and `args:`, built on startup instead |
-| `params` | Passed to every phase untouched |
-| `submission.allow` | Paths a submission may supply, as literals or globs |
-| `timeoutMs` | Wall-clock limit for one phase |
-| `limits` | `memoryMb`, `cpus`, `pids`, `network` |
+| Key                |                                                                            |
+| ------------------ | -------------------------------------------------------------------------- |
+| `command`          | What to run, once per phase, from the work directory                       |
+| `include`          | The program and anything it reads, keyed by the path each lands at         |
+| `image`            | The image every phase runs in, if the installed machine has images         |
+| `build`            | A `dockerfile:`, optional `context:` and `args:`, built on startup instead |
+| `params`           | Passed to every phase untouched                                            |
+| `submission.allow` | Paths a submission may supply, as literals or globs                        |
+| `timeoutMs`        | Wall-clock limit for one phase                                             |
+| `limits`           | `memoryMb`, `cpus`, `pids`, `network`                                      |
 
 There is no `program:` key. The program is a file like any other, and only `command:` decides which of them runs.
 

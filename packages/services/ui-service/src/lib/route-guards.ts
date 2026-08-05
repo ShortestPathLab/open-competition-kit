@@ -39,41 +39,30 @@ export type CompetitionShape = {
  */
 const getCompetitionShape = createServerFn({ method: "GET" })
   .inputValidator(z.string())
-  .handler(
-    async ({ data: competitionId }): Promise<CompetitionShape | null> => {
-      const [config, admin] = await Promise.all([
-        unsafe(sdk.config.get()),
-        adminStatus(),
-      ]);
-      const competition = config.competitions.find(
-        (candidate) => candidate.id === competitionId,
-      );
-      if (!competition) return null;
+  .handler(async ({ data: competitionId }): Promise<CompetitionShape | null> => {
+    const [config, admin] = await Promise.all([unsafe(sdk.config.get()), adminStatus()]);
+    const competition = config.competitions.find((candidate) => candidate.id === competitionId);
+    if (!competition) return null;
 
-      // An unpublished competition reads as one that was never configured. The
-      // alternative — "forbidden" — confirms to anyone guessing ids that a
-      // competition by that name is being prepared, which is the one thing a
-      // draft is for keeping quiet.
-      if (!isVisibleTo(competition, admin.isAdmin)) return null;
+    // An unpublished competition reads as one that was never configured. The
+    // alternative — "forbidden" — confirms to anyone guessing ids that a
+    // competition by that name is being prepared, which is the one thing a
+    // draft is for keeping quiet.
+    if (!isVisibleTo(competition, admin.isAdmin)) return null;
 
-      return {
-        id: competition.id,
-        trackIds: competition.tracks.map((track) => track.id),
-        leaderboardIds: competition.leaderboards.map(
-          (leaderboard) => leaderboard.id,
-        ),
-        isDraft: isDraft(competition),
-      };
-    },
-  );
+    return {
+      id: competition.id,
+      trackIds: competition.tracks.map((track) => track.id),
+      leaderboardIds: competition.leaderboards.map((leaderboard) => leaderboard.id),
+      isDraft: isDraft(competition),
+    };
+  });
 
 /**
  * Guards the whole `/competitions/$id` subtree. Returns the shape so the pages
  * below can check their own ids against it without a second round trip.
  */
-export async function ensureCompetition(
-  competitionId: string,
-): Promise<CompetitionShape> {
+export async function ensureCompetition(competitionId: string): Promise<CompetitionShape> {
   const competition = await getCompetitionShape({ data: competitionId });
   if (!competition) throw notFound({ data: { subject: "competition" } });
   return competition;
@@ -90,10 +79,7 @@ export function ensureTrack(competition: CompetitionShape, trackId: string) {
   }
 }
 
-export function ensureLeaderboard(
-  competition: CompetitionShape,
-  leaderboardId: string,
-) {
+export function ensureLeaderboard(competition: CompetitionShape, leaderboardId: string) {
   if (!competition.leaderboardIds.includes(leaderboardId)) {
     throw notFound({ data: { subject: "leaderboard" } });
   }

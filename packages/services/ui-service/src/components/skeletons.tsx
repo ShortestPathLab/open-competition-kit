@@ -1,22 +1,14 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 /**
  * Generic full-page loading placeholder used while a route's primary data
  * resolves. Mirrors the common heading + hero + content layout so the page
  * doesn't jump when the real content arrives.
  */
-export function PageSkeleton({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function PageSkeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      role="status"
-      aria-label="Loading"
-      className={cn("space-y-6", className)}
-      {...props}
-    >
+    <div role="status" aria-label="Loading" className={cn("space-y-6", className)} {...props}>
       <div className="space-y-3">
         <Skeleton className="h-8 w-56 max-w-full" />
         <Skeleton className="h-4 w-80 max-w-full" />
@@ -24,7 +16,7 @@ export function PageSkeleton({
       <Skeleton className="h-40 w-full rounded-xl" />
       <Skeleton className="h-64 w-full rounded-xl" />
     </div>
-  )
+  );
 }
 
 /**
@@ -56,7 +48,7 @@ export function ListSkeleton({
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 /**
@@ -68,12 +60,7 @@ export function FormSkeleton({
   ...props
 }: React.ComponentProps<"div"> & { fields?: number }) {
   return (
-    <div
-      role="status"
-      aria-label="Loading"
-      className={cn("space-y-4", className)}
-      {...props}
-    >
+    <div role="status" aria-label="Loading" className={cn("space-y-4", className)} {...props}>
       {Array.from({ length: fields }).map((_, index) => (
         <div key={index} className="space-y-2">
           <Skeleton className="h-4 w-24" />
@@ -82,7 +69,7 @@ export function FormSkeleton({
       ))}
       <Skeleton className="h-10 w-32 rounded-md" />
     </div>
-  )
+  );
 }
 
 /**
@@ -90,18 +77,12 @@ export function FormSkeleton({
  * the competitions/tracks grids. Drop several inside the caller's grid or
  * flex wrapper while the list loads.
  */
-export function CardSkeleton({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function CardSkeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       role="status"
       aria-label="Loading"
-      className={cn(
-        "overflow-hidden rounded-lg border border-border",
-        className
-      )}
+      className={cn("overflow-hidden rounded-lg border border-border", className)}
       {...props}
     >
       <Skeleton className="aspect-4/3 w-full rounded-none" />
@@ -110,5 +91,5 @@ export function CardSkeleton({
         <Skeleton className="h-3 w-1/2" />
       </div>
     </div>
-  )
+  );
 }

@@ -7,9 +7,11 @@ import { z } from "zod";
 export type ClientProps = {};
 
 export type PropTypes<T = Hooks> = {
-  [K in keyof T]: T[K] extends () => Promise<Source<infer R>> ? R
-  : T[K] extends Record<string, any> ? PropTypes<T[K]>
-  : never;
+  [K in keyof T]: T[K] extends () => Promise<Source<infer R>>
+    ? R
+    : T[K] extends Record<string, any>
+      ? PropTypes<T[K]>
+      : never;
 };
 
 export const $props: PropTypes = null as unknown as any;
@@ -51,9 +53,7 @@ export async function makeComponent<TProps>(def: ComponentDef<TProps>) {
 
   // Warnings do not fail the build but are still worth seeing.
   if (diagnostics) {
-    console.warn(
-      `[open-competition-kit] esbuild warnings for "${def.path}":\n${diagnostics}`,
-    );
+    console.warn(`[open-competition-kit] esbuild warnings for "${def.path}":\n${diagnostics}`);
   }
 
   return {

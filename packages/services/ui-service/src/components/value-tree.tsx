@@ -1,11 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Fragment } from "react";
 import type { JsonValue } from "@/lib/submission-fn";
-import {
-  formatResultValue,
-  labelForKey,
-  prettyJson,
-} from "@/lib/submission-readout";
+import { formatResultValue, labelForKey, prettyJson } from "@/lib/submission-readout";
 
 /**
  * Any JSON value, as rows rather than as a block of syntax.
@@ -29,11 +25,7 @@ export function ValueTree({
   className?: string;
 }) {
   if (value === null || typeof value !== "object") {
-    return (
-      <p className={cn("text-sm wrap-break-word", className)}>
-        {formatResultValue(value)}
-      </p>
-    );
+    return <p className={cn("text-sm wrap-break-word", className)}>{formatResultValue(value)}</p>;
   }
 
   // Past a few levels the shape is the information, and a list of lists of
@@ -52,9 +44,8 @@ export function ValueTree({
   }
 
   const isList = Array.isArray(value);
-  const entries: [string, JsonValue][] =
-    isList ?
-      value.map((entry, index) => [String(index + 1), entry])
+  const entries: [string, JsonValue][] = isList
+    ? value.map((entry, index) => [String(index + 1), entry])
     : Object.entries(value);
 
   if (entries.length === 0) {
@@ -82,9 +73,7 @@ export function ValueTree({
           return (
             <Fragment key={key}>
               <dt className="text-xs text-muted-foreground">{label}</dt>
-              <dd className="text-sm wrap-break-word">
-                {formatResultValue(entry)}
-              </dd>
+              <dd className="text-sm wrap-break-word">{formatResultValue(entry)}</dd>
             </Fragment>
           );
         }

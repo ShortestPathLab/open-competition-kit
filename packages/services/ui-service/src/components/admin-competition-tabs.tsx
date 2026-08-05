@@ -4,9 +4,7 @@ interface AdminCompetitionTabsProps {
   competitionId: string;
 }
 
-export function AdminCompetitionTabs({
-  competitionId,
-}: AdminCompetitionTabsProps) {
+export function AdminCompetitionTabs({ competitionId }: AdminCompetitionTabsProps) {
   const base = `/dashboard/${competitionId}`;
   return (
     <TabNav

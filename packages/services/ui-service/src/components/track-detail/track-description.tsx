@@ -27,13 +27,15 @@ export function TrackDescription({
         {/* Held empty until the name arrives rather than seeded with a
             placeholder, which would draw one avatar and then replace it with a
             different one. */}
-        {competition ?
+        {competition ? (
           <CompetitionIcon
             name={competition.name}
             icon={competition.icon}
             className="size-5 rounded"
           />
-        : <span className="size-5 shrink-0 rounded bg-muted" />}
+        ) : (
+          <span className="size-5 shrink-0 rounded bg-muted" />
+        )}
         {competition?.name}
       </Link>
       <span className="mt-1.5 block">{description}</span>

@@ -22,8 +22,7 @@ export function useEnrolPage(competitionId: string, trackId?: string) {
   const enrolFn = useServerFn(enrolInTrack);
 
   const selectedTrack =
-    competition?.tracks.find((track) => track.id === trackId) ??
-    competition?.tracks[0];
+    competition?.tracks.find((track) => track.id === trackId) ?? competition?.tracks[0];
 
   const mutation = useMutation({
     mutationFn: () => {

@@ -25,10 +25,7 @@ export const CreatedAt = S.DateFromSelf.annotations({
 
 export const typedJson = <T>() => Json as S.Schema<T>;
 
-const createSchemas = <
-  K extends string,
-  T extends { [x: Readonly<PropertyKey>]: S.Schema<any> },
->(
+const createSchemas = <K extends string, T extends { [x: Readonly<PropertyKey>]: S.Schema<any> }>(
   key: K,
   fields: T,
 ) => ({
@@ -94,12 +91,8 @@ export const schemas = mapValues(tables, (v) => v.full) as {
 
 export type DbKey = keyof typeof schemas;
 export type DbRecord<K extends DbKey> = S.Schema.Type<(typeof schemas)[K]>;
-export type DbCreate<K extends DbKey> = S.Schema.Type<
-  (typeof tables)[K]["create"]
->;
-export type DbUpdate<K extends DbKey> = S.Schema.Type<
-  (typeof tables)[K]["update"]
->;
+export type DbCreate<K extends DbKey> = S.Schema.Type<(typeof tables)[K]["create"]>;
+export type DbUpdate<K extends DbKey> = S.Schema.Type<(typeof tables)[K]["update"]>;
 
 export type Competition = DbRecord<"competition">;
 export type CompetitionCreate = DbCreate<"competition">;
@@ -132,13 +125,11 @@ export type TableHooks<TCreate, TUpdate, TFull> = {
 };
 
 export type WithHooks<TCreate, TUpdate, TFull, E, C> = {
-  [K in keyof TableHooks<TCreate, TUpdate, TFull>]: TableHooks<
-    TCreate,
-    TUpdate,
-    TFull
-  >[K] extends (...args: infer In) => Promise<infer Out> ?
-    (...args: In) => E.Effect<Out, E, C>
-  : never;
+  [K in keyof TableHooks<TCreate, TUpdate, TFull>]: TableHooks<TCreate, TUpdate, TFull>[K] extends (
+    ...args: infer In
+  ) => Promise<infer Out>
+    ? (...args: In) => E.Effect<Out, E, C>
+    : never;
 };
 
 const tableHooks = <F>() =>

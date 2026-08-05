@@ -43,10 +43,7 @@ export function StatusPill({
   children: ReactNode;
 }) {
   return (
-    <Badge
-      variant="outline"
-      className={cn("gap-1.5 px-2 py-0.5", TONE_STYLES[tone], className)}
-    >
+    <Badge variant="outline" className={cn("gap-1.5 px-2 py-0.5", TONE_STYLES[tone], className)}>
       <span
         aria-hidden
         className={cn(

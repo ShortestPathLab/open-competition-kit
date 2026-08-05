@@ -48,9 +48,9 @@ export default {
       const nextDef = {
         ...def,
         shape: def.shape.map((shapeItem) =>
-          shapeItem.kind === GITHUB_REF_SELECT_KIND ?
-            { ...shapeItem, kind: "select", options }
-          : shapeItem,
+          shapeItem.kind === GITHUB_REF_SELECT_KIND
+            ? { ...shapeItem, kind: "select", options }
+            : shapeItem,
         ),
       };
 
@@ -60,21 +60,12 @@ export default {
   runner: {
     setup: async ({ job }, next) => {
       const jobRecord = await unsafe(kit.jobs.get(job));
-      const submission = await unsafe(
-        kit.submissions.get(jobRecord.submission),
-      );
+      const submission = await unsafe(kit.submissions.get(jobRecord.submission));
       const owner = await githubOrg();
       const repo = await participantRepositoryName(submission.user);
-      const selectedRef = await resolveSelectedRef(
-        submission.body,
-        owner,
-        repo,
-      );
+      const selectedRef = await resolveSelectedRef(submission.body, owner, repo);
       const client = await octokit();
-      const { data } = await client.request(
-        "GET /repos/{owner}/{repo}/zipball/{ref}",
-        selectedRef,
-      );
+      const { data } = await client.request("GET /repos/{owner}/{repo}/zipball/{ref}", selectedRef);
       const archive = Buffer.from(data as ArrayBuffer);
       const limit = await maxArchiveBytes();
 
@@ -114,10 +105,7 @@ export default {
      */
     teardown: async ({ job }, next) => {
       await unsafe(kit.files.purge(job)).catch((e) =>
-        console.error(
-          `[github-classic] Could not purge files for job ${job}`,
-          e,
-        ),
+        console.error(`[github-classic] Could not purge files for job ${job}`, e),
       );
       return (await next?.({ job })) ?? { status: "done" };
     },

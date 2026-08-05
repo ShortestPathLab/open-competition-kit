@@ -73,20 +73,18 @@ export function readBody(body: string): BodyReadout {
     return wholeBody(decodeValue(parsed as JsonValue), body);
   }
 
-  const fields = Object.entries(parsed as Record<string, JsonValue>).map(
-    ([key, value]) => {
-      const decoded = decodeValue(value);
-      return {
-        key,
-        // TODO(forms): the track's form definition holds the real field labels.
-        // Until the submission endpoints carry it, a title-cased key is the best
-        // name available, which reads fine for `teamName` and poorly for `q1a`.
-        label: labelForKey(key),
-        value: decoded,
-        file: asFile(decoded),
-      };
-    },
-  );
+  const fields = Object.entries(parsed as Record<string, JsonValue>).map(([key, value]) => {
+    const decoded = decodeValue(value);
+    return {
+      key,
+      // TODO(forms): the track's form definition holds the real field labels.
+      // Until the submission endpoints carry it, a title-cased key is the best
+      // name available, which reads fine for `teamName` and poorly for `q1a`.
+      label: labelForKey(key),
+      value: decoded,
+      file: asFile(decoded),
+    };
+  });
 
   return { fields, raw: body };
 }
@@ -116,9 +114,7 @@ function collectFacts(label: string, value: JsonValue, into: BodyFact[]): void {
   if (value === null) return;
 
   if (Array.isArray(value)) {
-    value.forEach((entry, index) =>
-      collectFacts(`${label} ${index + 1}`.trim(), entry, into),
-    );
+    value.forEach((entry, index) => collectFacts(`${label} ${index + 1}`.trim(), entry, into));
     return;
   }
 
@@ -137,10 +133,7 @@ function collectFacts(label: string, value: JsonValue, into: BodyFact[]): void {
 
   into.push({
     label,
-    value:
-      text.length > MAX_SUMMARY_TEXT ?
-        `${text.slice(0, MAX_SUMMARY_TEXT)}...`
-      : text,
+    value: text.length > MAX_SUMMARY_TEXT ? `${text.slice(0, MAX_SUMMARY_TEXT)}...` : text,
   });
 }
 

@@ -6,12 +6,7 @@ import type { FieldProps } from "@rjsf/utils";
 import { isFile, type FileRef } from "@open-competition-kit/core/file";
 import React from "react";
 import { upload, type UploadProgress } from "./upload";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "./ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 
 const format = (bytes: number) => {
@@ -58,19 +53,17 @@ export function FileField(props: FieldProps) {
   };
 
   const percent =
-    progress && progress.total > 0 ?
-      Math.round((progress.loaded / progress.total) * 100)
-    : 0;
+    progress && progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0;
 
   return (
     <Field data-invalid={error ? "true" : undefined}>
       <FieldLabel htmlFor={id}>
         {schema.title}
-        {required ?
+        {required ? (
           <span aria-hidden="true" className="text-destructive">
             *
           </span>
-        : null}
+        ) : null}
       </FieldLabel>
 
       <Input
@@ -81,7 +74,7 @@ export function FileField(props: FieldProps) {
         type="file"
       />
 
-      {progress ?
+      {progress ? (
         <div className="flex flex-col gap-1.5">
           <div
             aria-valuemax={100}
@@ -96,24 +89,19 @@ export function FileField(props: FieldProps) {
             />
           </div>
           <FieldDescription>
-            Uploading… {percent}% ({format(progress.loaded)} of{" "}
-            {format(progress.total)})
+            Uploading… {percent}% ({format(progress.loaded)} of {format(progress.total)})
           </FieldDescription>
         </div>
-      : null}
+      ) : null}
 
-      {current && !progress ?
+      {current && !progress ? (
         <FieldDescription>
-          <span className="font-medium text-foreground">
-            {current.name ?? "File"}
-          </span>{" "}
-          ({format(current.size)}) uploaded
+          <span className="font-medium text-foreground">{current.name ?? "File"}</span> (
+          {format(current.size)}) uploaded
         </FieldDescription>
-      : null}
+      ) : null}
 
-      {schema.description ?
-        <FieldDescription>{schema.description}</FieldDescription>
-      : null}
+      {schema.description ? <FieldDescription>{schema.description}</FieldDescription> : null}
 
       {error ? <FieldError>{error}</FieldError> : null}
     </Field>

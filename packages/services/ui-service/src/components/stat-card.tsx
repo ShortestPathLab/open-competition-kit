@@ -29,21 +29,24 @@ export function StatCard({
       <p className="mt-2 text-3xl font-bold">
         {typeof value === "number" ? value.toLocaleString() : value}
       </p>
-      {change === undefined ?
-        hint ?
+      {change === undefined ? (
+        hint ? (
           <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
-        : null
-      : <div className="mt-2 flex items-center gap-1 text-xs">
-          {isPositive ?
+        ) : null
+      ) : (
+        <div className="mt-2 flex items-center gap-1 text-xs">
+          {isPositive ? (
             <TrendingUp className="h-3 w-3 text-green-600" />
-          : <TrendingDown className="h-3 w-3 text-red-500" />}
+          ) : (
+            <TrendingDown className="h-3 w-3 text-red-500" />
+          )}
           <span className={isPositive ? "text-green-600" : "text-red-500"}>
             {isPositive ? "+" : ""}
             {change}%
           </span>
           <span className="text-muted-foreground">{changeLabel}</span>
         </div>
-      }
+      )}
     </div>
   );
 }

@@ -24,10 +24,7 @@ export class CompetitionNotFoundError extends Error {
  * right answer.
  */
 export async function requireVisibleCompetition(id: string) {
-  const [competition, admin] = await Promise.all([
-    unsafe(competitions.get(id)),
-    adminStatus(),
-  ]);
+  const [competition, admin] = await Promise.all([unsafe(competitions.get(id)), adminStatus()]);
 
   if (!isVisibleTo(competition, admin.isAdmin)) {
     throw new CompetitionNotFoundError(id);

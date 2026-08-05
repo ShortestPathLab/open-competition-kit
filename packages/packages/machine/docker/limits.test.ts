@@ -41,10 +41,7 @@ describe("clamp", () => {
 
   test("a greedy run comes back at the ceiling", () => {
     expect(
-      clamp(
-        { timeoutMs: 600_000, limits: { memoryMb: 16_384, pids: 4096 } },
-        ceiling,
-      ),
+      clamp({ timeoutMs: 600_000, limits: { memoryMb: 16_384, pids: 4096 } }, ceiling),
     ).toEqual({
       timeoutMs: 120_000,
       limits: {
@@ -59,12 +56,10 @@ describe("clamp", () => {
 
   test("a modest run is left as it was", () => {
     expect(
-      clamp({ timeoutMs: 35_000, limits: { memoryMb: 512, cpus: 0.5 } }, ceiling)
-        .timeoutMs,
+      clamp({ timeoutMs: 35_000, limits: { memoryMb: 512, cpus: 0.5 } }, ceiling).timeoutMs,
     ).toBe(35_000);
     expect(
-      clamp({ timeoutMs: 35_000, limits: { memoryMb: 512, cpus: 0.5 } }, ceiling)
-        .limits,
+      clamp({ timeoutMs: 35_000, limits: { memoryMb: 512, cpus: 0.5 } }, ceiling).limits,
     ).toMatchObject({ memoryMb: 512, cpus: 0.5 });
   });
 
@@ -83,16 +78,11 @@ describe("clamp", () => {
   });
 
   test("a withheld network cannot be asked back on", () => {
-    expect(
-      clamp({ limits: { network: true } }, { network: false }).limits?.network,
-    ).toBe(false);
+    expect(clamp({ limits: { network: true } }, { network: false }).limits?.network).toBe(false);
   });
 
   test("a withheld writable root cannot be asked back on", () => {
-    expect(
-      clamp({ limits: { writable: true } }, { writable: false }).limits
-        ?.writable,
-    ).toBe(false);
+    expect(clamp({ limits: { writable: true } }, { writable: false }).limits?.writable).toBe(false);
   });
 });
 
@@ -100,9 +90,7 @@ describe("the machine: block", () => {
   test("an absent block is a ceiling of nothing", () => {
     const read = machine.safeParse({});
     expect(read.success).toBe(true);
-    expect(clamp({ timeoutMs: 600_000 }, read.data ?? {}).timeoutMs).toBe(
-      600_000,
-    );
+    expect(clamp({ timeoutMs: 600_000 }, read.data ?? {}).timeoutMs).toBe(600_000);
   });
 
   test("a limit of zero is refused rather than read as unlimited", () => {

@@ -152,16 +152,7 @@ const collectFrom = async (
   return out;
 };
 
-const run = async ({
-  image,
-  command,
-  files,
-  env,
-  cwd,
-  collect,
-  timeoutMs,
-  limits,
-}: Run) => {
+const run = async ({ image, command, files, env, cwd, collect, timeoutMs, limits }: Run) => {
   const started = Date.now();
 
   const injecting = !!files && Object.keys(files).length > 0;
@@ -175,9 +166,7 @@ const run = async ({
     ...command,
   ]);
   if (created.code !== 0) {
-    throw new Error(
-      `Could not create a container from "${image}": ${created.stderr.trim()}`,
-    );
+    throw new Error(`Could not create a container from "${image}": ${created.stderr.trim()}`);
   }
   const id = created.stdout.trim();
 
@@ -209,20 +198,14 @@ const run = async ({
       const missing = new Set<string>();
       for (const path of Object.keys(files)) {
         const relative = path.replace(/^\/+/, "");
-        const copied = await sh([
-          "cp",
-          join(staging, relative),
-          `${id}:${path}`,
-        ]);
+        const copied = await sh(["cp", join(staging, relative), `${id}:${path}`]);
         if (copied.code === 0) continue;
 
         // The first segment, because that is the largest thing we can create
         // without touching anything the image already put there.
         const root = relative.split("/")[0];
         if (!root || root === relative) {
-          throw new Error(
-            `Could not place "${path}" into the container: ${copied.stderr.trim()}`,
-          );
+          throw new Error(`Could not place "${path}" into the container: ${copied.stderr.trim()}`);
         }
         missing.add(root);
       }
@@ -233,9 +216,7 @@ const run = async ({
       for (const root of missing) {
         const copied = await sh(["cp", join(staging, root), `${id}:/`]);
         if (copied.code !== 0) {
-          throw new Error(
-            `Could not create "/${root}" in the container: ${copied.stderr.trim()}`,
-          );
+          throw new Error(`Could not create "/${root}" in the container: ${copied.stderr.trim()}`);
         }
       }
     }
@@ -249,12 +230,7 @@ const run = async ({
     // so it alone cannot say which happened. Ask the daemon instead.
     let timedOut = false;
     if (finished.code !== 0) {
-      const state = await sh([
-        "inspect",
-        "-f",
-        "{{.State.OOMKilled}} {{.State.ExitCode}}",
-        id,
-      ]);
+      const state = await sh(["inspect", "-f", "{{.State.OOMKilled}} {{.State.ExitCode}}", id]);
       const [oom] = state.stdout.trim().split(" ");
       timedOut = finished.code === 137 && oom !== "true";
     }

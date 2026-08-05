@@ -18,23 +18,13 @@ import {
 } from "@open-competition-kit/sdk";
 import z from "zod";
 
-const literalSchema = z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-  z.null(),
-  z.undefined(),
-]);
+const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null(), z.undefined()]);
 type Literal = z.infer<typeof literalSchema>;
 
 type Json = Literal | { [key: string]: Json } | Json[];
 
 export const jsonSchema: z.ZodType<Json> = z.lazy(() =>
-  z.union([
-    literalSchema,
-    z.array(jsonSchema),
-    z.record(z.string(), jsonSchema),
-  ]),
+  z.union([literalSchema, z.array(jsonSchema), z.record(z.string(), jsonSchema)]),
 );
 
 type OmitNever<T> = { [K in keyof T as T[K] extends never ? never : K]: T[K] };
@@ -49,13 +39,13 @@ type OmitNever<T> = { [K in keyof T as T[K] extends never ? never : K]: T[K] };
  */
 type ComponentHooks = OmitNever<{
   [K in Path<Hooks>]: PathValue<Hooks, K> extends (
-    (...args: infer A) => Promise<Source<infer R> | undefined>
-  ) ?
-    {
-      args: A extends [infer First, ...unknown[]] ? First : undefined;
-      props: R;
-    }
-  : never;
+    ...args: infer A
+  ) => Promise<Source<infer R> | undefined>
+    ? {
+        args: A extends [infer First, ...unknown[]] ? First : undefined;
+        props: R;
+      }
+    : never;
 }>;
 
 type ComponentHookPath = keyof ComponentHooks;
@@ -119,9 +109,7 @@ export function useKitComponent<T extends ComponentHookPath>(
       const id = hash({ hook, accessor, args: args ?? null });
 
       if (cache[id]) {
-        return cache[id].component as ComponentOnly<
-          ComponentHooks[T]["props"]
-        >["component"];
+        return cache[id].component as ComponentOnly<ComponentHooks[T]["props"]>["component"];
       }
       const { source } = await getKitComponentModuleFn({
         data: { hook, accessor, args },
@@ -131,15 +119,12 @@ export function useKitComponent<T extends ComponentHookPath>(
         "react-dom": await import("react-dom"),
         "react/jsx-runtime": await import("react/jsx-runtime"),
       };
-      const module = new Function(
-        "require",
-        `var module = {}; ${source}; return module;`,
-      )((p: keyof typeof packages) => packages[p])?.exports?.default;
+      const module = new Function("require", `var module = {}; ${source}; return module;`)(
+        (p: keyof typeof packages) => packages[p],
+      )?.exports?.default;
       assert(isComponent(module), "Hook output is is not a component");
       cache[id] = module;
-      return module.component as ComponentOnly<
-        ComponentHooks[T]["props"]
-      >["component"];
+      return module.component as ComponentOnly<ComponentHooks[T]["props"]>["component"];
     },
   });
 
@@ -149,13 +134,15 @@ export function useKitComponent<T extends ComponentHookPath>(
       // boundary, so a renderer that declares nothing picks up the app's Inter.
       // The rule that used to sit here named Geist, which nothing loads, and so
       // dropped every kit component to the browser's default serif.
-      return KitComponent ?
-          <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
-            <root.div>
-              <KitComponent {...props} />
-            </root.div>
-          </CatchBoundary>
-        : <Loader />;
+      return KitComponent ? (
+        <CatchBoundary getResetKey={() => "reset"} onCatch={console.error}>
+          <root.div>
+            <KitComponent {...props} />
+          </root.div>
+        </CatchBoundary>
+      ) : (
+        <Loader />
+      );
     },
     [KitComponent],
   );

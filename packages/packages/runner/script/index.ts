@@ -85,17 +85,13 @@ const LOG_LINES = 512;
  * installed. Core validated this block at boot against the same schema, so a
  * failure here means the config changed underneath a running process.
  */
-const settings = async (
-  competition: string,
-): Promise<ScriptRunner | undefined> => {
+const settings = async (competition: string): Promise<ScriptRunner | undefined> => {
   const c = await unsafe(sdk.competitions.get(competition));
   const read = script.safeParse(c.runner ?? {});
   if (!read.success) {
     throw new Error(
       `The runner: block on ${competition} is not one this package can read: ` +
-        read.error.issues
-          .map((i) => `${i.path.join(".")}: ${i.message}`)
-          .join("; "),
+        read.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
     );
   }
   return read.data.command ? read.data : undefined;
@@ -158,11 +154,11 @@ const invoke = async (
   const described: Request = {
     ...request,
     reply: REPLY,
-    ...(submission ?
-      {
-        submission: { root: SUBMISSION, files: Object.keys(submission) },
-      }
-    : {}),
+    ...(submission
+      ? {
+          submission: { root: SUBMISSION, files: Object.keys(submission) },
+        }
+      : {}),
   };
 
   const files = payload(runner, described);
@@ -191,12 +187,12 @@ const invoke = async (
     // never reached its own write. Its output is in the log, and the log is the
     // traceback, so the message points there rather than trying to guess.
     throw new Error(
-      result.timedOut ?
-        `The ${where} phase ran out of time after ${runner.timeoutMs ?? "the default"}ms.`
-      : `The ${where} phase exited with ${result.code} and left no reply at ` +
-        `${REPLY}. A program that fails before it writes one looks like this, ` +
-        `and so does a machine with no ${runner.command?.[0] ?? "command"} on ` +
-        `it. Its output was:\n${log}`,
+      result.timedOut
+        ? `The ${where} phase ran out of time after ${runner.timeoutMs ?? "the default"}ms.`
+        : `The ${where} phase exited with ${result.code} and left no reply at ` +
+            `${REPLY}. A program that fails before it writes one looks like this, ` +
+            `and so does a machine with no ${runner.command?.[0] ?? "command"} on ` +
+            `it. Its output was:\n${log}`,
     );
   }
 
@@ -222,9 +218,7 @@ const record = async (job: string, lines: readonly string[]) => {
   const wanted = lines.filter(Boolean);
   if (!wanted.length) return;
   const previous = await unsafe(outputs.get({ reference: LOGS, owner: job }));
-  const next = (Array.isArray(previous) ? [...previous, ...wanted] : wanted).slice(
-    -LOG_LINES,
-  );
+  const next = (Array.isArray(previous) ? [...previous, ...wanted] : wanted).slice(-LOG_LINES);
   await unsafe(outputs.set({ reference: LOGS, owner: job, value: next }));
 };
 
@@ -253,10 +247,7 @@ const evaluate = async (job: string, runner: ScriptRunner) => {
     );
   }
   const cases = plan.value ?? ONE_UNNAMED_CASE;
-  await record(job, [
-    plan.log,
-    `Planned ${cases.length} case${cases.length === 1 ? "" : "s"}.`,
-  ]);
+  await record(job, [plan.log, `Planned ${cases.length} case${cases.length === 1 ? "" : "s"}.`]);
 
   const files = await source.files(job, { allow: runner.submission?.allow });
 
@@ -327,9 +318,7 @@ export default {
 
       console.log(`[runner-script] ${competition}: preparing the evaluation image`);
       const { image: tag, built } = await unsafe(machine.build(runner.build));
-      console.log(
-        `[runner-script] ${competition}: ${tag} ${built ? "built" : "already present"}`,
-      );
+      console.log(`[runner-script] ${competition}: ${tag} ${built ? "built" : "already present"}`);
     },
     run: async ({ job }, next) => {
       const competition = await competitionOf(job);
@@ -346,9 +335,7 @@ export default {
 
       try {
         const value = await evaluate(job, runner);
-        await unsafe(
-          outputs.set({ reference: reference.std.output, owner: job, value }),
-        );
+        await unsafe(outputs.set({ reference: reference.std.output, owner: job, value }));
         await unsafe(jobs.update({ id: job, status: "done" }));
         return { status: "done" };
       } catch (e) {

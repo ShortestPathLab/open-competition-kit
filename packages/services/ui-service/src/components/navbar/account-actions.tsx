@@ -39,29 +39,17 @@ function DashboardButton() {
  * Register only when there is a password to register with. An install running
  * on OAuth alone has no form behind that link.
  */
-function SignedOutActions({
-  emailEnabled,
-  padding,
-}: {
-  emailEnabled: boolean;
-  padding: string;
-}) {
+function SignedOutActions({ emailEnabled, padding }: { emailEnabled: boolean; padding: string }) {
   return (
     <>
       {emailEnabled && (
-        <Link
-          to="/register"
-          className={cn("rounded-md border border-border text-sm", padding)}
-        >
+        <Link to="/register" className={cn("rounded-md border border-border text-sm", padding)}>
           Register
         </Link>
       )}
       <Link
         to="/sign-in"
-        className={cn(
-          "rounded-md bg-primary text-sm text-primary-foreground",
-          padding,
-        )}
+        className={cn("rounded-md bg-primary text-sm text-primary-foreground", padding)}
       >
         Sign in
       </Link>
@@ -84,11 +72,7 @@ export function DesktopActions({
 }: ActionsProps) {
   if (sessionLoading) {
     return (
-      <div
-        className="flex items-center gap-2"
-        role="status"
-        aria-label="Loading account"
-      >
+      <div className="flex items-center gap-2" role="status" aria-label="Loading account">
         <Skeleton className="h-9 w-20 rounded-md" />
         <Skeleton className="size-9 rounded-full" />
       </div>
@@ -126,14 +110,12 @@ export function MobileActions({
 
   return (
     <div className="flex flex-col gap-2">
-      {isLoggedIn && user ?
+      {isLoggedIn && user ? (
         <>
           <div className="flex items-center justify-between gap-2 w-full mb-1">
             <div className="flex items-center gap-3 rounded-md px-2 py-1">
               <ProfileAvatar user={user} />
-              <span className="min-w-0 truncate text-sm font-medium">
-                {nameOf(user)}
-              </span>
+              <span className="min-w-0 truncate text-sm font-medium">{nameOf(user)}</span>
             </div>
             {isAdmin ? <AdminBell /> : null}
           </div>
@@ -142,7 +124,9 @@ export function MobileActions({
             Sign out
           </Button>
         </>
-      : <SignedOutActions emailEnabled={emailEnabled} padding="px-4 py-2" />}
+      ) : (
+        <SignedOutActions emailEnabled={emailEnabled} padding="px-4 py-2" />
+      )}
     </div>
   );
 }

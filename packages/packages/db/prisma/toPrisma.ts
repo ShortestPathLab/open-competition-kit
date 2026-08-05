@@ -3,8 +3,7 @@ import { Match as M, Schema as S } from "effect";
 import { capitalize } from "es-toolkit";
 import { hook } from "@open-competition-kit/sdk";
 
-const { schemas, Id, Number, Boolean, Date, String, Int, Json, CreatedAt } =
-  hook.db;
+const { schemas, Id, Number, Boolean, Date, String, Int, Json, CreatedAt } = hook.db;
 
 const is =
   <T>(a: T) =>

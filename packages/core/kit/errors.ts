@@ -1,13 +1,9 @@
 import { Data as D } from "effect";
 import { describeRefusals, type Refusal } from "../gate";
 
-export class CollectionOwnerError extends D.TaggedError(
-  "CollectionOwnerError",
-) {}
+export class CollectionOwnerError extends D.TaggedError("CollectionOwnerError") {}
 export class MissingContextError extends D.TaggedError("MissingContextError") {}
-export class MissingNamespaceError extends D.TaggedError(
-  "MissingNamespaceError",
-) {}
+export class MissingNamespaceError extends D.TaggedError("MissingNamespaceError") {}
 export class MissingFileError extends D.TaggedError("MissingFileError")<{
   key: string;
 }> {}
@@ -25,9 +21,7 @@ export class FileTooLargeError extends D.TaggedError("FileTooLargeError")<{
  * path that happens to render a form. What the rules are is not core's business:
  * it runs the chain and reports what came back.
  */
-export class SubmissionRefusedError extends D.TaggedError(
-  "SubmissionRefusedError",
-)<{
+export class SubmissionRefusedError extends D.TaggedError("SubmissionRefusedError")<{
   track: string;
   refusals: readonly Refusal[];
 }> {

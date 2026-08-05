@@ -23,12 +23,9 @@ export function EnrolledConfirmation({
       <div className="flex items-start gap-3 rounded-xl border border-success/30 bg-success/5 p-4">
         <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" />
         <div>
-          <p className="text-sm font-semibold text-success">
-            You are entered in {track.name}
-          </p>
+          <p className="text-sm font-semibold text-success">You are entered in {track.name}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {competitionName} will count your submissions to this track from now
-            on.
+            {competitionName} will count your submissions to this track from now on.
           </p>
         </div>
       </div>

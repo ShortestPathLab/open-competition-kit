@@ -96,16 +96,12 @@ export function CompetitionPageHeader({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink render={<Link to="/competitions" />}>
-                Competitions
-              </BreadcrumbLink>
+              <BreadcrumbLink render={<Link to="/competitions" />}>Competitions</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink
-                render={
-                  <Link to="/competitions/$id" params={{ id: competitionId }} />
-                }
+                render={<Link to="/competitions/$id" params={{ id: competitionId }} />}
               >
                 {/* A space rather than a fallback name: the crumb holds its
                     height while the competition loads, so the title below it
@@ -119,10 +115,7 @@ export function CompetitionPageHeader({
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     render={
-                      <Link
-                        to={SECTION_ROUTES[step.section]}
-                        params={{ id: competitionId }}
-                      />
+                      <Link to={SECTION_ROUTES[step.section]} params={{ id: competitionId }} />
                     }
                   >
                     {step.label}

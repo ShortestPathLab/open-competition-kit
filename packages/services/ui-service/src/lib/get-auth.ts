@@ -29,8 +29,7 @@ const _options = createServerFn().handler(async () => {
   const providers = await authConfig();
   const { email, ...social } = providers;
   return {
-    emailAndPassword:
-      email ? { enabled: true, ...email.providerOptions } : undefined,
+    emailAndPassword: email ? { enabled: true, ...email.providerOptions } : undefined,
     socialProviders: mapValues(social, (a) => a.providerOptions as any),
     // `authConfig` is the memoised function, not the config it returns — taking
     // Object.values of it yielded [] and silently discarded every
@@ -77,10 +76,8 @@ export const auth = onceOk(async () => {
   return betterAuth({ ...(await options()), ...(await getAuthBaseConfig()) });
 });
 
-export const getAuthConfig = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const config = await authConfig();
-    const { email, ...social } = config;
-    return { emailEnabled: !!email, socialProviders: Object.keys(social) };
-  },
-);
+export const getAuthConfig = createServerFn({ method: "GET" }).handler(async () => {
+  const config = await authConfig();
+  const { email, ...social } = config;
+  return { emailEnabled: !!email, socialProviders: Object.keys(social) };
+});

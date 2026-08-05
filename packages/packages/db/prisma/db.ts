@@ -17,10 +17,7 @@ export const db = once(async () => {
     DATABASE_URL=${url} bunx --package prisma@7.8.0 prisma db push dev --accept-data-loss --schema ${import.meta.dir}/schemas/schema.prisma --config ${import.meta.dir}/prisma.config.ts
   `;
   } catch (e) {
-    console.warn(
-      "Error setting up database. Things might not work correctly.",
-      e,
-    );
+    console.warn("Error setting up database. Things might not work correctly.", e);
   }
   //
   return await client(new PrismaPg({ connectionString: url }));

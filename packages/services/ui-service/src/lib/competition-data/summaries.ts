@@ -11,9 +11,7 @@ function makeCompetitionDescription(name: string, trackCount: number) {
   return `${name} currently has ${trackCount} tracks available.`;
 }
 
-export async function getCompetitionSummary(
-  id: string,
-): Promise<CompetitionSummary> {
+export async function getCompetitionSummary(id: string): Promise<CompetitionSummary> {
   const competition = await requireVisibleCompetition(id);
   const competitionTracks = await unsafe(tracks.of(competition));
 
@@ -40,8 +38,7 @@ export async function getCompetitionSummary(
     name: competitionName,
     organiser: competition.organiser || "OpenCompetitionKit",
     description:
-      competition.description ||
-      makeCompetitionDescription(competitionName, trackSummaries.length),
+      competition.description || makeCompetitionDescription(competitionName, trackSummaries.length),
     overview: competition.overview ?? "",
     rules: competition.rules ?? "",
     icon: competition.icon,
@@ -62,16 +59,12 @@ export async function getCompetitionSummary(
  * Behind the same visibility check as everything else here, so a draft does not
  * leak its existence through a picture.
  */
-export async function getCompetitionBanner(
-  id: string,
-): Promise<string | undefined> {
+export async function getCompetitionBanner(id: string): Promise<string | undefined> {
   const competition = await requireVisibleCompetition(id);
   return competition.banner;
 }
 
-export async function listCompetitionSummaries(): Promise<
-  CompetitionSummary[]
-> {
+export async function listCompetitionSummaries(): Promise<CompetitionSummary[]> {
   const [competitionRecords, admin] = await Promise.all([
     unsafe(competitions.list({})),
     adminStatus(),

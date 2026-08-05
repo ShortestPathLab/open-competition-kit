@@ -35,10 +35,7 @@ export * as surface from "@open-competition-kit/core/surface";
  * not have to check. A contributor to a region this build of core has never
  * heard of gets the loose subject, which is the honest answer for one.
  */
-export type SurfaceRequestFor<K extends string> = Omit<
-  SurfaceRequest,
-  "surface" | "subject"
-> & {
+export type SurfaceRequestFor<K extends string> = Omit<SurfaceRequest, "surface" | "subject"> & {
   surface: K;
   subject: K extends SurfaceId ? Surfaces[K] & Subject : Subject;
 };
@@ -75,13 +72,9 @@ export type SurfaceContributors = {
 export function surfaces(map: SurfaceContributors): SurfaceContentHook {
   return async (request, next) => {
     const contributor = map[request.surface];
-    const mine =
-      contributor ?
-        await Promise.resolve(contributor(request)).catch((error) => {
-          console.error(
-            `[surface] contributor for ${request.surface} failed`,
-            error,
-          );
+    const mine = contributor
+      ? await Promise.resolve(contributor(request)).catch((error) => {
+          console.error(`[surface] contributor for ${request.surface} failed`, error);
           return [] as readonly SurfaceItem[];
         })
       : [];
@@ -91,10 +84,7 @@ export function surfaces(map: SurfaceContributors): SurfaceContentHook {
   };
 }
 
-export type SurfaceViews = Record<
-  string,
-  () => Promise<Source<SurfaceViewProps<any>>>
->;
+export type SurfaceViews = Record<string, () => Promise<Source<SurfaceViewProps<any>>>>;
 
 /**
  * Turn a map of view ids into the chained `surface.view` hook.

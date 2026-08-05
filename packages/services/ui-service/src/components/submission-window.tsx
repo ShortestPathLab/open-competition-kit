@@ -3,10 +3,7 @@ import { cn } from "@/lib/utils";
 import { CalendarClock, CircleCheck, LockKeyhole } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isActionable, phaseOf, type Phase } from "@/lib/competition-window";
-import {
-  describeDuration,
-  formatInstant,
-} from "@open-competition-kit/sdk/instant";
+import { describeDuration, formatInstant } from "@open-competition-kit/sdk/instant";
 import { nextInstant, type GateReport } from "@open-competition-kit/sdk/gate";
 
 /**
@@ -77,17 +74,12 @@ function labelFor(reports: readonly GateReport[], phase: Phase) {
     (report) =>
       (phase === "open" && report.state === "ok") ||
       (phase === "closing" && report.state === "pending") ||
-      ((phase === "upcoming" || phase === "closed") &&
-        report.state === "blocked"),
+      ((phase === "upcoming" || phase === "closed") && report.state === "blocked"),
   );
   return deciding?.label ?? PHASE_LABELS[phase];
 }
 
-export function SubmissionWindowBadge({
-  reports,
-}: {
-  reports: readonly GateReport[];
-}) {
+export function SubmissionWindowBadge({ reports }: { reports: readonly GateReport[] }) {
   const phase = usePhase(reports);
   const Icon = PHASE_ICONS[phase];
 
@@ -114,11 +106,11 @@ export function WindowStatus({
   const phase = phaseOf(reports, now);
   const next = nextInstant(reports, now);
 
-  const summary =
-    next?.at ?
-      `${(next.atLabel ?? "next").toLowerCase()} in ${describeDuration(Date.parse(next.at) - now)}`
-    : phase === "closed" ? "no longer accepting submissions"
-    : "no closing date";
+  const summary = next?.at
+    ? `${(next.atLabel ?? "next").toLowerCase()} in ${describeDuration(Date.parse(next.at) - now)}`
+    : phase === "closed"
+      ? "no longer accepting submissions"
+      : "no closing date";
 
   return (
     <div className={cn("min-w-0", className)}>
@@ -126,14 +118,14 @@ export function WindowStatus({
         {labelFor(reports, phase)}
       </StatusPill>
       <p className="mt-1.5 text-xs text-muted-foreground">{summary}</p>
-      {next?.at ?
+      {next?.at ? (
         <time
           dateTime={next.at}
           className="mt-0.5 block font-mono text-[11px] text-muted-foreground/80"
         >
           {formatInstant(next.at)}
         </time>
-      : null}
+      ) : null}
     </div>
   );
 }
@@ -152,26 +144,15 @@ const STATE_TONES: Record<GateReport["state"], PillTone> = {
  * competitor needs both facts. Renders nothing when no gate has anything to say,
  * so a track with no rules does not grow an empty panel.
  */
-export function SubmissionWindowSummary({
-  reports,
-}: {
-  reports: readonly GateReport[];
-}) {
+export function SubmissionWindowSummary({ reports }: { reports: readonly GateReport[] }) {
   if (!reports.length) return null;
 
   return (
     <div className="flex flex-col gap-2 text-sm">
       {reports.map((report) => (
-        <div
-          key={report.gate}
-          className="flex flex-wrap items-center gap-x-3 gap-y-1"
-        >
-          <StatusPill tone={STATE_TONES[report.state]}>
-            {report.label}
-          </StatusPill>
-          {report.detail ?
-            <span className="text-muted-foreground">{report.detail}</span>
-          : null}
+        <div key={report.gate} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <StatusPill tone={STATE_TONES[report.state]}>{report.label}</StatusPill>
+          {report.detail ? <span className="text-muted-foreground">{report.detail}</span> : null}
         </div>
       ))}
     </div>

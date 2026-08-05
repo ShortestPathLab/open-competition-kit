@@ -1,9 +1,4 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [
-    "**/.nitro/**",
-    "**/.output/**",
-    "**/generated/**",
-    "**/*.min.js"
-  ]
+  "ignorePatterns": ["**/.nitro/**", "**/.output/**", "**/generated/**", "**/*.min.js"]
 }

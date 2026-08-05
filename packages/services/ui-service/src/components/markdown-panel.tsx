@@ -1,10 +1,4 @@
-import {
-  Panel,
-  PanelBody,
-  PanelDescription,
-  PanelHeader,
-  PanelTitle,
-} from "@/components/panel";
+import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/components/panel";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 import Markdown from "react-markdown";
@@ -38,12 +32,7 @@ export function MarkdownPanel({
         {description ? <PanelDescription>{description}</PanelDescription> : null}
       </PanelHeader>
       <PanelBody>
-        <div
-          className={cn(
-            "prose prose-sm max-w-none dark:prose-invert",
-            proseClassName,
-          )}
-        >
+        <div className={cn("prose prose-sm max-w-none dark:prose-invert", proseClassName)}>
           <Markdown remarkPlugins={[remarkGfm]}>{markdown || fallback}</Markdown>
         </div>
       </PanelBody>

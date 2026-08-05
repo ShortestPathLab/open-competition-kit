@@ -59,23 +59,14 @@ export function TrackChooser({
 
       {selectedTrack ? (
         <div className="rounded-xl border border-border bg-muted/40 p-4">
-          <h3 className="text-base font-semibold text-foreground">
-            {selectedTrack.name}
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {selectedTrack.description}
-          </p>
+          <h3 className="text-base font-semibold text-foreground">{selectedTrack.name}</h3>
+          <p className="mt-2 text-sm text-muted-foreground">{selectedTrack.description}</p>
         </div>
       ) : null}
 
       <div className="flex items-center gap-3">
-        <Button
-          onClick={() => mutation.mutate()}
-          disabled={mutation.isPending || !selectedTrack}
-        >
-          {mutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : null}
+        <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !selectedTrack}>
+          {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Enrol
         </Button>
         <Button
@@ -88,9 +79,7 @@ export function TrackChooser({
 
       {mutation.isError ? (
         <p className="text-sm font-medium text-destructive">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "Enrolment failed."}
+          {mutation.error instanceof Error ? mutation.error.message : "Enrolment failed."}
         </p>
       ) : null}
     </>

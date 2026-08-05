@@ -27,10 +27,7 @@ export const createEntities = ({ config, hooks, instance }: Runtime) => {
 
   const tracks = flow(
     instance.tracks,
-    (c) =>
-      withMergeConfig(c, (id) =>
-        access({ competitions: { tracks: id } }, config),
-      ),
+    (c) => withMergeConfig(c, (id) => access({ competitions: { tracks: id } }, config)),
     (c) =>
       withCollectionUtilities(
         c,
@@ -41,15 +38,10 @@ export const createEntities = ({ config, hooks, instance }: Runtime) => {
 
   const forms = {
     get: (id: string) =>
-      access({ competitions: { tracks: id } }, config).pipe(
-        E.andThen((c) => c.form),
-      ),
+      access({ competitions: { tracks: id } }, config).pipe(E.andThen((c) => c.form)),
     load: (track: string, user: string) =>
       E.gen(function* () {
-        const def = (yield* access(
-          { competitions: { tracks: track } },
-          config,
-        )).form;
+        const def = (yield* access({ competitions: { tracks: track } }, config)).form;
         const loaded = yield* hooks.do((h) => h.form.loader({ def, user }), {
           competitions: { tracks: track },
         });
@@ -61,17 +53,11 @@ export const createEntities = ({ config, hooks, instance }: Runtime) => {
     get: (id: string) => access({ competitions: { leaderboards: id } }, config),
     load: (leaderboard: string) =>
       E.gen(function* () {
-        const raw = yield* access(
-          { competitions: { leaderboards: leaderboard } },
-          config,
-        );
+        const raw = yield* access({ competitions: { leaderboards: leaderboard } }, config);
         // `propagateExtendable` stamps `with` onto every object it walks, so it
         // lands inside `options` too, where it means nothing and would show up to
         // renderers as a phantom setting. Drop it.
-        const def =
-          raw?.options ?
-            { ...raw, options: omit(raw.options, ["with"]) }
-          : raw;
+        const def = raw?.options ? { ...raw, options: omit(raw.options, ["with"]) } : raw;
         const owner = config.competitions.find((c) =>
           c.leaderboards.some((l) => l.id === leaderboard),
         );

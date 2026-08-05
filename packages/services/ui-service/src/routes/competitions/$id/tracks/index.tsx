@@ -13,8 +13,7 @@ export const Route = createFileRoute("/competitions/$id/tracks/")({
 function TracksPage() {
   const { id } = Route.useParams();
   const list = useTrackList(id);
-  const { competition, trackCount, openCount, enteredCount, nextDeadline } =
-    list;
+  const { competition, trackCount, openCount, enteredCount, nextDeadline } = list;
 
   return (
     <>

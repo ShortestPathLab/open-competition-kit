@@ -18,9 +18,7 @@ export function SignedOut() {
           <Lock />
         </EmptyMedia>
         <EmptyTitle>Sign in to view your dashboard</EmptyTitle>
-        <EmptyDescription>
-          Your competition activity is connected to your account.
-        </EmptyDescription>
+        <EmptyDescription>Your competition activity is connected to your account.</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button size="lg" className="h-10 px-5" render={<Link to="/sign-in" />}>

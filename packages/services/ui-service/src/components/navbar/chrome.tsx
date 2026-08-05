@@ -28,12 +28,7 @@ const barClass = (banner: boolean | undefined, extra: string) =>
     extra,
   );
 
-export function DesktopNavbar({
-  brand,
-  navLinks,
-  actions,
-  banner,
-}: ChromeProps) {
+export function DesktopNavbar({ brand, navLinks, actions, banner }: ChromeProps) {
   return (
     <header className={barClass(banner, "hidden px-6 md:flex")}>
       <div className="flex min-w-0 items-center gap-6">

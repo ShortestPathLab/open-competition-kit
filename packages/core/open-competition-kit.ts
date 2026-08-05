@@ -30,8 +30,8 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
         global: {
           get: (s: string) =>
             E.gen(function* () {
-              return config.secrets && s in config.secrets ?
-                  config.secrets[s]
+              return config.secrets && s in config.secrets
+                ? config.secrets[s]
                 : yield* Config.string(s);
             }),
           require: (s: string) =>
@@ -41,9 +41,7 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
               return c;
             }),
         },
-        user: createNamespacedContext(instance)(
-          "open-competition-kit/namespace/user/secret",
-        ),
+        user: createNamespacedContext(instance)("open-competition-kit/namespace/user/secret"),
       };
 
       return {

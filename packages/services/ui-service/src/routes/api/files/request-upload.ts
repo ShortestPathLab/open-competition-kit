@@ -1,11 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import sdk, { unsafe } from "@open-competition-kit/sdk";
 import { z } from "zod";
-import {
-  UPLOAD_NAMESPACE,
-  maxUploadBytes,
-  requireUser,
-} from "@/lib/files.server";
+import { UPLOAD_NAMESPACE, maxUploadBytes, requireUser } from "@/lib/files.server";
 
 const body = z.object({
   name: z.string().min(1).max(200),

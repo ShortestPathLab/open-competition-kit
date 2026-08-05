@@ -77,10 +77,7 @@ export function useGateReports(tracks: string[], sessionUserId?: string) {
 }
 
 /** Reports for one track, expressed through the batch so the cache is shared. */
-export function useTrackReports(
-  track: string | undefined,
-  sessionUserId?: string,
-) {
+export function useTrackReports(track: string | undefined, sessionUserId?: string) {
   const query = useGateReports(track ? [track] : [], sessionUserId);
   return {
     ...query,

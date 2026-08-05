@@ -32,17 +32,10 @@ export function CompetitionCard({
           rather than covers. Cropping a square logo to 4:3 takes a bite out of
           its top and bottom; letterboxed against the muted fill it reads as
           deliberate instead. */}
-      <CompetitionIcon
-        name={name}
-        icon={icon}
-        fit="contain"
-        className="aspect-4/3 w-full"
-      />
+      <CompetitionIcon name={name} icon={icon} fit="contain" className="aspect-4/3 w-full" />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <p className="font-semibold tracking-tight group-hover:underline">
-            {name}
-          </p>
+          <p className="font-semibold tracking-tight group-hover:underline">{name}</p>
           {isDraft ? (
             <Badge variant="secondary" className="shrink-0">
               <PencilRuler />

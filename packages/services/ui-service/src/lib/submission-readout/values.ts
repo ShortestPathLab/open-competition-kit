@@ -43,10 +43,7 @@ export function decodeValue(value: JsonValue, depth = 0): JsonValue {
 
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [
-        key,
-        decodeValue(entry, depth + 1),
-      ]),
+      Object.entries(value).map(([key, entry]) => [key, decodeValue(entry, depth + 1)]),
     );
   }
 
@@ -58,8 +55,7 @@ export function decodeValue(value: JsonValue, depth = 0): JsonValue {
  * runner called it, and a column of "Score 1, Score 2" reads as prose where the
  * runner meant identifiers.
  */
-export const labelForKey = (key: string) =>
-  /^[a-z0-9_]+\d$/i.test(key) ? key : startCase(key);
+export const labelForKey = (key: string) => (/^[a-z0-9_]+\d$/i.test(key) ? key : startCase(key));
 
 /** Enough decimal places for a score, without printing 0.9188000000000001. */
 export function formatScore(value: number): string {

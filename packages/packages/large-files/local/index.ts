@@ -91,14 +91,10 @@ const metaFor = async (key: string, path: string): Promise<FileMeta> => {
 /** Realm-safe: the request body's stream comes from the server runtime's realm,
  * so `instanceof ReadableStream` is false even when it plainly is one. */
 const isStream = (b: unknown): b is ReadableStream =>
-  !!b &&
-  typeof b === "object" &&
-  typeof (b as ReadableStream).getReader === "function";
+  !!b && typeof b === "object" && typeof (b as ReadableStream).getReader === "function";
 
 const store = (path: string, body: FileBody) =>
-  isStream(body) ?
-    Bun.write(path, new Response(body))
-  : Bun.write(path, body as Blob);
+  isStream(body) ? Bun.write(path, new Response(body)) : Bun.write(path, body as Blob);
 
 export default {
   name: "@open-competition-kit/large-files-local",

@@ -32,24 +32,17 @@ export function TabNav({ tabs, variant = "pill" }: TabNavProps) {
       )}
     >
       {tabs.map((tab) => {
-        const isActive =
-          tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+        const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
         return (
           <Link
             key={tab.href}
             to={tab.href}
             className={cn(
               "flex shrink-0 items-center gap-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground",
-              variant === "underline" &&
-                "-mb-px border-b-2 border-transparent py-2.5",
-              variant === "pill" &&
-                "rounded-full border-border border px-2 py-1",
-              variant === "pill" &&
-                isActive &&
-                "bg-primary/5 border-primary text-foreground",
-              variant === "underline" &&
-                isActive &&
-                "border-primary text-foreground py-2",
+              variant === "underline" && "-mb-px border-b-2 border-transparent py-2.5",
+              variant === "pill" && "rounded-full border-border border px-2 py-1",
+              variant === "pill" && isActive && "bg-primary/5 border-primary text-foreground",
+              variant === "underline" && isActive && "border-primary text-foreground py-2",
               isActive && "font-medium",
             )}
           >

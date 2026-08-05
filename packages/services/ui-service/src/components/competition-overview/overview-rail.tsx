@@ -55,10 +55,7 @@ export function OverviewRail({
         standings={standings}
       />
 
-      <LeaderboardsPanel
-        competitionId={competitionId}
-        leaderboards={leaderboards}
-      />
+      <LeaderboardsPanel competitionId={competitionId} leaderboards={leaderboards} />
     </aside>
   );
 }

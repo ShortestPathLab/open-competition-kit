@@ -56,9 +56,7 @@ export const CORE_KEYS: Record<NodeKind, readonly string[]> = {
   machine: Object.keys(MachineNode.fields),
 };
 
-export type Resolve<R = never> = (
-  specifier: string,
-) => E.Effect<unknown, unknown, R>;
+export type Resolve<R = never> = (specifier: string) => E.Effect<unknown, unknown, R>;
 
 /**
  * The extensions contributed at one point in the tree, by kind.
@@ -68,18 +66,13 @@ export type Resolve<R = never> = (
  * failure is loud in the log either way: an integration that cannot load is a
  * broken integration, not a broken competition.
  */
-export const collectExtensions = <R>(
-  installed: readonly string[],
-  resolve: Resolve<R>,
-) =>
+export const collectExtensions = <R>(installed: readonly string[], resolve: Resolve<R>) =>
   E.gen(function* () {
     const byKind = new Map<NodeKind, ResolvedExtension[]>();
     const unloadable: string[] = [];
 
     for (const specifier of installed) {
-      const module = yield* resolve(specifier).pipe(
-        E.catchAll(() => E.succeed(undefined)),
-      );
+      const module = yield* resolve(specifier).pipe(E.catchAll(() => E.succeed(undefined)));
       // Told apart from a package that loaded and simply declares no config, so
       // that an unrecognised field can point at the import that never happened
       // rather than at the organiser's spelling.
@@ -87,9 +80,7 @@ export const collectExtensions = <R>(
         unloadable.push(specifier);
         continue;
       }
-      for (const [kind, extension] of Object.entries(
-        extensionsOf(module, specifier),
-      )) {
+      for (const [kind, extension] of Object.entries(extensionsOf(module, specifier))) {
         const list = byKind.get(kind as NodeKind) ?? [];
         list.push(extension as ResolvedExtension);
         byKind.set(kind as NodeKind, list);
@@ -127,10 +118,7 @@ export const validateConfig = <R = never>(
     const copy = structuredClone(config) as Node;
 
     for (const { node, kind, path, installed } of walkNodes(copy)) {
-      const { byKind, unloadable } = yield* collectExtensions(
-        installed,
-        options.resolve,
-      );
+      const { byKind, unloadable } = yield* collectExtensions(installed, options.resolve);
       const checked = yield* validateNode(node, {
         kind,
         path,

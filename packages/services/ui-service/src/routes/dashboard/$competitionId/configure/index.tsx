@@ -1,11 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk, {
-  reference,
-  unsafe,
-  type ConfigNodeDescription,
-} from "@open-competition-kit/sdk";
+import sdk, { reference, unsafe, type ConfigNodeDescription } from "@open-competition-kit/sdk";
 import {
   Empty,
   EmptyDescription,
@@ -105,18 +101,18 @@ function SettingRow({
           {field.label ?? field.name ?? field.id}
         </span>
         <span className="text-right text-sm font-medium text-foreground">
-          {value === undefined ?
+          {value === undefined ? (
             <span className="text-muted-foreground">Not set</span>
-          : typeof value === "object" ?
+          ) : typeof value === "object" ? (
             <code className="font-mono text-xs">{JSON.stringify(value)}</code>
-          : <code className="font-mono text-xs">{String(value)}</code>}
+          ) : (
+            <code className="font-mono text-xs">{String(value)}</code>
+          )}
         </span>
       </div>
-      {field.description ?
-        <p className="mt-1 max-w-prose text-xs text-muted-foreground">
-          {field.description}
-        </p>
-      : null}
+      {field.description ? (
+        <p className="mt-1 max-w-prose text-xs text-muted-foreground">{field.description}</p>
+      ) : null}
     </div>
   );
 }
@@ -129,9 +125,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-6 border-b border-border py-2.5 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium text-foreground">
-        {value}
-      </span>
+      <span className="text-right text-sm font-medium text-foreground">{value}</span>
     </div>
   );
 }
@@ -155,8 +149,7 @@ function ConfigurePage() {
           </EmptyMedia>
           <EmptyTitle>Competition not found</EmptyTitle>
           <EmptyDescription>
-            No competition with id{" "}
-            <code className="font-mono">{competitionId}</code> exists in the
+            No competition with id <code className="font-mono">{competitionId}</code> exists in the
             config.
           </EmptyDescription>
         </EmptyHeader>
@@ -176,8 +169,8 @@ function ConfigurePage() {
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
             Read-only. These values come from{" "}
-            <code className="font-mono text-xs">competition.config.yaml</code>;
-            edit that file and restart to change them.
+            <code className="font-mono text-xs">competition.config.yaml</code>; edit that file and
+            restart to change them.
           </span>
         </div>
 
@@ -192,21 +185,20 @@ function ConfigurePage() {
           <Row
             label="Database URL"
             value={
-              config.database.configured ?
+              config.database.configured ? (
                 <span className="text-success">Configured</span>
-              : <span className="text-destructive">Missing</span>
+              ) : (
+                <span className="text-destructive">Missing</span>
+              )
             }
           />
         </div>
       </section>
 
       <section>
-        <SectionHeader
-          title="Tracks"
-          description="Each track has its own submission form."
-        />
+        <SectionHeader title="Tracks" description="Each track has its own submission form." />
         <div className="mt-4 rounded-lg border border-border px-4">
-          {config.tracks.length ?
+          {config.tracks.length ? (
             config.tracks.map((track) => (
               <Row
                 key={track.id}
@@ -214,27 +206,26 @@ function ConfigurePage() {
                 value={`${track.fields} form field${track.fields === 1 ? "" : "s"}`}
               />
             ))
-          : <Row label="No tracks configured" value="-" />}
+          ) : (
+            <Row label="No tracks configured" value="-" />
+          )}
         </div>
       </section>
 
       <section>
-        <SectionHeader
-          title="Leaderboards"
-          description="Where each board's rows come from."
-        />
+        <SectionHeader title="Leaderboards" description="Where each board's rows come from." />
         <div className="mt-4 rounded-lg border border-border px-4">
-          {config.leaderboards.length ?
+          {config.leaderboards.length ? (
             config.leaderboards.map((leaderboard) => (
               <Row
                 key={leaderboard.id}
                 label={leaderboard.name}
-                value={
-                  <code className="font-mono text-xs">{leaderboard.source}</code>
-                }
+                value={<code className="font-mono text-xs">{leaderboard.source}</code>}
               />
             ))
-          : <Row label="No leaderboards configured" value="-" />}
+          ) : (
+            <Row label="No leaderboards configured" value="-" />
+          )}
         </div>
       </section>
 
@@ -244,7 +235,7 @@ function ConfigurePage() {
           description="The implementations this competition is composed of."
         />
         <div className="mt-4 flex flex-wrap gap-2">
-          {config.packages.length ?
+          {config.packages.length ? (
             config.packages.map((pkg) => (
               <code
                 key={pkg}
@@ -253,7 +244,9 @@ function ConfigurePage() {
                 {pkg}
               </code>
             ))
-          : <span className="text-sm text-muted-foreground">None</span>}
+          ) : (
+            <span className="text-sm text-muted-foreground">None</span>
+          )}
         </div>
       </section>
 
@@ -263,17 +256,12 @@ function ConfigurePage() {
           description="Fields the installed packages declare, and what this config has in them."
         />
         <div className="mt-4 flex flex-col gap-4">
-          {config.settings.length ?
+          {config.settings.length ? (
             config.settings.map((node) => (
-              <div
-                key={node.path}
-                className="rounded-lg border border-border px-4 py-1"
-              >
+              <div key={node.path} className="rounded-lg border border-border px-4 py-1">
                 <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border py-2.5">
                   <span className="text-sm font-medium">{node.label}</span>
-                  <code className="font-mono text-xs text-muted-foreground">
-                    {node.path}
-                  </code>
+                  <code className="font-mono text-xs text-muted-foreground">{node.path}</code>
                 </div>
                 {node.sections.map((section) => (
                   <div key={`${node.path}:${section.source}`} className="py-2.5">
@@ -292,13 +280,14 @@ function ConfigurePage() {
                 ))}
               </div>
             ))
-          : <div className="rounded-lg border border-border px-4">
+          ) : (
+            <div className="rounded-lg border border-border px-4">
               <Row
                 label="No package settings"
                 value="No installed package declares config fields here."
               />
             </div>
-          }
+          )}
         </div>
       </section>
     </div>

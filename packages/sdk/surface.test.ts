@@ -1,17 +1,8 @@
 import { describe, expect, mock, test } from "bun:test";
 import type { Source } from "@open-competition-kit/core/hook/component";
-import {
-  std,
-  surfaces,
-  views,
-  type SurfaceItem,
-  type SurfaceRequest,
-} from "./surface";
+import { std, surfaces, views, type SurfaceItem, type SurfaceRequest } from "./surface";
 
-const request = (
-  surface: string,
-  items: readonly SurfaceItem[] = [],
-): SurfaceRequest => ({
+const request = (surface: string, items: readonly SurfaceItem[] = []): SurfaceRequest => ({
   surface,
   audience: "participant",
   user: "someone@example.com",
@@ -36,9 +27,10 @@ describe("surfaces", () => {
       [std.competitionYou]: async () => [note("mine")],
     });
 
-    expect(await content(request(std.competitionYou, [note("theirs")]))).toEqual(
-      [note("theirs"), note("mine")],
-    );
+    expect(await content(request(std.competitionYou, [note("theirs")]))).toEqual([
+      note("theirs"),
+      note("mine"),
+    ]);
   });
 
   // The mistake this helper exists to prevent: an implementation that returns its
@@ -65,9 +57,7 @@ describe("surfaces", () => {
     });
     const empty = async () => undefined as never;
 
-    expect(await content(request(std.competitionYou), empty)).toEqual([
-      note("mine"),
-    ]);
+    expect(await content(request(std.competitionYou), empty)).toEqual([note("mine")]);
   });
 
   test("a contributor that throws loses its own content and nothing else", async () => {
@@ -77,9 +67,7 @@ describe("surfaces", () => {
       },
     });
 
-    expect(await content(request(std.competitionYou, [note("theirs")]))).toEqual(
-      [note("theirs")],
-    );
+    expect(await content(request(std.competitionYou, [note("theirs")]))).toEqual([note("theirs")]);
   });
 
   test("accepts a region this build of core has never heard of", async () => {

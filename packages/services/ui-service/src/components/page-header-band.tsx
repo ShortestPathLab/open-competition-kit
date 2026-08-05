@@ -84,14 +84,10 @@ export function PageHeaderBand({
       )}
     >
       <div className={cn("", children ? "pb-0" : "pb-6")}>
-        {breadcrumb ?
-          <div className="mx-auto max-w-7xl px-6 pt-6">{breadcrumb}</div>
-        : null}
-        {nav ?
-          <div className="mx-auto max-w-7xl px-6 min-h-max pt-4 pb-0 sm:pb-2">
-            {nav}
-          </div>
-        : null}
+        {breadcrumb ? <div className="mx-auto max-w-7xl px-6 pt-6">{breadcrumb}</div> : null}
+        {nav ? (
+          <div className="mx-auto max-w-7xl px-6 min-h-max pt-4 pb-0 sm:pb-2">{nav}</div>
+        ) : null}
         <div
           className={cn(
             "mx-auto max-w-7xl px-6 pt-0 flex flex-wrap items-start justify-between gap-4",
@@ -104,26 +100,20 @@ export function PageHeaderBand({
               <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
                 {title}
               </h1>
-              {description ?
+              {description ? (
                 <div className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                   {description}
                 </div>
-              : null}
+              ) : null}
             </div>
           </div>
-          {actions ?
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
-              {actions}
-            </div>
-          : null}
+          {actions ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+          ) : null}
         </div>
-        {meta ?
-          <div className="mt-5">{meta}</div>
-        : null}
+        {meta ? <div className="mt-5">{meta}</div> : null}
       </div>
-      {children ?
-        <div className="mx-auto max-w-7xl px-6 pt-4">{children}</div>
-      : null}
+      {children ? <div className="mx-auto max-w-7xl px-6 pt-4">{children}</div> : null}
     </div>
   );
 }
@@ -137,10 +127,7 @@ export function PageHeaderBand({
  * `-mb-6` only makes sense against the band's bottom padding. Fill it with
  * `Stat`.
  */
-export function HeaderStats({
-  className,
-  ...props
-}: React.ComponentProps<typeof StatStrip>) {
+export function HeaderStats({ className, ...props }: React.ComponentProps<typeof StatStrip>) {
   return (
     <StatStrip
       surface={false}
@@ -151,11 +138,6 @@ export function HeaderStats({
 }
 
 /** The content region under a header band. */
-export function PageBody({
-  className,
-  ...props
-}: React.ComponentProps<"main">) {
-  return (
-    <main className={cn("mx-auto max-w-7xl px-6 py-8", className)} {...props} />
-  );
+export function PageBody({ className, ...props }: React.ComponentProps<"main">) {
+  return <main className={cn("mx-auto max-w-7xl px-6 py-8", className)} {...props} />;
 }

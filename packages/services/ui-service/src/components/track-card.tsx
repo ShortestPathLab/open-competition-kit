@@ -72,12 +72,9 @@ export function TrackCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <h3
-            className={cn(
-              "text-base font-semibold tracking-tight",
-              dim && "text-muted-foreground",
-            )}
+            className={cn("text-base font-semibold tracking-tight", dim && "text-muted-foreground")}
           >
-            {action ?
+            {action ? (
               <Link
                 to="/competitions/$id/tracks/$trackId"
                 params={{ id: competitionId, trackId: id }}
@@ -85,7 +82,9 @@ export function TrackCard({
               >
                 {name}
               </Link>
-            : name}
+            ) : (
+              name
+            )}
           </h3>
           {action ? null : (
             <ArrowRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
@@ -100,15 +99,13 @@ export function TrackCard({
           {description}
         </p>
       </div>
-      {reports?.length ?
-        <WindowStatus reports={reports} className="sm:w-44 sm:shrink-0" />
-      : null}
-      {!showEnrolment && submissions === undefined ?
-        null
-      : <div className="text-sm sm:w-32 sm:shrink-0">
-          {submissions === undefined ?
+      {reports?.length ? <WindowStatus reports={reports} className="sm:w-44 sm:shrink-0" /> : null}
+      {!showEnrolment && submissions === undefined ? null : (
+        <div className="text-sm sm:w-32 sm:shrink-0">
+          {submissions === undefined ? (
             <span className="text-muted-foreground">Not entered</span>
-          : <>
+          ) : (
+            <>
               <span className="flex items-center gap-1.5 font-medium">
                 <Check className="size-3.5 text-success" />
                 Entered
@@ -117,9 +114,9 @@ export function TrackCard({
                 {submissions} submission{submissions === 1 ? "" : "s"}
               </span>
             </>
-          }
+          )}
         </div>
-      }
+      )}
       {action ? <div className="shrink-0">{action}</div> : null}
     </>
   );

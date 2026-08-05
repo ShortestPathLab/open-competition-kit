@@ -136,9 +136,7 @@ const shape = z
      * is the only thing standing between a competitor and an edited marking
      * script, so write it.
      */
-    submission: z
-      .object({ allow: z.array(z.string()).optional() })
-      .optional(),
+    submission: z.object({ allow: z.array(z.string()).optional() }).optional(),
     /** Wall-clock limit for one phase, not for the whole evaluation. */
     timeoutMs: z.number().positive().optional(),
     limits: limits.optional(),

@@ -30,11 +30,7 @@ function MeIndexPage() {
         title="Overview"
         description="Everything you have entered, in one place."
         actions={
-          <Button
-            size="lg"
-            className="h-10 px-5"
-            render={<Link to="/competitions" />}
-          >
+          <Button size="lg" className="h-10 px-5" render={<Link to="/competitions" />}>
             Browse competitions
             <ArrowRight />
           </Button>
@@ -43,18 +39,14 @@ function MeIndexPage() {
         // out, a strip of zeroes reads as an empty account rather than as a
         // prompt to sign in.
         meta={
-          ready ?
+          ready ? (
             <HeaderStats>
               <Stat label="Competitions" value={stats.competitions} />
               <Stat label="Enrolled tracks" value={stats.tracks} />
               <Stat label="Submissions" value={stats.submissions} />
-              <Stat
-                label="Closing soon"
-                value={stats.closing}
-                emphasis={stats.closing > 0}
-              />
+              <Stat label="Closing soon" value={stats.closing} emphasis={stats.closing > 0} />
             </HeaderStats>
-          : undefined
+          ) : undefined
         }
         tabs
       />
@@ -63,23 +55,20 @@ function MeIndexPage() {
         {/* Above the two lists, and only for a signed-in reader: an account-wide
             note from a package is about the reader, and the lists below are only
             the parts of that the product happens to know about. */}
-        {ready ?
-          <SurfaceSlot
-            surface={surface.std.meOverview}
-            subject={{}}
-            layout="inline"
-          />
-        : null}
+        {ready ? (
+          <SurfaceSlot surface={surface.std.meOverview} subject={{}} layout="inline" />
+        ) : null}
 
-        {loading ?
+        {loading ? (
           <ListSkeleton aria-label="Loading your competitions..." />
-        : !signedIn ?
+        ) : !signedIn ? (
           <SignedOut />
-        : <div className="grid gap-6 xl:grid-cols-2">
+        ) : (
+          <div className="grid gap-6 xl:grid-cols-2">
             <EnrolmentsPanel enrolments={enrolments} />
             <SubmissionsPanel submissions={submissions} />
           </div>
-        }
+        )}
       </PageBody>
     </>
   );

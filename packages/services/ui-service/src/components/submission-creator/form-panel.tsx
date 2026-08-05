@@ -4,12 +4,7 @@ import type { SubmissionCreatorState } from "./use-submission-creator";
 
 type FormPanelProps = Pick<
   SubmissionCreatorState,
-  | "SubmissionForm"
-  | "formDef"
-  | "formLoading"
-  | "formIsError"
-  | "formError"
-  | "mutation"
+  "SubmissionForm" | "formDef" | "formLoading" | "formIsError" | "formError" | "mutation"
 > & { trackName: string };
 
 const messageOf = (error: unknown, fallback: string) =>
@@ -65,9 +60,7 @@ export function FormPanel({
       ) : null}
 
       {mutation.isSuccess ? (
-        <p className="text-sm text-muted-foreground">
-          Submission created for {trackName}.
-        </p>
+        <p className="text-sm text-muted-foreground">Submission created for {trackName}.</p>
       ) : null}
     </div>
   );

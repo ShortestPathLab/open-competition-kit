@@ -1,11 +1,6 @@
 import { TrackCard } from "@/components/track-card";
 import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import type { TrackSummary } from "@/lib/competition-data";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Layers3 } from "lucide-react";
@@ -28,19 +23,16 @@ export function TracksSection({
           variant="link"
           size="sm"
           className="h-auto px-0"
-          render={
-            <Link to="/competitions/$id/tracks" params={{ id: competitionId }} />
-          }
+          render={<Link to="/competitions/$id/tracks" params={{ id: competitionId }} />}
         >
           All tracks
           <ArrowRight />
         </Button>
       </div>
       <p className="text-sm text-muted-foreground">
-        Participation happens at the track level. Pick one to see its rules and
-        standings.
+        Participation happens at the track level. Pick one to see its rules and standings.
       </p>
-      {tracks.length > 0 ?
+      {tracks.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {tracks.slice(0, PREVIEW_COUNT).map((track) => (
             <TrackCard
@@ -53,7 +45,8 @@ export function TracksSection({
             />
           ))}
         </div>
-      : <Empty className="rounded-xl border border-dashed border-border">
+      ) : (
+        <Empty className="rounded-xl border border-dashed border-border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Layers3 />
@@ -61,7 +54,7 @@ export function TracksSection({
             <EmptyTitle>No tracks yet</EmptyTitle>
           </EmptyHeader>
         </Empty>
-      }
+      )}
     </section>
   );
 }

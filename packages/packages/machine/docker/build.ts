@@ -34,9 +34,7 @@ export type BuildRequest = {
 export type BuildResult = { image: string; built: boolean; log: string };
 
 /** Runs `docker`. Injected so the tag logic can be tested without a daemon. */
-export type Docker = (
-  args: string[],
-) => Promise<{ stdout: string; stderr: string; code: number }>;
+export type Docker = (args: string[]) => Promise<{ stdout: string; stderr: string; code: number }>;
 
 /**
  * A name for exactly these inputs.
@@ -120,10 +118,7 @@ const build = async (
       dockerfile,
       "-t",
       image,
-      ...Object.entries(request.args ?? {}).flatMap(([k, v]) => [
-        "--build-arg",
-        `${k}=${v}`,
-      ]),
+      ...Object.entries(request.args ?? {}).flatMap(([k, v]) => ["--build-arg", `${k}=${v}`]),
       context,
     ]);
 
@@ -150,10 +145,7 @@ const build = async (
  * for: the caller wants an image that matches the recipe it just handed over,
  * and the only name that can promise that is the one derived from it.
  */
-export const ensure = async (
-  docker: Docker,
-  request: BuildRequest,
-): Promise<BuildResult> => {
+export const ensure = async (docker: Docker, request: BuildRequest): Promise<BuildResult> => {
   const image = await tagFor(request);
 
   const existing = inFlight.get(image);

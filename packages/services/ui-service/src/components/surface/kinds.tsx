@@ -4,31 +4,15 @@ import { Check, Copy, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type {
-  SurfaceAction,
-  SurfaceItem,
-  SurfaceNote,
-} from "@open-competition-kit/sdk/surface";
-import {
-  BUTTON_VARIANTS,
-  ICONS,
-  NOTE_TITLE_TONES,
-  NOTE_TONES,
-  STEP_DOTS,
-} from "./tokens";
+import type { SurfaceAction, SurfaceItem, SurfaceNote } from "@open-competition-kit/sdk/surface";
+import { BUTTON_VARIANTS, ICONS, NOTE_TITLE_TONES, NOTE_TONES, STEP_DOTS } from "./tokens";
 
 /**
  * A contributed link. A plain anchor either way: an internal href is rare, and
  * the router's `Link` wants a route it can prove exists, which a string from a
  * package is not.
  */
-export function ActionButton({
-  action,
-  full,
-}: {
-  action: SurfaceAction;
-  full?: boolean;
-}) {
+export function ActionButton({ action, full }: { action: SurfaceAction; full?: boolean }) {
   const Icon = action.icon ? ICONS[action.icon] : undefined;
 
   return (
@@ -39,9 +23,7 @@ export function ActionButton({
       render={
         <a
           href={action.href}
-          {...(action.external ?
-            { target: "_blank", rel: "noreferrer noopener" }
-          : {})}
+          {...(action.external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
         />
       }
     >
@@ -68,12 +50,10 @@ export function Note({
 
   return (
     <div className={cn("rounded-xl border p-4", NOTE_TONES[tone])}>
-      {note.title ?
-        <p className={cn("text-sm font-semibold", NOTE_TITLE_TONES[tone])}>
-          {note.title}
-        </p>
-      : null}
-      {note.body ?
+      {note.title ? (
+        <p className={cn("text-sm font-semibold", NOTE_TITLE_TONES[tone])}>{note.title}</p>
+      ) : null}
+      {note.body ? (
         <div
           className={cn(
             "prose prose-sm max-w-none text-muted-foreground dark:prose-invert",
@@ -83,18 +63,14 @@ export function Note({
         >
           <Markdown remarkPlugins={[remarkGfm]}>{note.body}</Markdown>
         </div>
-      : null}
-      {note.actions?.length ?
+      ) : null}
+      {note.actions?.length ? (
         <div className={cn("mt-3 flex flex-wrap gap-2", full && "flex-col")}>
           {note.actions.map((action, index) => (
-            <ActionButton
-              key={`${action.href}-${index}`}
-              action={action}
-              full={full}
-            />
+            <ActionButton key={`${action.href}-${index}`} action={action} full={full} />
           ))}
         </div>
-      : null}
+      ) : null}
     </div>
   );
 }
@@ -116,7 +92,7 @@ export function Fact({
       <span className="text-[0.68rem] font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </span>
-      {href ?
+      {href ? (
         <a
           className="truncate text-sm font-medium underline-offset-4 hover:underline"
           href={href}
@@ -124,7 +100,9 @@ export function Fact({
         >
           {value}
         </a>
-      : <span className="truncate text-sm font-medium">{value}</span>}
+      ) : (
+        <span className="truncate text-sm font-medium">{value}</span>
+      )}
     </div>
   );
 }
@@ -167,14 +145,15 @@ export function Code({
             );
           }}
         >
-          {copied ?
+          {copied ? (
             <>
               <Check /> Copied
             </>
-          : <>
+          ) : (
+            <>
               <Copy /> Copy
             </>
-          }
+          )}
         </Button>
       </div>
       <pre className="overflow-x-auto bg-terminal px-3 py-2.5 text-xs text-terminal-foreground">
@@ -193,9 +172,7 @@ export function Checklist({
 }) {
   return (
     <div className="rounded-xl border border-border p-4">
-      {title ?
-        <p className="mb-2.5 text-sm font-semibold">{title}</p>
-      : null}
+      {title ? <p className="mb-2.5 text-sm font-semibold">{title}</p> : null}
       <ul className="flex flex-col gap-2.5">
         {steps.map((step) => (
           <li key={step.label} className="flex items-start gap-2.5">
@@ -209,16 +186,14 @@ export function Checklist({
             />
             <span className="min-w-0">
               <span className="block text-sm font-medium">{step.label}</span>
-              {step.detail ?
-                <span className="block text-xs text-muted-foreground">
-                  {step.detail}
-                </span>
-              : null}
-              {step.action ?
+              {step.detail ? (
+                <span className="block text-xs text-muted-foreground">{step.detail}</span>
+              ) : null}
+              {step.action ? (
                 <span className="mt-1.5 block">
                   <ActionButton action={{ style: "link", ...step.action }} />
                 </span>
-              : null}
+              ) : null}
             </span>
           </li>
         ))}

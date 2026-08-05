@@ -7,12 +7,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk, {
-  cast,
-  hooks,
-  unsafe,
-  type ConfigAccessor,
-} from "@open-competition-kit/sdk";
+import sdk, { cast, hooks, unsafe, type ConfigAccessor } from "@open-competition-kit/sdk";
 import {
   audienceOf,
   orderItems,
@@ -203,11 +198,7 @@ const getSurfaceContent = createServerFn({ method: "GET" })
  * separates one signed-in reader's cached content from the next's, so signing
  * out does not leave the previous reader's repository on screen.
  */
-export function useSurface(
-  surface: string,
-  subject: Subject,
-  sessionUserId?: string,
-) {
+export function useSurface(surface: string, subject: Subject, sessionUserId?: string) {
   const getSurfaceContentFn = useServerFn(getSurfaceContent);
   return useQuery({
     queryKey: ["surface", surface, subject, sessionUserId],

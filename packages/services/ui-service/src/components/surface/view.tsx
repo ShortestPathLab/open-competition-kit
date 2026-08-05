@@ -1,8 +1,5 @@
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/panel";
-import type {
-  SurfaceContext,
-  SurfaceItem,
-} from "@open-competition-kit/sdk/surface";
+import type { SurfaceContext, SurfaceItem } from "@open-competition-kit/sdk/surface";
 import { useKitComponent } from "@/hooks/use-kit-component";
 import { Note } from "./kinds";
 
@@ -25,12 +22,11 @@ export function View({
   const { Component, isPending, isError } = useKitComponent("surface.view", {
     // The same node the content came from, so the package that contributed the
     // item is the one asked to draw it.
-    accessor:
-      context.subject.track ?
-        { competitions: { tracks: context.subject.track } }
-      : context.subject.competition ?
-        { competitions: context.subject.competition }
-      : true,
+    accessor: context.subject.track
+      ? { competitions: { tracks: context.subject.track } }
+      : context.subject.competition
+        ? { competitions: context.subject.competition }
+        : true,
     args: { view: item.view },
   });
 
@@ -47,14 +43,16 @@ export function View({
 
   // The chrome is decided here rather than around the call, so a view that is
   // still loading or gone does not leave an empty panel with a heading on it.
-  return item.chrome === "panel" ?
-      <Panel>
-        {item.title ?
-          <PanelHeader>
-            <PanelTitle>{item.title}</PanelTitle>
-          </PanelHeader>
-        : null}
-        <PanelBody>{view}</PanelBody>
-      </Panel>
-    : view;
+  return item.chrome === "panel" ? (
+    <Panel>
+      {item.title ? (
+        <PanelHeader>
+          <PanelTitle>{item.title}</PanelTitle>
+        </PanelHeader>
+      ) : null}
+      <PanelBody>{view}</PanelBody>
+    </Panel>
+  ) : (
+    view
+  );
 }

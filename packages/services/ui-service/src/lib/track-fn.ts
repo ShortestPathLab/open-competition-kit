@@ -1,10 +1,6 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import {
-  countTrackEnrolments,
-  countTrackSubmissions,
-  getTrackSummary,
-} from "./competition-data";
+import { countTrackEnrolments, countTrackSubmissions, getTrackSummary } from "./competition-data";
 import { z } from "zod";
 
 const trackInput = z.object({ trackId: z.string() });

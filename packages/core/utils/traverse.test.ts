@@ -36,18 +36,15 @@ describe("traverse", () => {
   test("recurses into whatever the callback returns, not the original", () => {
     // A callback that replaces a subtree must have that replacement traversed,
     // so a transform applied at one node still reaches the nodes beneath it.
-    const output = traverse<Record<string, unknown>>(
-      { a: { keep: 1 } },
-      (v, path) => (path.length === 1 ? { replaced: 2 } : v),
+    const output = traverse<Record<string, unknown>>({ a: { keep: 1 } }, (v, path) =>
+      path.length === 1 ? { replaced: 2 } : v,
     );
 
     expect(output).toEqual({ a: { replaced: 2 } });
   });
 
   test("composes a transform through every level of the tree", () => {
-    const output = traverse({ a: 1, b: [2, 3] }, (v) =>
-      typeof v === "number" ? v * 2 : v,
-    );
+    const output = traverse({ a: 1, b: [2, 3] }, (v) => (typeof v === "number" ? v * 2 : v));
 
     expect(output).toEqual({ a: 2, b: [4, 6] });
   });

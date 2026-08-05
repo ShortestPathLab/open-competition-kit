@@ -10,10 +10,7 @@ const PUBLIC_LINKS = [
 
 export function Brand({ appName }: { appName: string }) {
   return (
-    <Link
-      to="/"
-      className="flex min-w-0 items-center gap-2 font-semibold text-lg"
-    >
+    <Link to="/" className="flex min-w-0 items-center gap-2 font-semibold text-lg">
       <div className="h-6 w-6 shrink-0 rounded-full bg-muted">
         <Avatar name={appName} width="100%" height="100%" />
       </div>
@@ -37,13 +34,13 @@ export function NavLinks({ variant }: { variant: "desktop" | "mobile" }) {
       to={link.href}
       className={cn(
         "rounded-md text-sm text-muted-foreground transition-colors",
-        variant === "desktop" ?
-          "px-2 py-1 hover:text-foreground"
-        : "px-3 py-2 hover:bg-muted hover:text-foreground",
+        variant === "desktop"
+          ? "px-2 py-1 hover:text-foreground"
+          : "px-3 py-2 hover:bg-muted hover:text-foreground",
         match({ to: link.href, fuzzy: true }) &&
-          (variant === "desktop" ?
-            "text-primary font-medium"
-          : "bg-muted text-primary font-medium"),
+          (variant === "desktop"
+            ? "text-primary font-medium"
+            : "bg-muted text-primary font-medium"),
       )}
     >
       {link.label}

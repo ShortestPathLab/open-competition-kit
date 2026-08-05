@@ -75,9 +75,7 @@ export function EnrolmentCard({
             </div>
           ) : (
             <div className="flex gap-4 justify-between items-center ">
-              <p className="text-sm">
-                Sign in to enrol in this track and create submissions.
-              </p>
+              <p className="text-sm">Sign in to enrol in this track and create submissions.</p>
               <div className="flex items-center gap-3">
                 {signInAction ?? <Button>Sign in</Button>}
               </div>

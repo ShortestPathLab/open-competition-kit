@@ -16,17 +16,17 @@ form:
       lines: 5
     - id: agent
       name: Agent archive
-      kind: file          # ← uploads, and stores a FileRef
+      kind: file # ← uploads, and stores a FileRef
       required: true
 ```
 
-| `kind` | Value |
-|---|---|
-| `text` (default), `email`, `textarea` | string |
-| `number` | number |
-| `checkbox` | boolean |
-| `select` (with `options:`) | string |
-| `file` | a `FileRef` object |
+| `kind`                                | Value              |
+| ------------------------------------- | ------------------ |
+| `text` (default), `email`, `textarea` | string             |
+| `number`                              | number             |
+| `checkbox`                            | boolean            |
+| `select` (with `options:`)            | string             |
+| `file`                                | a `FileRef` object |
 
 ## Styling
 

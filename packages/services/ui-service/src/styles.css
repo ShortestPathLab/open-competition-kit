@@ -26,8 +26,7 @@ body {
 }
 
 code {
-  font-family:
-    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 /*
@@ -190,9 +189,7 @@ code {
      one. A `--banner-focus` written on both sides would not work: a declaration
      on an element beats what that element inherits, so the published value
      would never arrive. */
-  --banner-focus: calc(
-    50vw / var(--banner-ratio, 1.6) - var(--banner-crop) / 2
-  );
+  --banner-focus: calc(50vw / var(--banner-ratio, 1.6) - var(--banner-crop) / 2);
   /* Shows through anywhere the image does not reach. The page's own background,
      so that a banner which runs short reads as one that ended rather than as a
      grey plate someone forgot to fill. */
@@ -268,11 +265,7 @@ code {
      because the line above has already shadowed `--card` with a translucent
      value for the controls, and mixing ink towards it would make the ink
      translucent too. */
-  --muted-foreground: color-mix(
-    in oklab,
-    var(--foreground) 82%,
-    var(--banner-tint)
-  );
+  --muted-foreground: color-mix(in oklab, var(--foreground) 82%, var(--banner-tint));
 }
 
 /* Below this width, height leads and the sides crop.
@@ -309,18 +302,13 @@ code {
    line between two flat surfaces rather than a cut through a photograph. */
 .banner-chrome-band {
   --banner-y: calc(-1 * var(--nav-h));
-  --banner-veil: linear-gradient(
-    to bottom,
-    var(--banner-fade-join) 0%,
-    var(--card) 100%
-  );
+  --banner-veil: linear-gradient(to bottom, var(--banner-fade-join) 0%, var(--card) 100%);
 }
 
 @theme inline {
   --font-sans: "Inter Variable", sans-serif;
   --font-mono:
-    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
+    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);

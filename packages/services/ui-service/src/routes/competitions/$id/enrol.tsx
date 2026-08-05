@@ -3,13 +3,7 @@ import { EnrolledConfirmation } from "@/components/enrol/enrolled-confirmation";
 import { NoTracks, SignInToEnrol } from "@/components/enrol/notices";
 import { TrackChooser } from "@/components/enrol/track-chooser";
 import { PageBody } from "@/components/page-header-band";
-import {
-  Panel,
-  PanelBody,
-  PanelDescription,
-  PanelHeader,
-  PanelTitle,
-} from "@/components/panel";
+import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/components/panel";
 import { PageSkeleton } from "@/components/skeletons";
 import { useEnrolPage } from "@/lib/enrol-page-fn";
 import { createFileRoute } from "@tanstack/react-router";
@@ -25,8 +19,10 @@ export const Route = createFileRoute("/competitions/$id/enrol")({
 function CompetitionEnrolPage() {
   const { id } = Route.useParams();
   const { trackId } = Route.useSearch();
-  const { competition, selectedTrack, isSignedIn, mutation, enrolment, selectTrack } =
-    useEnrolPage(id, trackId);
+  const { competition, selectedTrack, isSignedIn, mutation, enrolment, selectTrack } = useEnrolPage(
+    id,
+    trackId,
+  );
 
   if (!competition) return <PageSkeleton />;
 
@@ -51,25 +47,26 @@ function CompetitionEnrolPage() {
             </PanelDescription>
           </PanelHeader>
           <PanelBody className="space-y-5">
-            {!isSignedIn ?
+            {!isSignedIn ? (
               <SignInToEnrol />
-            : competition.tracks.length === 0 ?
+            ) : competition.tracks.length === 0 ? (
               <NoTracks />
-            : enrolment && selectedTrack ?
+            ) : enrolment && selectedTrack ? (
               <EnrolledConfirmation
                 competitionId={id}
                 competitionName={competition.name}
                 track={selectedTrack}
                 enrolment={enrolment}
               />
-            : <TrackChooser
+            ) : (
+              <TrackChooser
                 competitionId={id}
                 tracks={competition.tracks}
                 selectedTrack={selectedTrack}
                 onSelect={selectTrack}
                 mutation={mutation}
               />
-            }
+            )}
           </PanelBody>
         </Panel>
       </PageBody>

@@ -54,16 +54,12 @@ export function StatusScreen({
         >
           {code}
         </span>
-        <h1 className="mt-5 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-          {title}
-        </h1>
+        <h1 className="mt-5 text-3xl font-bold tracking-tight text-balance sm:text-4xl">{title}</h1>
         <div className="mt-3 text-sm leading-relaxed text-pretty text-muted-foreground">
           {description}
         </div>
         {children ? <div className="mt-6">{children}</div> : null}
-        {actions ?
-          <div className="mt-8 flex flex-wrap items-center gap-3">{actions}</div>
-        : null}
+        {actions ? <div className="mt-8 flex flex-wrap items-center gap-3">{actions}</div> : null}
       </div>
     </div>
   );

@@ -1,17 +1,11 @@
-import {
-  DataBrowser,
-  type DataBrowserFilterOption,
-} from "@/components/data-browser";
+import { DataBrowser, type DataBrowserFilterOption } from "@/components/data-browser";
 import { JobStatusBadge } from "@/components/job-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { Fragment, useMemo } from "react";
-import type {
-  SubmissionBrowserItem,
-  SubmissionOutcome,
-} from "@/lib/submission-fn";
+import type { SubmissionBrowserItem, SubmissionOutcome } from "@/lib/submission-fn";
 import {
   describeJobStatus,
   formatScore,
@@ -38,9 +32,7 @@ interface SubmissionBrowserProps {
   noResultsDescription?: string;
 }
 
-function deriveTrackOptions(
-  submissions: SubmissionBrowserItem[],
-): DataBrowserFilterOption[] {
+function deriveTrackOptions(submissions: SubmissionBrowserItem[]): DataBrowserFilterOption[] {
   const byId = new Map<string, DataBrowserFilterOption>();
   submissions.forEach((submission) => {
     if (!byId.has(submission.trackId)) {
@@ -57,23 +49,13 @@ const ROW_COLUMNS =
   "grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,12rem)_3.5rem_7rem_1rem] sm:items-center";
 
 /** What the newest run produced, in the width of a column. */
-function ResultCell({
-  outcome,
-  loading,
-}: {
-  outcome?: SubmissionOutcome;
-  loading: boolean;
-}) {
+function ResultCell({ outcome, loading }: { outcome?: SubmissionOutcome; loading: boolean }) {
   if (loading && !outcome) {
     return <Skeleton className="h-5 w-16 justify-self-end" aria-label="Loading result" />;
   }
 
   if (!outcome || outcome.runs === 0) {
-    return (
-      <span className="justify-self-end text-sm text-muted-foreground">
-        Not run
-      </span>
-    );
+    return <span className="justify-self-end text-sm text-muted-foreground">Not run</span>;
   }
 
   const headline = readResult(outcome.result).headline;
@@ -113,11 +95,7 @@ function BodySummaryLine({ summary }: { summary: BodySummary }) {
   const { file, facts } = summary;
 
   if (!file && facts.length === 0) {
-    return (
-      <span className="mt-0.5 block text-sm text-muted-foreground">
-        No answers recorded
-      </span>
-    );
+    return <span className="mt-0.5 block text-sm text-muted-foreground">No answers recorded</span>;
   }
 
   // A single answer is named by being the only one, so its label is furniture.
@@ -125,11 +103,7 @@ function BodySummaryLine({ summary }: { summary: BodySummary }) {
 
   return (
     <span className="mt-0.5 flex items-baseline gap-x-2 text-sm text-muted-foreground">
-      {file ? (
-        <span className="min-w-0 truncate font-mono text-foreground">
-          {file}
-        </span>
-      ) : null}
+      {file ? <span className="min-w-0 truncate font-mono text-foreground">{file}</span> : null}
       {facts.map((fact, index) => (
         <Fragment key={`${fact.label}-${index}`}>
           {file || index > 0 ? (
@@ -171,9 +145,7 @@ function SubmissionRow({
             track are told apart by which came first, which is what a competitor
             counts anyway, and the id is on the submission's own page for
             anybody who needs to quote it. */}
-        <span className="block text-sm font-medium">
-          Submission {submission.number}
-        </span>
+        <span className="block text-sm font-medium">Submission {submission.number}</span>
         {/* The body is `JSON.stringify` of the form values, so the row reads the
             answers out of it rather than clamping three lines of punctuation. */}
         <BodySummaryLine summary={summary} />
@@ -221,15 +193,10 @@ export function SubmissionBrowser({
   noResultsTitle = "No submissions match your filters",
   noResultsDescription = "Try a different search term or switch back to all tracks.",
 }: SubmissionBrowserProps) {
-  const trackOptions = useMemo(
-    () => deriveTrackOptions(submissions),
-    [submissions],
-  );
+  const trackOptions = useMemo(() => deriveTrackOptions(submissions), [submissions]);
   // Only worth a line of its own when the list spans more than one competition.
   const showCompetition = useMemo(
-    () =>
-      new Set(submissions.map((submission) => submission.competitionId)).size >
-      1,
+    () => new Set(submissions.map((submission) => submission.competitionId)).size > 1,
     [submissions],
   );
 
@@ -243,12 +210,7 @@ export function SubmissionBrowser({
       filterOptions={trackOptions}
       getFilterValue={(submission) => submission.trackId}
       matchesSearch={(submission, query) =>
-        [
-          submission.id,
-          submission.trackName,
-          submission.competitionName,
-          submission.body,
-        ]
+        [submission.id, submission.trackName, submission.competitionName, submission.body]
           .join(" ")
           .toLowerCase()
           .includes(query)

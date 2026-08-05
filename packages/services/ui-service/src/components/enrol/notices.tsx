@@ -18,9 +18,7 @@ export function SignInToEnrol() {
           <Lock />
         </EmptyMedia>
         <EmptyTitle>Sign in to enrol</EmptyTitle>
-        <EmptyDescription>
-          Your enrolments are attached to your account.
-        </EmptyDescription>
+        <EmptyDescription>Your enrolments are attached to your account.</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button render={<Link to="/sign-in" />}>Sign in</Button>

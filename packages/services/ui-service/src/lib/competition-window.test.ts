@@ -65,9 +65,7 @@ describe("phaseOf", () => {
   // That is true of an opening date, and equally true of a quota that resets.
   it("splits a blocked gate by whether anything is still ahead", () => {
     expect(phaseOf([opens(AUG)], NOW)).toBe("upcoming");
-    expect(phaseOf([closed(AUG)], Date.parse("2026-10-01T00:00:00.000Z"))).toBe(
-      "closed",
-    );
+    expect(phaseOf([closed(AUG)], Date.parse("2026-10-01T00:00:00.000Z"))).toBe("closed");
   });
 
   it("takes the worst thing any gate has to say", () => {
@@ -95,18 +93,12 @@ describe("competitionSchedule", () => {
   });
 
   it("names the deadline when every track shares it", () => {
-    const schedule = competitionSchedule(
-      [track("a", closes(AUG)), track("b", closes(AUG))],
-      NOW,
-    );
+    const schedule = competitionSchedule([track("a", closes(AUG)), track("b", closes(AUG))], NOW);
     expect(schedule?.countdown).toEqual({ label: "Closes in", at: AUG });
   });
 
   it("counts down to the nearest deadline, not the last", () => {
-    const schedule = competitionSchedule(
-      [track("a", closes(AUG)), track("b", closes(SEP))],
-      NOW,
-    );
+    const schedule = competitionSchedule([track("a", closes(AUG)), track("b", closes(SEP))], NOW);
     expect(schedule?.countdown).toEqual({ label: "Next deadline in", at: AUG });
   });
 
@@ -151,18 +143,12 @@ describe("competitionSchedule", () => {
   // Two tracks closing at the same moment is one date; a track closing exactly
   // when another opens is two, because they are different events.
   it("keeps dates from different gates apart", () => {
-    const schedule = competitionSchedule(
-      [track("a", opens(AUG)), track("b", closes(AUG))],
-      NOW,
-    );
+    const schedule = competitionSchedule([track("a", opens(AUG)), track("b", closes(AUG))], NOW);
     expect(schedule?.milestones).toHaveLength(2);
   });
 
   it("orders milestones by date", () => {
-    const schedule = competitionSchedule(
-      [track("a", closes(SEP)), track("b", opens(AUG))],
-      NOW,
-    );
+    const schedule = competitionSchedule([track("a", closes(SEP)), track("b", opens(AUG))], NOW);
     expect(schedule?.milestones.map((m) => m.at)).toEqual([AUG, SEP]);
   });
 

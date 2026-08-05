@@ -17,13 +17,7 @@ import type { BaseInputTemplateProps, WidgetProps } from "@rjsf/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { cn } from "../ui/utils";
 
@@ -53,9 +47,7 @@ export function BaseInputTemplate({
   const { ClearButton } = registry.templates.ButtonTemplates;
   const inputProps = { ...extraProps, ...getInputProps(schema, type, options) };
 
-  const handleChange = ({
-    target: { value },
-  }: React.ChangeEvent<HTMLInputElement>) =>
+  const handleChange = ({ target: { value } }: React.ChangeEvent<HTMLInputElement>) =>
     onChange(value === "" ? options.emptyValue : value);
   const handleBlur = ({ target }: React.FocusEvent<HTMLInputElement>) =>
     onBlur(id, target && target.value);
@@ -70,8 +62,7 @@ export function BaseInputTemplate({
     [onChange, options.emptyValue],
   );
 
-  const clearable =
-    options.allowClearTextInputs && !readonly && !disabled && value;
+  const clearable = options.allowClearTextInputs && !readonly && !disabled && value;
 
   return (
     <div className={cn(clearable && "relative")}>
@@ -94,9 +85,7 @@ export function BaseInputTemplate({
         onFocus={handleFocus}
         aria-describedby={ariaDescribedByIds(id, !!schema.examples)}
       />
-      {clearable ?
-        <ClearButton onClick={handleClear} registry={registry} />
-      : null}
+      {clearable ? <ClearButton onClick={handleClear} registry={registry} /> : null}
       {children}
       <SchemaExamples id={id} schema={schema} />
     </div>
@@ -119,9 +108,7 @@ export function TextareaWidget({
   rawErrors = [],
   className,
 }: WidgetProps) {
-  const handleChange = ({
-    target: { value },
-  }: React.ChangeEvent<HTMLTextAreaElement>) =>
+  const handleChange = ({ target: { value } }: React.ChangeEvent<HTMLTextAreaElement>) =>
     onChange(value === "" ? options.emptyValue : value);
   const handleBlur = ({ target }: React.FocusEvent<HTMLTextAreaElement>) =>
     onBlur(id, target && target.value);
@@ -181,13 +168,7 @@ export function SelectWidget({
     disabled: Array.isArray(enumDisabled) && enumDisabled.includes(option.value),
   }));
 
-  const selected = enumOptionSelectedValue(
-    value,
-    enumOptions,
-    false,
-    format,
-    "",
-  ) as string;
+  const selected = enumOptionSelectedValue(value, enumOptions, false, format, "") as string;
 
   return (
     <Select
@@ -197,9 +178,7 @@ export function SelectWidget({
       disabled={disabled || readonly}
       required={required}
       onValueChange={(next) =>
-        onChange(
-          enumOptionValueDecoder(next ?? "", enumOptions, format, emptyValue),
-        )
+        onChange(enumOptionValueDecoder(next ?? "", enumOptions, format, emptyValue))
       }
     >
       <SelectTrigger
@@ -262,16 +241,14 @@ export function CheckboxWidget({
         aria-describedby={ariaDescribedByIds(id)}
         className={className}
       />
-      {text || description ?
+      {text || description ? (
         <FieldContent>
           {text ? <FieldLabel htmlFor={id}>{text}</FieldLabel> : null}
-          {description ?
-            <FieldDescription id={descriptionId(id)}>
-              {description}
-            </FieldDescription>
-          : null}
+          {description ? (
+            <FieldDescription id={descriptionId(id)}>{description}</FieldDescription>
+          ) : null}
         </FieldContent>
-      : null}
+      ) : null}
     </Field>
   );
 }

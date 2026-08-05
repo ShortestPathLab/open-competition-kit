@@ -1,8 +1,4 @@
-import {
-  Link,
-  useRouter,
-  type ErrorComponentProps,
-} from "@tanstack/react-router";
+import { Link, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { RotateCcw } from "lucide-react";
 
 import { StatusScreen } from "@/components/status-screen";
@@ -52,12 +48,7 @@ export function ErrorPage({ error, reset }: ErrorComponentProps) {
             <RotateCcw />
             Try again
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="h-10 px-5"
-            render={<Link to="/" />}
-          >
+          <Button variant="outline" size="lg" className="h-10 px-5" render={<Link to="/" />}>
             Go home
           </Button>
         </>
@@ -68,7 +59,7 @@ export function ErrorPage({ error, reset }: ErrorComponentProps) {
           {readMessage(error)}
         </p>
       </div>
-      {import.meta.env.DEV && stack ?
+      {import.meta.env.DEV && stack ? (
         <details className="mt-3 rounded-xl border border-border bg-muted/40 p-4">
           <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
             Stack trace
@@ -77,7 +68,7 @@ export function ErrorPage({ error, reset }: ErrorComponentProps) {
             {stack}
           </pre>
         </details>
-      : null}
+      ) : null}
     </StatusScreen>
   );
 }

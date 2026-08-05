@@ -46,12 +46,12 @@ export function OverviewHeader({
           {competition.name}
           {/* Only an organiser is ever handed a draft, so this doubles as a
               reminder that nobody else can reach this page. */}
-          {isDraft(competition) ?
+          {isDraft(competition) ? (
             <Badge variant="secondary">
               <PencilRuler />
               Draft, visible only to organisers
             </Badge>
-          : null}
+          ) : null}
         </span>
       }
       description={
@@ -62,17 +62,12 @@ export function OverviewHeader({
       }
       actions={
         <>
-          <TrackPickerPopover
-            competitionId={competitionId}
-            tracks={competition.tracks}
-          />
+          <TrackPickerPopover competitionId={competitionId} tracks={competition.tracks} />
           <Button
             size="lg"
             className="h-10 px-5"
             variant="outline"
-            render={
-              <Link to="/competitions/$id/rules" params={{ id: competitionId }} />
-            }
+            render={<Link to="/competitions/$id/rules" params={{ id: competitionId }} />}
           >
             Read the rules
           </Button>

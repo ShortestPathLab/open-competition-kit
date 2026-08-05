@@ -26,8 +26,5 @@ export const files = S.Struct({
    * the app server. Backends that cannot presign return undefined and the caller
    * proxies instead, keeping every backend usable and letting good ones be fast.
    */
-  link: hook<
-    { key: string; mode: "read" | "write"; expiresIn?: number },
-    string | undefined
-  >(),
+  link: hook<{ key: string; mode: "read" | "write"; expiresIn?: number }, string | undefined>(),
 });

@@ -31,8 +31,7 @@ const styles = {
     lineHeight: 1.45,
   },
   path: {
-    fontFamily:
-      "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
     fontSize: "0.8125rem",
     wordBreak: "break-all",
   },
@@ -55,8 +54,7 @@ const styles = {
     borderTop: "1px solid var(--border, #e5e8f0)",
   },
   name: {
-    fontFamily:
-      "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
     fontSize: "0.8125rem",
     minWidth: 0,
     overflow: "hidden",
@@ -64,8 +62,7 @@ const styles = {
     whiteSpace: "nowrap",
   },
   sha: {
-    fontFamily:
-      "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
     fontSize: "0.75rem",
     color: "var(--muted-foreground, #4c5468)",
     flexShrink: 0,
@@ -77,9 +74,7 @@ const styles = {
   },
 } satisfies Record<string, React.CSSProperties>;
 
-export function RepositoryCard({
-  props,
-}: SurfaceViewProps<RepositoryCardProps>) {
+export function RepositoryCard({ props }: SurfaceViewProps<RepositoryCardProps>) {
   const { owner, repo, url, branches } = props;
 
   return (
@@ -89,12 +84,12 @@ export function RepositoryCard({
           {owner}/{repo}
         </div>
         <div style={styles.hint}>
-          You have push access. Commit your work to a branch, then choose that
-          branch when you submit.
+          You have push access. Commit your work to a branch, then choose that branch when you
+          submit.
         </div>
       </div>
 
-      {branches.length > 0 ?
+      {branches.length > 0 ? (
         <div style={styles.list}>
           {branches.map((branch, index) => (
             <a
@@ -111,17 +106,11 @@ export function RepositoryCard({
             </a>
           ))}
         </div>
-      : <div style={styles.hint}>
-          Nothing pushed yet. Your first commit will show up here.
-        </div>
-      }
+      ) : (
+        <div style={styles.hint}>Nothing pushed yet. Your first commit will show up here.</div>
+      )}
 
-      <a
-        style={styles.link}
-        href={url}
-        target="_blank"
-        rel="noreferrer noopener"
-      >
+      <a style={styles.link} href={url} target="_blank" rel="noreferrer noopener">
         Open on GitHub
       </a>
     </div>

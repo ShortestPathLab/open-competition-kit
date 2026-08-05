@@ -80,27 +80,15 @@
   --color-card: var(--card, var(--fb-card));
   --color-card-foreground: var(--card-foreground, var(--fb-card-foreground));
   --color-popover: var(--popover, var(--fb-popover));
-  --color-popover-foreground: var(
-    --popover-foreground,
-    var(--fb-popover-foreground)
-  );
+  --color-popover-foreground: var(--popover-foreground, var(--fb-popover-foreground));
   --color-primary: var(--primary, var(--fb-primary));
-  --color-primary-foreground: var(
-    --primary-foreground,
-    var(--fb-primary-foreground)
-  );
+  --color-primary-foreground: var(--primary-foreground, var(--fb-primary-foreground));
   --color-secondary: var(--secondary, var(--fb-secondary));
-  --color-secondary-foreground: var(
-    --secondary-foreground,
-    var(--fb-secondary-foreground)
-  );
+  --color-secondary-foreground: var(--secondary-foreground, var(--fb-secondary-foreground));
   --color-muted: var(--muted, var(--fb-muted));
   --color-muted-foreground: var(--muted-foreground, var(--fb-muted-foreground));
   --color-accent: var(--accent, var(--fb-accent));
-  --color-accent-foreground: var(
-    --accent-foreground,
-    var(--fb-accent-foreground)
-  );
+  --color-accent-foreground: var(--accent-foreground, var(--fb-accent-foreground));
   --color-destructive: var(--destructive, var(--fb-destructive));
   --color-border: var(--border, var(--fb-border));
   --color-input: var(--input, var(--fb-input));
@@ -117,7 +105,9 @@
    * import; font faces registered on the main document are visible inside
    * shadow trees, so this resolves to the same font the app is using.
    */
-  --font-sans: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans:
+    "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 /*

@@ -22,16 +22,7 @@ export const light: Theme = {
   textSecondary: "#52514e",
   grid: "#e6e5e1",
   border: "#d9d8d3",
-  series: [
-    "#2a78d6",
-    "#1baf7a",
-    "#eda100",
-    "#008300",
-    "#4a3aa7",
-    "#e34948",
-    "#e87ba4",
-    "#eb6834",
-  ],
+  series: ["#2a78d6", "#1baf7a", "#eda100", "#008300", "#4a3aa7", "#e34948", "#e87ba4", "#eb6834"],
 };
 
 export const dark: Theme = {
@@ -40,16 +31,7 @@ export const dark: Theme = {
   textSecondary: "#c3c2b7",
   grid: "#33322f",
   border: "#3d3c38",
-  series: [
-    "#3987e5",
-    "#199e70",
-    "#c98500",
-    "#008300",
-    "#9085e9",
-    "#e66767",
-    "#d55181",
-    "#d95926",
-  ],
+  series: ["#3987e5", "#199e70", "#c98500", "#008300", "#9085e9", "#e66767", "#d55181", "#d95926"],
 };
 
 /** Colour follows the entity's slot, never its rank, so filtering never repaints. */

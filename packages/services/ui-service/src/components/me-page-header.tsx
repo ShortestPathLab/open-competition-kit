@@ -80,30 +80,26 @@ export function MePageHeader({
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink render={<Link to="/me" />}>
-                Your competitions
-              </BreadcrumbLink>
+              <BreadcrumbLink render={<Link to="/me" />}>Your competitions</BreadcrumbLink>
             </BreadcrumbItem>
             {trail.map((step) => (
               <Fragment key={step.section}>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbLink
-                    render={<Link to={SECTION_ROUTES[step.section]} />}
-                  >
+                  <BreadcrumbLink render={<Link to={SECTION_ROUTES[step.section]} />}>
                     {step.label}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
               </Fragment>
             ))}
-            {current ?
+            {current ? (
               <>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage>{current}</BreadcrumbPage>
                 </BreadcrumbItem>
               </>
-            : null}
+            ) : null}
           </BreadcrumbList>
         </Breadcrumb>
       }

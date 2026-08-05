@@ -35,9 +35,7 @@ export function TrackPickerPopover({
       <PopoverContent align="end" className="w-96 p-3">
         <PopoverHeader className="px-1">
           <PopoverTitle>Choose a track</PopoverTitle>
-          <PopoverDescription>
-            Participation happens at the track level.
-          </PopoverDescription>
+          <PopoverDescription>Participation happens at the track level.</PopoverDescription>
         </PopoverHeader>
         <div className="flex flex-col gap-1">
           {tracks.map((track) => (

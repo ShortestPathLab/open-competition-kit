@@ -1,13 +1,13 @@
 {
-  "version": "0.0.11",
   "name": "@open-competition-kit/sdk",
+  "version": "0.0.11",
+  "private": false,
+  "type": "module",
+  "module": "index.ts",
+  "types": "index.ts",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "module": "index.ts",
-  "types": "index.ts",
-  "type": "module",
-  "private": false,
   "dependencies": {
     "@effect/platform": "^0.92.1",
     "@effect/platform-bun": "^0.81.1",

@@ -1,9 +1,4 @@
-import {
-  config,
-  unsafe,
-  type FileBody,
-  type Package,
-} from "@open-competition-kit/sdk";
+import { config, unsafe, type FileBody, type Package } from "@open-competition-kit/sdk";
 import { S3Client } from "bun";
 import { once } from "es-toolkit";
 import { config as extensions } from "./config";
@@ -13,10 +8,7 @@ const DEFAULT_EXPIRY_SECONDS = 15 * 60;
 /** Realm-safe: the request body's stream comes from the server runtime's realm,
  * so `instanceof ReadableStream` is false even when it plainly is one. */
 const isStream = (b: unknown): b is ReadableStream =>
-  !!b &&
-  typeof b === "object" &&
-  typeof (b as ReadableStream).getReader === "function";
-
+  !!b && typeof b === "object" && typeof (b as ReadableStream).getReader === "function";
 
 type S3Config = {
   bucket?: string;
@@ -90,8 +82,7 @@ export default {
 
       // A ReadableStream must be wrapped, not coerced: passed raw it stringifies
       // to "[object ReadableStream]" and silently stores 23 bytes.
-      const payload: FileBody | Response =
-        isStream(body) ? new Response(body) : body;
+      const payload: FileBody | Response = isStream(body) ? new Response(body) : body;
 
       const size = await s3.write(key, payload as Blob, { type: contentType });
 

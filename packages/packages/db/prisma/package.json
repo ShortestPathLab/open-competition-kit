@@ -1,21 +1,21 @@
 {
-  "version": "0.0.11",
   "name": "@open-competition-kit/db-prisma",
+  "version": "0.0.11",
+  "private": false,
+  "type": "module",
+  "module": "index.ts",
+  "types": "index.ts",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "module": "index.ts",
-  "types": "index.ts",
-  "type": "module",
-  "private": false,
   "dependencies": {
+    "@open-competition-kit/sdk": "workspace:*",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "7.4.0",
     "dotenv": "^17.4.2",
     "effect": "^3.18.4",
     "es-toolkit": "^1.46.1",
     "prisma": "7.4.0",
-    "@open-competition-kit/sdk": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

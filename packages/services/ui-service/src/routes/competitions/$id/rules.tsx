@@ -3,13 +3,7 @@ import { CompetitionPageHeader } from "@/components/competition-page-header";
 import { HeaderStats, PageBody } from "@/components/page-header-band";
 import { Stat } from "@/components/stat-strip";
 import { PageSkeleton } from "@/components/skeletons";
-import {
-  Panel,
-  PanelBody,
-  PanelDescription,
-  PanelHeader,
-  PanelTitle,
-} from "@/components/panel";
+import { Panel, PanelBody, PanelDescription, PanelHeader, PanelTitle } from "@/components/panel";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useCompetition } from "@/lib/competition-fn";
@@ -48,9 +42,7 @@ function CompetitionRulesPage() {
         <Panel>
           <PanelHeader className="flex-col items-start gap-1">
             <PanelTitle>General rules</PanelTitle>
-            <PanelDescription>
-              Rules that apply across the entire competition.
-            </PanelDescription>
+            <PanelDescription>Rules that apply across the entire competition.</PanelDescription>
           </PanelHeader>
           <PanelBody>
             <div className={proseClass}>
@@ -71,9 +63,7 @@ function CompetitionRulesPage() {
                 </PanelHeader>
                 <PanelBody>
                   <div className={proseClass}>
-                    <Markdown remarkPlugins={[remarkGfm]}>
-                      {track.rules}
-                    </Markdown>
+                    <Markdown remarkPlugins={[remarkGfm]}>{track.rules}</Markdown>
                   </div>
                 </PanelBody>
               </Panel>

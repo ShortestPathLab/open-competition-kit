@@ -17,8 +17,9 @@ import * as React from "react";
  * `null` means no container was provided, which is the right answer when the
  * form is rendered straight into the page. Base UI then uses its default.
  */
-const PortalContainerContext =
-  React.createContext<React.RefObject<HTMLElement | null> | null>(null);
+const PortalContainerContext = React.createContext<React.RefObject<HTMLElement | null> | null>(
+  null,
+);
 
 export function PortalContainerProvider({
   value,
@@ -28,9 +29,7 @@ export function PortalContainerProvider({
   children: React.ReactNode;
 }) {
   return (
-    <PortalContainerContext.Provider value={value}>
-      {children}
-    </PortalContainerContext.Provider>
+    <PortalContainerContext.Provider value={value}>{children}</PortalContainerContext.Provider>
   );
 }
 

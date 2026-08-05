@@ -4,11 +4,7 @@ import { DesktopNavbar, MobileNavbar } from "./chrome";
 import { Brand, NavLinks } from "./nav-links";
 import { useNavbar } from "./use-navbar";
 
-export function Navbar({
-  appName = "Open Competition Kit",
-}: {
-  appName?: string;
-}) {
+export function Navbar({ appName = "Open Competition Kit" }: { appName?: string }) {
   const { banner, signOut, ...account } = useNavbar();
   const brand = <Brand appName={appName} />;
 

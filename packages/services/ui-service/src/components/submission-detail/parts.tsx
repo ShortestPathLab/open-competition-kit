@@ -70,21 +70,18 @@ export function ResultStat({
 
   return (
     <Stat
-      tone={
-        failed ? "destructive"
-        : readout.headline ? "success"
-        : undefined
-      }
+      tone={failed ? "destructive" : readout.headline ? "success" : undefined}
       label={
-        failed ? `Run ${runNumber} of ${runCount} failed`
-        : (readout.headline?.label ?? "Result")
+        failed ? `Run ${runNumber} of ${runCount} failed` : (readout.headline?.label ?? "Result")
       }
       value={
-        readout.headline ?
+        readout.headline ? (
           formatScore(readout.headline.value)
-        : <span className="font-sans text-base">
+        ) : (
+          <span className="font-sans text-base">
             {readout.present ? "No headline score" : "Not scored yet"}
           </span>
+        )
       }
     />
   );
@@ -105,12 +102,13 @@ export function RunCard({
   const readout = readResult(job.result);
   const { tone } = describeJobStatus(job.status);
 
-  const outcome =
-    readout.headline ?
-      `${readout.headline.label.toLowerCase()} ${formatScore(readout.headline.value)}`
-    : tone === "destructive" ? "no result written"
-    : tone === "pending" ? "waiting on the runner"
-    : `${job.outputs.length} output${job.outputs.length === 1 ? "" : "s"}`;
+  const outcome = readout.headline
+    ? `${readout.headline.label.toLowerCase()} ${formatScore(readout.headline.value)}`
+    : tone === "destructive"
+      ? "no result written"
+      : tone === "pending"
+        ? "waiting on the runner"
+        : `${job.outputs.length} output${job.outputs.length === 1 ? "" : "s"}`;
 
   return (
     <button
@@ -119,9 +117,9 @@ export function RunCard({
       aria-pressed={selected}
       className={cn(
         "w-44 shrink-0 rounded-lg border px-3 py-2.5 text-left transition-colors",
-        selected ?
-          "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
-        : "border-border bg-card hover:border-input",
+        selected
+          ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+          : "border-border bg-card hover:border-input",
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -132,9 +130,7 @@ export function RunCard({
       </div>
       {/* No job id. "Run 2" is what somebody calls this when they ask about it,
           and the strip is already ordered, so the cuid was only ever noise. */}
-      <p className="mt-1.5 truncate font-mono text-xs text-muted-foreground">
-        {outcome}
-      </p>
+      <p className="mt-1.5 truncate font-mono text-xs text-muted-foreground">{outcome}</p>
     </button>
   );
 }
@@ -151,9 +147,7 @@ export function LogConsole({ lines }: { lines: string[] }) {
             /error|exception|traceback/i.test(line) && "bg-destructive/20",
           )}
         >
-          <span className="text-terminal-foreground/35 select-none text-right">
-            {index + 1}
-          </span>
+          <span className="text-terminal-foreground/35 select-none text-right">{index + 1}</span>
           <span className="wrap-break-word whitespace-pre-wrap">{line}</span>
         </div>
       ))}
@@ -162,13 +156,7 @@ export function LogConsole({ lines }: { lines: string[] }) {
 }
 
 /** A JSON value, kept out of the way until somebody asks for it. */
-export function RawDisclosure({
-  label,
-  value,
-}: {
-  label: string;
-  value: unknown;
-}) {
+export function RawDisclosure({ label, value }: { label: string; value: unknown }) {
   return (
     <details className="group border-t border-border">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-3 text-sm font-medium text-muted-foreground hover:text-foreground">

@@ -1,9 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ensureLeaderboard } from "@/lib/route-guards";
 
-export const Route = createFileRoute(
-  "/competitions/$id/leaderboards/$leaderboardId",
-)({
+export const Route = createFileRoute("/competitions/$id/leaderboards/$leaderboardId")({
   // Every board now sits on the one leaderboards page, so this is a permalink
   // rather than a page of its own: links shared while each board had its own URL
   // still land on that board, as an anchor.

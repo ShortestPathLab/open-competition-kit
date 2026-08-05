@@ -1,18 +1,8 @@
 import { cn } from "@/lib/utils";
-import type {
-  Subject,
-  SurfaceContext,
-  SurfaceItem,
-} from "@open-competition-kit/sdk/surface";
+import type { Subject, SurfaceContext, SurfaceItem } from "@open-competition-kit/sdk/surface";
 import { authClient } from "@/lib/auth-client";
 import { useSurface } from "@/lib/surface-fn";
-import {
-  ActionButton,
-  Checklist,
-  Code,
-  Fact,
-  Note,
-} from "./surface/kinds";
+import { ActionButton, Checklist, Code, Fact, Note } from "./surface/kinds";
 import { View } from "./surface/view";
 
 /**
@@ -42,17 +32,10 @@ function Item({
       return <Note note={item} full={full} />;
     case "fact":
       return (
-        <Fact
-          label={item.label}
-          value={item.value}
-          href={item.href}
-          external={item.external}
-        />
+        <Fact label={item.label} value={item.value} href={item.href} external={item.external} />
       );
     case "code":
-      return (
-        <Code title={item.title} language={item.language} body={item.body} />
-      );
+      return <Code title={item.title} language={item.language} body={item.body} />;
     case "checklist":
       return <Checklist title={item.title} steps={item.steps} />;
     // `chrome: "panel"` is what a package asks for when it only wants the inside
@@ -123,26 +106,18 @@ export function SurfaceSlot({
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       {runsOf(data.items).map((run, index) =>
-        run.actions ?
+        run.actions ? (
           <div
             key={`actions-${index}`}
             className={cn("flex gap-2", full ? "flex-col" : "flex-wrap")}
           >
             {run.actions.map((action) => (
-              <Item
-                key={action.id}
-                item={action}
-                context={context}
-                full={full}
-              />
+              <Item key={action.id} item={action} context={context} full={full} />
             ))}
           </div>
-        : <Item
-            key={run.item.id}
-            item={run.item}
-            context={context}
-            full={full}
-          />,
+        ) : (
+          <Item key={run.item.id} item={run.item} context={context} full={full} />
+        ),
       )}
     </div>
   );

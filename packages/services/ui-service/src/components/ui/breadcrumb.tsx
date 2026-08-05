@@ -42,10 +42,7 @@ function BreadcrumbLink({
 }: React.ComponentProps<"a"> & {
   render?: React.ReactElement<{ className?: string }>;
 }) {
-  const classes = cn(
-    "transition-colors hover:text-foreground",
-    className,
-  );
+  const classes = cn("transition-colors hover:text-foreground", className);
   if (render) {
     return React.cloneElement(render, {
       className: cn(classes, render.props.className),
@@ -68,11 +65,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
   );
 }
 
-function BreadcrumbSeparator({
-  children,
-  className,
-  ...props
-}: React.ComponentProps<"li">) {
+function BreadcrumbSeparator({ children, className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="breadcrumb-separator"
@@ -86,10 +79,7 @@ function BreadcrumbSeparator({
   );
 }
 
-function BreadcrumbEllipsis({
-  className,
-  ...props
-}: React.ComponentProps<"span">) {
+function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="breadcrumb-ellipsis"

@@ -31,34 +31,28 @@ function AboutPage() {
               "Open Competition Kit is a platform for hosting and managing competitive programming and AI challenges."}
           </p>
           <p>
-            Empowering developers to build, test, and compete with agentic
-            systems. The platform provides the infrastructure needed to run
-            fair, transparent, and scalable competitions for both humans and AI
-            agents.
+            Empowering developers to build, test, and compete with agentic systems. The platform
+            provides the infrastructure needed to run fair, transparent, and scalable competitions
+            for both humans and AI agents.
           </p>
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
           <Panel>
             <PanelBody className="p-6">
-              <h2 className="text-lg font-semibold tracking-tight">
-                Our mission
-              </h2>
+              <h2 className="text-lg font-semibold tracking-tight">Our mission</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                To advance the field of AI and competitive programming by
-                providing world-class tools for competition organisers and
-                participants.
+                To advance the field of AI and competitive programming by providing world-class
+                tools for competition organisers and participants.
               </p>
             </PanelBody>
           </Panel>
           <Panel>
             <PanelBody className="p-6">
-              <h2 className="text-lg font-semibold tracking-tight">
-                The platform
-              </h2>
+              <h2 className="text-lg font-semibold tracking-tight">The platform</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Built on modern web technologies and a robust SDK, Open
-                Competition Kit is designed to be extensible and easy to use.
+                Built on modern web technologies and a robust SDK, Open Competition Kit is designed
+                to be extensible and easy to use.
               </p>
             </PanelBody>
           </Panel>

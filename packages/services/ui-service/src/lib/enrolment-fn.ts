@@ -15,9 +15,7 @@ import { resolveId } from "./configure-user";
  */
 const getUserEnrolments = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .handler(({ context: { session } }) =>
-    listUserEnrolments(resolveId(session.user)),
-  );
+  .handler(({ context: { session } }) => listUserEnrolments(resolveId(session.user)));
 
 /**
  * `sessionUserId` never reaches the server. It separates one signed-in user's

@@ -111,9 +111,7 @@ const parseArguments = (list: string | undefined) =>
 const isOperator = (name: string): name is Operator => name in ARITY;
 
 const buildCall = (op: Operator, args: string[]): Call =>
-  op === "env" ?
-    { op, name: args[0]!, fallback: args[1] }
-  : { op, file: args[0]! };
+  op === "env" ? { op, name: args[0]!, fallback: args[1] } : { op, file: args[0]! };
 
 type Interpolation = {
   readonly call: Call;
@@ -206,9 +204,9 @@ const collect = (obj: unknown): Collected => {
             template,
             at,
             reason:
-              min === max ?
-                `${name}() takes ${min} argument, and was given ${args.length}.`
-              : `${name}() takes ${min} or ${max} arguments, and was given ${args.length}.`,
+              min === max
+                ? `${name}() takes ${min} argument, and was given ${args.length}.`
+                : `${name}() takes ${min} or ${max} arguments, and was given ${args.length}.`,
           }),
         );
         continue;
@@ -244,14 +242,8 @@ const resolveCall = (
     if (call.op === "env") {
       const variable = C.string(call.name);
       return yield* (
-        call.fallback === undefined ? variable : (
-          variable.pipe(C.withDefault(call.fallback))
-        )
-      ).pipe(
-        E.mapError(
-          () => `${call.name} is not set and no fallback was given.`,
-        ),
-      );
+        call.fallback === undefined ? variable : variable.pipe(C.withDefault(call.fallback))
+      ).pipe(E.mapError(() => `${call.name} is not set and no fallback was given.`));
     }
 
     const file = path.resolve(cwd, call.file);
@@ -267,16 +259,12 @@ const resolveCall = (
           `${file} is ${bytes.length} bytes, over the ${MAX_DATA_URL_BYTES} byte limit for an inlined file.`,
         );
       }
-      const mime =
-        MIME_TYPES[path.extname(file).toLowerCase()] ??
-        "application/octet-stream";
+      const mime = MIME_TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
       return `data:${mime};base64,${Buffer.from(bytes).toString("base64")}`;
     }
 
     if (seen.includes(file)) {
-      return yield* E.fail(
-        `Circular include: ${[...seen, file].join(" -> ")}.`,
-      );
+      return yield* E.fail(`Circular include: ${[...seen, file].join(" -> ")}.`);
     }
 
     const source = yield* read(fs.readFileString(file));
@@ -288,10 +276,9 @@ const resolveCall = (
     // The included document is resolved before it is spliced, against its own
     // directory, so its `text("./x.md")` means the file next to it and not the
     // one next to whoever included it.
-    return yield* transformIn(path.dirname(file), document, [
-      ...seen,
-      file,
-    ]).pipe(E.mapError((error) => `In ${call.file}: ${error.message}`));
+    return yield* transformIn(path.dirname(file), document, [...seen, file]).pipe(
+      E.mapError((error) => `In ${call.file}: ${error.message}`),
+    );
   });
 
 /**
@@ -301,20 +288,14 @@ const resolveCall = (
  * resolved, and walking into it again would test its strings against a map of
  * templates belonging to a different file.
  */
-const substitute = (
-  value: unknown,
-  resolveString: (value: string) => unknown,
-): unknown => {
+const substitute = (value: unknown, resolveString: (value: string) => unknown): unknown => {
   if (isString(value)) return resolveString(value);
   if (Array.isArray(value)) {
     return value.map((entry) => substitute(entry, resolveString));
   }
   if (isPlainObject(value)) {
     return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [
-        key,
-        substitute(entry, resolveString),
-      ]),
+      Object.entries(value).map(([key, entry]) => [key, substitute(entry, resolveString)]),
     );
   }
   return value;
@@ -386,5 +367,4 @@ const transformIn = (
  * in the input can be a whole competition in the output. `decode` runs straight
  * after this and is where the shape is established.
  */
-export const transform = (cwd: string, obj: unknown) =>
-  transformIn(cwd, obj, []);
+export const transform = (cwd: string, obj: unknown) => transformIn(cwd, obj, []);

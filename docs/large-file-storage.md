@@ -48,7 +48,7 @@ What this costs:
 - **Storage is welded to the database choice**, which is the exact opposite of
   "bring your own database".
 
-It also means the kit cannot support the competition shape where a submission *is*
+It also means the kit cannot support the competition shape where a submission _is_
 a large artifact — a trained model, a dataset, a compiled binary.
 
 ## The shape of the fix
@@ -72,8 +72,8 @@ export type FileRef = {
 };
 ```
 
-This is what the design deck meant by *"database fields can contain a reference to
-a large file"*. It is small, JSON-safe, and survives the existing `context`/JSON
+This is what the design deck meant by _"database fields can contain a reference to
+a large file"_. It is small, JSON-safe, and survives the existing `context`/JSON
 columns with no schema change.
 
 ### 2. `files.*` — the implementation point
@@ -102,7 +102,7 @@ This mirrors the deck's `large-file/write`, `large-file/read`, `large-file/peak`
 **On streams and serialisability.** These hooks pass `ReadableStream`s, which do not
 serialise, so they cannot cross a language boundary. That is fine and consistent:
 the `db` hook already passes non-serialisable values around. Both are
-*infrastructure* implementation points, in-process by definition. The
+_infrastructure_ implementation points, in-process by definition. The
 extension points that packages and third parties actually reach for — forms,
 runners, leaderboards — stay serialisable.
 
@@ -119,12 +119,12 @@ Add a `file` table to the registry, alongside `context`:
 ```ts
 file: createSchemas("open-competition-kit/db/file", {
   key: S.String,
-  namespace: S.String,   // job | user | submission — reuse the existing namespaces
+  namespace: S.String, // job | user | submission — reuse the existing namespaces
   owner: S.String,
   size: Int,
   checksum: S.String,
   contentType: S.String,
-})
+});
 ```
 
 Files become owned objects rather than loose blobs, which gives us:
@@ -202,13 +202,13 @@ remains welded to the database. It is the current design with a better encoding.
 
 ## Rough effort
 
-| Piece | Estimate |
-|---|---|
-| `FileRef`, `files.*` hooks, `file` table, GC | ~1 day |
-| `large-files/local` backend | ~1 day |
-| Upload endpoint + `kind: file` form field | ~2 days |
+| Piece                                         | Estimate    |
+| --------------------------------------------- | ----------- |
+| `FileRef`, `files.*` hooks, `file` table, GC  | ~1 day      |
+| `large-files/local` backend                   | ~1 day      |
+| Upload endpoint + `kind: file` form field     | ~2 days     |
 | Migrate `github-classic` to write a `FileRef` | ~half a day |
-| `large-files/s3` backend | ~1 day |
+| `large-files/s3` backend                      | ~1 day      |
 
 ## One dependency worth flagging
 

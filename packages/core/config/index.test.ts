@@ -47,10 +47,7 @@ describe("transform then decode", () => {
     ].join("\n");
 
     const config = (await E.runPromise(
-      transform(cwd, load(source)).pipe(
-        E.andThen(decode),
-        E.provide(BunContext.layer),
-      ),
+      transform(cwd, load(source)).pipe(E.andThen(decode), E.provide(BunContext.layer)),
     )) as Record<string, any>;
 
     // The whole point of the ordering: `competitions` is a list of strings until
@@ -97,10 +94,7 @@ describe("transform then decode", () => {
     ].join("\n");
 
     const config = (await E.runPromise(
-      transform(cwd, load(source)).pipe(
-        E.andThen(decode),
-        E.provide(BunContext.layer),
-      ),
+      transform(cwd, load(source)).pipe(E.andThen(decode), E.provide(BunContext.layer)),
     )) as Record<string, any>;
 
     const inlined = (svg: string) =>
@@ -110,9 +104,7 @@ describe("transform then decode", () => {
     // decoding rather than being preserved as excess properties.
     expect(config.competitions[0].icon).toBe(inlined("<svg>icon</svg>"));
     expect(config.competitions[0].banner).toBe(inlined("<svg>banner</svg>"));
-    expect(config.competitions[0].tracks[0].icon).toBe(
-      inlined("<svg>track</svg>"),
-    );
+    expect(config.competitions[0].tracks[0].icon).toBe(inlined("<svg>track</svg>"));
 
     rmSync(cwd, { recursive: true, force: true });
   });
@@ -137,10 +129,7 @@ describe("decode", () => {
       "        form: { shape: [] }",
     ].join("\n");
 
-    const config = (await E.runPromise(decode(load(source)))) as Record<
-      string,
-      any
-    >;
+    const config = (await E.runPromise(decode(load(source)))) as Record<string, any>;
 
     // Every extendable node still carries a list afterwards, so nothing reading
     // the decoded config has to ask whether the organiser wrote one.
@@ -169,11 +158,7 @@ describe("propagateExtendable", () => {
     // Each level keeps its own `with` last, so a track can override what its
     // competition and the root declared.
     expect(result.competitions[0]?.with).toEqual(["root", "alpha"]);
-    expect(result.competitions[0]?.tracks[0]?.with).toEqual([
-      "root",
-      "alpha",
-      "main",
-    ]);
+    expect(result.competitions[0]?.tracks[0]?.with).toEqual(["root", "alpha", "main"]);
   });
 
   test("dedupes a package a child re-declares that an ancestor already had", () => {

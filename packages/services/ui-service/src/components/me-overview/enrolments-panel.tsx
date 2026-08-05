@@ -11,9 +11,7 @@ function EnrolmentRow({ enrolment }: { enrolment: EnrolmentSummary }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <p className="font-semibold">{enrolment.track.name}</p>
-      <p className="text-sm text-muted-foreground">
-        {enrolment.competition.name}
-      </p>
+      <p className="text-sm text-muted-foreground">{enrolment.competition.name}</p>
       <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
         {enrolment.track.description}
       </p>
@@ -51,11 +49,7 @@ function EnrolmentRow({ enrolment }: { enrolment: EnrolmentSummary }) {
   );
 }
 
-export function EnrolmentsPanel({
-  enrolments,
-}: {
-  enrolments: EnrolmentSummary[];
-}) {
+export function EnrolmentsPanel({ enrolments }: { enrolments: EnrolmentSummary[] }) {
   return (
     <PreviewPanel
       title="Enrolments"
@@ -65,18 +59,19 @@ export function EnrolmentsPanel({
         </Button>
       }
     >
-      {enrolments.length === 0 ?
+      {enrolments.length === 0 ? (
         <PanelEmpty
           icon={<Layers3 />}
           title="No enrolments yet"
           description="Browse competitions to join your first track."
         />
-      : <div className="space-y-3">
+      ) : (
+        <div className="space-y-3">
           {enrolments.slice(0, PREVIEW_COUNT).map((enrolment) => (
             <EnrolmentRow key={enrolment.id} enrolment={enrolment} />
           ))}
         </div>
-      }
+      )}
     </PreviewPanel>
   );
 }

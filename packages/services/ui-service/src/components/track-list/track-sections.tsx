@@ -39,9 +39,7 @@ function NoTracks() {
           <Layers3 />
         </EmptyMedia>
         <EmptyTitle>No tracks yet</EmptyTitle>
-        <EmptyDescription>
-          This competition doesn't have any tracks published yet.
-        </EmptyDescription>
+        <EmptyDescription>This competition doesn't have any tracks published yet.</EmptyDescription>
       </EmptyHeader>
     </Empty>
   );
@@ -55,9 +53,7 @@ function NoMatches() {
           <SearchX />
         </EmptyMedia>
         <EmptyTitle>No tracks match your filters</EmptyTitle>
-        <EmptyDescription>
-          Try a different keyword, or switch back to all tracks.
-        </EmptyDescription>
+        <EmptyDescription>Try a different keyword, or switch back to all tracks.</EmptyDescription>
       </EmptyHeader>
     </Empty>
   );
@@ -71,42 +67,44 @@ export function TrackSections({
   sections,
   isSignedIn,
 }: TrackSectionsProps) {
-  const body =
-    isLoading ? <LoadingRows />
-    : trackCount === 0 ? <NoTracks />
-    : sections.length === 0 ? <NoMatches />
-    : sections.map((section) => (
-        <section key={section.key} className="flex flex-col gap-3">
-          <h2 className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {section.label}
-            <span className="font-mono tracking-normal">
-              {section.rows.length}
-            </span>
-          </h2>
-          {section.rows.map(({ track, phase, submissions }) => (
-            <TrackCard
-              key={track.id}
-              id={track.id}
-              competitionId={competitionId}
-              name={track.name}
-              description={track.description}
-              icon={track.icon}
-              reports={track.reports}
-              submissions={submissions}
-              showEnrolment={isSignedIn}
-              dim={phase === "closed"}
-              action={
-                <TrackAction
-                  competitionId={competitionId}
-                  track={track}
-                  phase={phase}
-                  entered={submissions !== undefined}
-                />
-              }
-            />
-          ))}
-        </section>
-      ));
+  const body = isLoading ? (
+    <LoadingRows />
+  ) : trackCount === 0 ? (
+    <NoTracks />
+  ) : sections.length === 0 ? (
+    <NoMatches />
+  ) : (
+    sections.map((section) => (
+      <section key={section.key} className="flex flex-col gap-3">
+        <h2 className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          {section.label}
+          <span className="font-mono tracking-normal">{section.rows.length}</span>
+        </h2>
+        {section.rows.map(({ track, phase, submissions }) => (
+          <TrackCard
+            key={track.id}
+            id={track.id}
+            competitionId={competitionId}
+            name={track.name}
+            description={track.description}
+            icon={track.icon}
+            reports={track.reports}
+            submissions={submissions}
+            showEnrolment={isSignedIn}
+            dim={phase === "closed"}
+            action={
+              <TrackAction
+                competitionId={competitionId}
+                track={track}
+                phase={phase}
+                entered={submissions !== undefined}
+              />
+            }
+          />
+        ))}
+      </section>
+    ))
+  );
 
   return <div className="mt-6 flex flex-col gap-6">{body}</div>;
 }

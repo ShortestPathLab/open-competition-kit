@@ -223,9 +223,7 @@ export type SurfaceRequest = {
 /** Everything a view is told about why it is on screen. */
 export type SurfaceContext = Omit<SurfaceRequest, "items">;
 
-export type SurfaceViewProps<
-  TProps extends SerialisableObject = SerialisableObject,
-> = {
+export type SurfaceViewProps<TProps extends SerialisableObject = SerialisableObject> = {
   /** Whatever the contributing package put on the item. */
   props: TProps;
   /** The same values `content` was given, minus the chain's accumulator. */
@@ -239,9 +237,7 @@ export type SurfaceContentHook = (
 
 export type SurfaceViewHook = (
   request: { view: string },
-  next?: (
-    request: { view: string },
-  ) => Promise<Source<SurfaceViewProps> | undefined>,
+  next?: (request: { view: string }) => Promise<Source<SurfaceViewProps> | undefined>,
 ) => Promise<Source<SurfaceViewProps> | undefined>;
 
 /**
@@ -253,9 +249,7 @@ export type SurfaceViewHook = (
  * configuration. Sorting is by weight and then by arrival, so a package that
  * states no weight lands where the chain put it instead of somewhere arbitrary.
  */
-export const orderItems = (
-  items: readonly SurfaceItem[],
-): readonly SurfaceItem[] => {
+export const orderItems = (items: readonly SurfaceItem[]): readonly SurfaceItem[] => {
   const seen = new Set<string>();
   const unique = items.filter((item) => {
     if (seen.has(item.id)) return false;
@@ -265,9 +259,6 @@ export const orderItems = (
 
   return unique
     .map((item, index) => ({ item, index }))
-    .sort(
-      (a, b) =>
-        (a.item.weight ?? 0) - (b.item.weight ?? 0) || a.index - b.index,
-    )
+    .sort((a, b) => (a.item.weight ?? 0) - (b.item.weight ?? 0) || a.index - b.index)
     .map((entry) => entry.item);
 };

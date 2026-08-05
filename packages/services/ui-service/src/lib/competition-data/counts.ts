@@ -13,9 +13,7 @@ import { ensureTrackAvailable } from "./visibility";
 export async function countCompetitionSubmissions(competitionId: string) {
   const competition = await getCompetitionSummary(competitionId);
   const perTrack = await Promise.all(
-    competition.tracks.map((track) =>
-      unsafe(submissions.list({ track: track.id })),
-    ),
+    competition.tracks.map((track) => unsafe(submissions.list({ track: track.id }))),
   );
   return perTrack.reduce((total, trackSubmissions) => {
     return total + trackSubmissions.length;
@@ -35,9 +33,7 @@ export async function countCompetitionSubmissions(competitionId: string) {
  */
 export async function countCompetitionEnrolments(competitionId: string) {
   await getCompetitionSummary(competitionId);
-  const competitionEnrolments = await unsafe(
-    enrolments.list({ competition: competitionId }),
-  );
+  const competitionEnrolments = await unsafe(enrolments.list({ competition: competitionId }));
   return competitionEnrolments.length;
 }
 

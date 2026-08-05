@@ -11,8 +11,6 @@ const ensureUserInput = z.object({
 export const ensureUserExists = createServerFn({ method: "POST" })
   .inputValidator(ensureUserInput)
   .handler(async ({ data }) => {
-    const { created } = await unsafe(
-      sdk.users.upsert({ id: data.id, name: data.name }),
-    );
+    const { created } = await unsafe(sdk.users.upsert({ id: data.id, name: data.name }));
     return { success: true, created };
   });

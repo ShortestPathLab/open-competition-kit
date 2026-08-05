@@ -4,11 +4,7 @@ type PollingOptions = {
   onError?: (error: unknown) => void;
 };
 
-export function createPollingWorker({
-  intervalMs,
-  poll,
-  onError = console.error,
-}: PollingOptions) {
+export function createPollingWorker({ intervalMs, poll, onError = console.error }: PollingOptions) {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let stopped = false;
   let running = false;

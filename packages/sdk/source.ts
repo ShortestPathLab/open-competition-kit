@@ -82,9 +82,7 @@ const toRegExp = (pattern: string) => {
   const source = pattern
     .split(/(\*\*|\*)/)
     .map((part) =>
-      part === "**" ? ".*"
-      : part === "*" ? "[^/]*"
-      : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      part === "**" ? ".*" : part === "*" ? "[^/]*" : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
     )
     .join("");
   return new RegExp(`(^|/)${source}$`);
@@ -106,9 +104,7 @@ const wrapper = (paths: readonly string[]) => {
   const segments = new Set(paths.map((path) => path.split("/")[0]));
   if (segments.size !== 1) return "";
   const [only] = [...segments];
-  return only && paths.every((path) => path.startsWith(`${only}/`)) ?
-      `${only}/`
-    : "";
+  return only && paths.every((path) => path.startsWith(`${only}/`)) ? `${only}/` : "";
 };
 
 export type FilesOptions = {
@@ -154,8 +150,7 @@ export const select = async (
   // only get in the way: an archive whose files all sit under `problems/` looks
   // exactly like a wrapped one, and stripping it would leave `problems/*.py`
   // matching nothing.
-  const prefix =
-    patterns ? "" : wrapper(entries.map((entry) => entry.name));
+  const prefix = patterns ? "" : wrapper(entries.map((entry) => entry.name));
 
   const matchers = patterns?.map(toRegExp);
   const out: Record<string, Uint8Array> = {};
@@ -173,9 +168,7 @@ export const select = async (
     // which is what removes a GitHub wrapper without anybody having to know its
     // name. `problems/*.py` matching `agent-main/problems/q1a.py` yields
     // `problems/q1a.py`: the path the allowlist was written in.
-    const found = matchers
-      .map((matcher) => matcher.exec(path))
-      .find((match) => match !== null);
+    const found = matchers.map((matcher) => matcher.exec(path)).find((match) => match !== null);
     if (!found) continue;
 
     const key = path.slice(found.index + (found[1]?.length ?? 0));

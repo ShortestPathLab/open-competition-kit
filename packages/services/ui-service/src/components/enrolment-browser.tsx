@@ -1,7 +1,4 @@
-import {
-  DataBrowser,
-  type DataBrowserFilterOption,
-} from "@/components/data-browser";
+import { DataBrowser, type DataBrowserFilterOption } from "@/components/data-browser";
 import { CompetitionIcon } from "@/components/entity-icon";
 import { Panel, PanelHeader, PanelTitle } from "@/components/panel";
 import { phaseOf, WindowStatus } from "@/components/submission-window";
@@ -87,9 +84,7 @@ function EnrolmentRow({
         >
           {track.name}
         </Link>
-        <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
-          {track.description}
-        </p>
+        <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{track.description}</p>
       </div>
 
       <WindowStatus reports={reports} />
@@ -102,17 +97,18 @@ function EnrolmentRow({
       </div>
 
       <div className="flex items-center gap-2">
-        {phase === "closed" ?
+        {phase === "closed" ? (
           // The button stays and says why rather than vanishing, which would
           // leave a closed row looking broken.
           <Button variant="outline" size="sm" disabled>
             Closed
           </Button>
-        : phase === "upcoming" ?
+        ) : phase === "upcoming" ? (
           <Button size="sm" disabled>
             Not open yet
           </Button>
-        : <Button
+        ) : (
+          <Button
             size="sm"
             render={
               <Link
@@ -122,11 +118,9 @@ function EnrolmentRow({
               />
             }
           >
-            {enrolment.submissions.length === 0 ?
-              "First submission"
-            : "New submission"}
+            {enrolment.submissions.length === 0 ? "First submission" : "New submission"}
           </Button>
-        }
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -178,11 +172,7 @@ export function EnrolmentBrowser({
       filterOptions={NO_FILTERS}
       getFilterValue={(enrolment) => enrolment.track.id}
       matchesSearch={(enrolment, query) =>
-        [
-          enrolment.track.name,
-          enrolment.competition.name,
-          enrolment.track.description,
-        ]
+        [enrolment.track.name, enrolment.competition.name, enrolment.track.description]
           .join(" ")
           .toLowerCase()
           .includes(query)
@@ -214,14 +204,11 @@ export function EnrolmentBrowser({
                       {group.competition.name}
                     </Link>
                   </PanelTitle>
-                  <p className="text-xs text-muted-foreground">
-                    {group.competition.organiser}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{group.competition.organiser}</p>
                 </div>
                 <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
-                  {group.enrolments.length}{" "}
-                  {group.enrolments.length === 1 ? "track" : "tracks"} &middot;{" "}
-                  {group.submissions}{" "}
+                  {group.enrolments.length} {group.enrolments.length === 1 ? "track" : "tracks"}{" "}
+                  &middot; {group.submissions}{" "}
                   {group.submissions === 1 ? "submission" : "submissions"}
                 </span>
               </PanelHeader>

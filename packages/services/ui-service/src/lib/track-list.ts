@@ -84,20 +84,14 @@ export const nextDeadlineOf = (rows: readonly TrackRow[], now: number) => {
   return instants.length ? describeDuration(instants[0]! - now) : undefined;
 };
 
-export const filterRows = (
-  rows: readonly TrackRow[],
-  filter: TrackFilter,
-  search: string,
-) => {
+export const filterRows = (rows: readonly TrackRow[], filter: TrackFilter, search: string) => {
   const query = search.trim().toLowerCase();
 
   return rows.filter((row) => {
     if (filter === "open" && !isActionable(row.phase)) return false;
     if (filter === "entered" && row.submissions === undefined) return false;
     if (!query) return true;
-    return `${row.track.name} ${row.track.description}`
-      .toLowerCase()
-      .includes(query);
+    return `${row.track.name} ${row.track.description}`.toLowerCase().includes(query);
   });
 };
 

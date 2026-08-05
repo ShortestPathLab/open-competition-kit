@@ -180,10 +180,7 @@ A view is bundled, evaluated in the browser and mounted in a shadow root, so:
 A page names a region and what it is about:
 
 ```tsx
-<SurfaceSlot
-  surface={surface.std.competitionYou}
-  subject={{ competition: competitionId }}
-/>
+<SurfaceSlot surface={surface.std.competitionYou} subject={{ competition: competitionId }} />
 ```
 
 `SurfaceSlot` renders nothing while it loads and nothing when there is nothing,

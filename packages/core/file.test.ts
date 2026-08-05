@@ -9,9 +9,7 @@ describe("makeKey", () => {
   };
 
   it("scopes a key by namespace, owner, and id", () => {
-    expect(makeKey({ ...base, name: "agent.zip" })).toBe(
-      "submission/sub_1/file_1/agent.zip",
-    );
+    expect(makeKey({ ...base, name: "agent.zip" })).toBe("submission/sub_1/file_1/agent.zip");
   });
 
   it("refuses to let a filename escape its directory", () => {
@@ -27,9 +25,7 @@ describe("makeKey", () => {
   });
 
   it("strips leading dots so a name cannot become a dotfile", () => {
-    expect(makeKey({ ...base, name: ".bashrc" })).toBe(
-      "submission/sub_1/file_1/bashrc",
-    );
+    expect(makeKey({ ...base, name: ".bashrc" })).toBe("submission/sub_1/file_1/bashrc");
   });
 
   it("keeps two uploads from colliding, even with the same filename", () => {
@@ -40,9 +36,7 @@ describe("makeKey", () => {
 
   it("survives a missing or hostile name", () => {
     expect(makeKey(base)).toBe("submission/sub_1/file_1/file");
-    expect(makeKey({ ...base, name: "///" })).toBe(
-      "submission/sub_1/file_1/___",
-    );
+    expect(makeKey({ ...base, name: "///" })).toBe("submission/sub_1/file_1/___");
   });
 });
 

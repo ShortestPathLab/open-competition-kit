@@ -1,7 +1,7 @@
-import { ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react";
 
 interface CompetitionSelectorProps {
-  name: string
+  name: string;
 }
 
 export function CompetitionSelector({ name }: CompetitionSelectorProps) {
@@ -11,5 +11,5 @@ export function CompetitionSelector({ name }: CompetitionSelectorProps) {
       <span>{name}</span>
       <ChevronDown className="h-4 w-4 text-muted-foreground" />
     </button>
-  )
+  );
 }

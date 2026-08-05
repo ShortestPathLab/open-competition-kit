@@ -1,17 +1,17 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 
 export interface Column<T> {
-  key: string
-  header: string
-  render: (row: T) => ReactNode
-  className?: string
+  key: string;
+  header: string;
+  render: (row: T) => ReactNode;
+  className?: string;
 }
 
 interface DataTableProps<T> {
-  columns: Column<T>[]
-  data: T[]
-  page?: number
-  totalPages?: number
+  columns: Column<T>[];
+  data: T[];
+  page?: number;
+  totalPages?: number;
 }
 
 export function DataTable<T>({ columns, data, page = 1, totalPages = 1 }: DataTableProps<T>) {
@@ -45,10 +45,16 @@ export function DataTable<T>({ columns, data, page = 1, totalPages = 1 }: DataTa
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-border px-4 py-3">
           <div className="flex items-center gap-2">
-            <button className="rounded-md border border-border px-3 py-1 text-sm" disabled={page === 1}>
+            <button
+              className="rounded-md border border-border px-3 py-1 text-sm"
+              disabled={page === 1}
+            >
               Previous
             </button>
-            <button className="rounded-md border border-border px-3 py-1 text-sm" disabled={page === totalPages}>
+            <button
+              className="rounded-md border border-border px-3 py-1 text-sm"
+              disabled={page === totalPages}
+            >
               Next
             </button>
           </div>
@@ -58,5 +64,5 @@ export function DataTable<T>({ columns, data, page = 1, totalPages = 1 }: DataTa
         </div>
       )}
     </div>
-  )
+  );
 }

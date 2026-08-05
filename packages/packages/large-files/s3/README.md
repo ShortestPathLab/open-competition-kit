@@ -22,9 +22,9 @@ with:
 files:
   bucket: my-competition-bucket
   region: us-east-1
-  endpoint: https://…  # omit for AWS; required for R2 / MinIO
-  expiresIn: 900       # presigned URL lifetime in seconds (default: 900)
-  maxBytes: 536870912  # optional. Omit and the bill is the ceiling.
+  endpoint: https://… # omit for AWS; required for R2 / MinIO
+  expiresIn: 900 # presigned URL lifetime in seconds (default: 900)
+  maxBytes: 536870912 # optional. Omit and the bill is the ceiling.
 ```
 
 The block was called `largeFiles:` up to 0.0.10. The old name still works and
@@ -33,14 +33,14 @@ warns at startup.
 Credentials fall back to the environment, so they need not be written into the
 config file:
 
-| Config | Environment |
-|---|---|
-| `files.bucket` | `S3_BUCKET` |
-| `files.accessKeyId` | `S3_ACCESS_KEY_ID` |
+| Config                  | Environment            |
+| ----------------------- | ---------------------- |
+| `files.bucket`          | `S3_BUCKET`            |
+| `files.accessKeyId`     | `S3_ACCESS_KEY_ID`     |
 | `files.secretAccessKey` | `S3_SECRET_ACCESS_KEY` |
-| `files.sessionToken` | `S3_SESSION_TOKEN` |
-| `files.region` | `S3_REGION` |
-| `files.endpoint` | `S3_ENDPOINT` |
+| `files.sessionToken`    | `S3_SESSION_TOKEN`     |
+| `files.region`          | `S3_REGION`            |
+| `files.endpoint`        | `S3_ENDPOINT`          |
 
 Some non-AWS implementations need `virtualHostedStyle: true`.
 

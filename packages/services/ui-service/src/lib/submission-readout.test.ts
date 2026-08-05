@@ -121,11 +121,7 @@ describe("readResult", () => {
 
     expect(readout.headline).toEqual({ key: "total", label: "Total", value: 10 });
     expect(readout.scores.map((score) => score.key)).toEqual(["score1", "score2"]);
-    expect(readout.meta.map((entry) => entry.key)).toEqual([
-      "status",
-      "runtime",
-      "warning",
-    ]);
+    expect(readout.meta.map((entry) => entry.key)).toEqual(["status", "runtime", "warning"]);
   });
 
   it("scores a result the runner stringified", () => {

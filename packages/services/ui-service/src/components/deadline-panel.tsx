@@ -54,9 +54,11 @@ function MilestoneRow({ milestone }: { milestone: Milestone }) {
           aria-hidden
           className={cn(
             "size-1.5 shrink-0 rounded-full",
-            milestone.past ? "bg-muted-foreground/40"
-            : milestone.state === "ok" ? "bg-success"
-            : "bg-warning",
+            milestone.past
+              ? "bg-muted-foreground/40"
+              : milestone.state === "ok"
+                ? "bg-success"
+                : "bg-warning",
           )}
         />
         <span className="truncate">{milestone.label}</span>
@@ -81,11 +83,7 @@ function MilestoneRow({ milestone }: { milestone: Milestone }) {
  * an opening or closing time, so a competition that runs indefinitely does not
  * grow an empty panel.
  */
-export function DeadlinePanel({
-  tracks,
-}: {
-  tracks: readonly TrackReports[];
-}) {
+export function DeadlinePanel({ tracks }: { tracks: readonly TrackReports[] }) {
   const now = useNow();
 
   // Recomputed on every tick rather than memoised against the track list. It is
@@ -96,10 +94,7 @@ export function DeadlinePanel({
   if (!schedule) return null;
 
   const countdown = schedule.countdown;
-  const split =
-    countdown ?
-      splitRemaining(Date.parse(countdown.at) - (now as number))
-    : undefined;
+  const split = countdown ? splitRemaining(Date.parse(countdown.at) - (now as number)) : undefined;
 
   const shown = schedule.milestones.slice(0, MILESTONE_LIMIT);
   const hidden = schedule.milestones.length - shown.length;
@@ -107,14 +102,12 @@ export function DeadlinePanel({
   return (
     <Panel>
       <div className="p-5">
-        {countdown ?
+        {countdown ? (
           <>
             <div
               className={cn(
                 "flex items-center gap-2 text-xs font-medium",
-                schedule.status === "upcoming" ?
-                  "text-muted-foreground"
-                : "text-warning",
+                schedule.status === "upcoming" ? "text-muted-foreground" : "text-warning",
               )}
             >
               <Clock className="size-3.5 shrink-0" />
@@ -127,33 +120,34 @@ export function DeadlinePanel({
               <ClockUnit value={split?.seconds} label="sec" />
             </div>
           </>
-        : <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            {schedule.status === "closed" ?
+        ) : (
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            {schedule.status === "closed" ? (
               <>
                 <LockKeyhole className="size-3.5 shrink-0" />
                 Submissions have closed
               </>
-            : <>
+            ) : (
+              <>
                 <CalendarClock className="size-3.5 shrink-0" />
                 No deadline ahead
               </>
-            }
+            )}
           </div>
-        }
+        )}
 
-        {shown.length ?
+        {shown.length ? (
           <div className="mt-4 flex flex-col gap-2.5 border-t border-border pt-4">
             {shown.map((milestone) => (
               <MilestoneRow key={milestone.key} milestone={milestone} />
             ))}
-            {hidden > 0 ?
+            {hidden > 0 ? (
               <p className="text-xs text-muted-foreground">
-                {hidden} more {hidden === 1 ? "date" : "dates"} on the tracks
-                page.
+                {hidden} more {hidden === 1 ? "date" : "dates"} on the tracks page.
               </p>
-            : null}
+            ) : null}
           </div>
-        : null}
+        ) : null}
       </div>
     </Panel>
   );

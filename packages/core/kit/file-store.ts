@@ -1,11 +1,5 @@
 import { Effect as E } from "effect";
-import {
-  keyOf,
-  makeKey,
-  toFileRef,
-  type FileBody,
-  type FileRef,
-} from "../file";
+import { keyOf, makeKey, toFileRef, type FileBody, type FileRef } from "../file";
 import type { Namespace } from "../namespace";
 import { FileTooLargeError, MissingFileError } from "./errors";
 import type { HookRunner, Instance } from "./runtime";
@@ -71,23 +65,14 @@ export const createFileStore = (hooks: HookRunner, instance: Instance) => {
         const key = makeKey({ namespace, owner, id: row.id, name });
         yield* instance.files.update({ id: row.id, key });
 
-        const url = yield* hooks.do((h) =>
-          h.files.link({ key, mode: "write", expiresIn }),
-        );
+        const url = yield* hooks.do((h) => h.files.link({ key, mode: "write", expiresIn }));
 
         return { key, id: row.id, url };
       }),
 
     /** Write bytes to a key already claimed by `reserve`. */
-    put: ({
-      key,
-      body,
-      contentType,
-    }: {
-      key: string;
-      body: FileBody;
-      contentType?: string;
-    }) => hooks.do((h) => h.files.write({ key, body, contentType })),
+    put: ({ key, body, contentType }: { key: string; body: FileBody; contentType?: string }) =>
+      hooks.do((h) => h.files.write({ key, body, contentType })),
 
     /**
      * Seal a reserved key and produce the reference to persist.
@@ -111,13 +96,9 @@ export const createFileStore = (hooks: HookRunner, instance: Instance) => {
 
         const ceiling = yield* limit();
         if (ceiling && meta.size > ceiling) {
-          yield* hooks
-            .do((h) => h.files.delete({ key }))
-            .pipe(E.catchAll(() => E.void));
+          yield* hooks.do((h) => h.files.delete({ key })).pipe(E.catchAll(() => E.void));
           if (row) yield* instance.files.delete(row.id);
-          return yield* E.fail(
-            new FileTooLargeError({ key, size: meta.size, limit: ceiling }),
-          );
+          return yield* E.fail(new FileTooLargeError({ key, size: meta.size, limit: ceiling }));
         }
 
         if (row) {
@@ -158,18 +139,13 @@ export const createFileStore = (hooks: HookRunner, instance: Instance) => {
       }),
 
     /** Size, existence, checksum, without pulling the body. */
-    peek: (file: FileRef | string) =>
-      hooks.do((h) => h.files.peek({ key: keyOf(file) })),
+    peek: (file: FileRef | string) => hooks.do((h) => h.files.peek({ key: keyOf(file) })),
 
-    read: (file: FileRef | string) =>
-      hooks.do((h) => h.files.read({ key: keyOf(file) })),
+    read: (file: FileRef | string) => hooks.do((h) => h.files.read({ key: keyOf(file) })),
 
     /** A direct URL, when the backend can presign one. */
-    link: (
-      file: FileRef | string,
-      mode: "read" | "write" = "read",
-      expiresIn?: number,
-    ) => hooks.do((h) => h.files.link({ key: keyOf(file), mode, expiresIn })),
+    link: (file: FileRef | string, mode: "read" | "write" = "read", expiresIn?: number) =>
+      hooks.do((h) => h.files.link({ key: keyOf(file), mode, expiresIn })),
 
     delete: (file: FileRef | string) =>
       E.gen(function* () {

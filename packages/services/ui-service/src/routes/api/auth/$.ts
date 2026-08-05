@@ -17,10 +17,7 @@ const handle = async (request: Request) => {
       JSON.stringify({
         error: "Auth handler failed",
         // No internals in production; in dev, seeing what broke is the point.
-        detail:
-          production ? undefined
-          : e instanceof Error ? (e.stack ?? e.message)
-          : String(e),
+        detail: production ? undefined : e instanceof Error ? (e.stack ?? e.message) : String(e),
       }),
       { status: 500, headers: { "content-type": "application/json" } },
     );

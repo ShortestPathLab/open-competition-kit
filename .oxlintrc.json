@@ -12,12 +12,7 @@
     "node": true,
     "browser": true
   },
-  "ignorePatterns": [
-    "**/.nitro/**",
-    "**/.output/**",
-    "**/generated/**",
-    "**/prisma/schemas/**"
-  ],
+  "ignorePatterns": ["**/.nitro/**", "**/.output/**", "**/generated/**", "**/prisma/schemas/**"],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "eslint/no-underscore-dangle": "off",

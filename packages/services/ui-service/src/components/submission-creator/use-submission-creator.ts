@@ -12,9 +12,7 @@ import { useTrackReports } from "@/lib/gate-fn";
 import { createSubmission, useSubmissionGate } from "@/lib/submission-fn";
 import { queryClient } from "@/router";
 
-export type SubmissionFormValues = Parameters<
-  NonNullable<(typeof $props.form.ui)["onSubmit"]>
->[0];
+export type SubmissionFormValues = Parameters<NonNullable<(typeof $props.form.ui)["onSubmit"]>>[0];
 
 /**
  * Everything the submission page needs to know, gathered in one place.
@@ -25,10 +23,7 @@ export type SubmissionFormValues = Parameters<
  * form. Collecting them here rather than in the component keeps that chain
  * readable and leaves the parts underneath rendering props they were handed.
  */
-export function useSubmissionCreator(
-  competition: CompetitionSummary,
-  initialTrackId?: string,
-) {
+export function useSubmissionCreator(competition: CompetitionSummary, initialTrackId?: string) {
   const { data: session } = authClient.useSession();
   const router = useRouter();
   const fetchEnrollmentStatus = useServerFn(getEnrollmentStatus);
@@ -62,9 +57,7 @@ export function useSubmissionCreator(
   const { data: isEnrolled = false, isLoading: enrollmentLoading } = useQuery({
     queryKey: ["enrollmentStatus", session?.user?.id, trackId],
     queryFn:
-      session?.user?.id && trackId
-        ? () => fetchEnrollmentStatus({ data: { trackId } })
-        : skipToken,
+      session?.user?.id && trackId ? () => fetchEnrollmentStatus({ data: { trackId } }) : skipToken,
   });
 
   const { data: gate, isLoading: gateLoading } = useSubmissionGate(
@@ -89,16 +82,11 @@ export function useSubmissionCreator(
   });
 
   const mutation = useMutation({
-    mutationFn: (values: SubmissionFormValues) =>
-      submitFn({ data: { trackId, value: values } }),
+    mutationFn: (values: SubmissionFormValues) => submitFn({ data: { trackId, value: values } }),
     onSuccess: async (result) => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: [
-            "competitionSubmissions",
-            session?.user?.id,
-            competition.id,
-          ],
+          queryKey: ["competitionSubmissions", session?.user?.id, competition.id],
         }),
         queryClient.invalidateQueries({
           queryKey: ["userSubmissions", session?.user?.id],

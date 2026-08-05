@@ -31,15 +31,7 @@ const propsSchema = z.object({
       ...shape.shape,
       ...meta.shape,
       kind: z
-        .enum([
-          "text",
-          "email",
-          "number",
-          "textarea",
-          "select",
-          "checkbox",
-          "file",
-        ])
+        .enum(["text", "email", "number", "textarea", "select", "checkbox", "file"])
         .optional(),
       placeholder: z.string().optional(),
       /**

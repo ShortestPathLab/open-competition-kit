@@ -12,10 +12,7 @@ const previousEnv = process.env.OPEN_COMPETITION_KIT_TEST_VALUE;
 // The unrecognised-operator warning is the subject of one test and noise in the
 // rest, so no test prints it.
 const run = (obj: unknown) =>
-  transform(cwd, obj).pipe(
-    Logger.withMinimumLogLevel(LogLevel.None),
-    E.provide(BunContext.layer),
-  );
+  transform(cwd, obj).pipe(Logger.withMinimumLogLevel(LogLevel.None), E.provide(BunContext.layer));
 
 // `transform` returns `unknown`, since `yaml` can change the shape of what it
 // was given. Every assertion below names the shape it expects anyway.
@@ -155,18 +152,13 @@ describe("dataUrl", () => {
 
     const result = await runTransform({ file: '${{ dataUrl("bin.png") }}' });
 
-    expect(result.file).toBe(
-      `data:image/png;base64,${bytes.toString("base64")}`,
-    );
+    expect(result.file).toBe(`data:image/png;base64,${bytes.toString("base64")}`);
   });
 });
 
 describe("yaml", () => {
   test("splices a parsed document in as a node", async () => {
-    writeFileSync(
-      join(cwd, "competition.yaml"),
-      "id: fit5047\ntracks:\n  - id: main\n",
-    );
+    writeFileSync(join(cwd, "competition.yaml"), "id: fit5047\ntracks:\n  - id: main\n");
 
     const result = await runTransform({
       competitions: ['${{ yaml("competition.yaml") }}'],

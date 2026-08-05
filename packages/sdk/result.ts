@@ -21,9 +21,7 @@ export function cast<TCast>() {
   function f<Out, Error>(
     t: Promise<Result<Out, Error>>,
   ): Promise<Result<PreserveNullable<Out, TCast>, Error>>;
-  function f<Out, Error>(
-    t: Result<Out, Error>,
-  ): Result<PreserveNullable<Out, TCast>, Error>;
+  function f<Out, Error>(t: Result<Out, Error>): Result<PreserveNullable<Out, TCast>, Error>;
   function f(t: any) {
     return t;
   }

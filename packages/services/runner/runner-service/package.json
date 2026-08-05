@@ -1,12 +1,12 @@
 {
   "name": "runner-service",
+  "private": false,
+  "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "type": "module",
-  "private": false,
   "dependencies": {
-    "es-toolkit": "^1.44.0",
-    "@open-competition-kit/sdk": "workspace:*"
+    "@open-competition-kit/sdk": "workspace:*",
+    "es-toolkit": "^1.44.0"
   },
   "devDependencies": {
     "@types/bun": "latest"

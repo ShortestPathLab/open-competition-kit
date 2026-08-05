@@ -1,11 +1,7 @@
 import { Effect as E, Either } from "effect";
 import type { OpenCompetitionKitHooks } from "../core/hook";
 import { OpenCompetitionKitDatabase } from "./db";
-import {
-  tables,
-  type DbKey,
-  type WithHooks,
-} from "./hook/db";
+import { tables, type DbKey, type WithHooks } from "./hook/db";
 import { isFunction } from "es-toolkit";
 import { OpenCompetitionKitConfig } from "./config";
 import { traverse } from "./utils/traverse";
@@ -88,15 +84,12 @@ export class OpenCompetitionKitCollections extends E.Service<OpenCompetitionKitC
             E.all(
               config.competitions.flatMap((c) => [
                 upsert(db.competitions, { id: c.id }),
-                ...c.tracks.map((t) =>
-                  upsert(db.tracks, { id: t.id, competition: c.id }),
-                ),
+                ...c.tracks.map((t) => upsert(db.tracks, { id: t.id, competition: c.id })),
               ]),
             ),
           );
           return traverse(db, (f) => {
-            if (isFunction(f))
-              return (...args: any[]) => E.zipRight(ensureDb, f(...args));
+            if (isFunction(f)) return (...args: any[]) => E.zipRight(ensureDb, f(...args));
             return f;
           });
         });

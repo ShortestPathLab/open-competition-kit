@@ -15,10 +15,12 @@ import { useUserSubmissions } from "./submission-fn";
  */
 export function useMeOverview() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
-  const { data: enrolments = [], isLoading: enrolmentsLoading } =
-    useUserEnrolments(session?.user?.id);
-  const { data: submissions = [], isLoading: submissionsLoading } =
-    useUserSubmissions(session?.user?.id);
+  const { data: enrolments = [], isLoading: enrolmentsLoading } = useUserEnrolments(
+    session?.user?.id,
+  );
+  const { data: submissions = [], isLoading: submissionsLoading } = useUserSubmissions(
+    session?.user?.id,
+  );
   const { data: reports } = useGateReports(
     enrolments.map((enrolment) => enrolment.track.id),
     session?.user?.id,
@@ -29,22 +31,18 @@ export function useMeOverview() {
   const stats = useMemo(() => {
     const now = Date.now();
     return {
-      competitions: new Set(
-        enrolments.map((enrolment) => enrolment.competition.id),
-      ).size,
+      competitions: new Set(enrolments.map((enrolment) => enrolment.competition.id)).size,
       tracks: enrolments.length,
       submissions: submissions.length,
       closing: enrolments.filter(
-        (enrolment) =>
-          phaseOf(reports?.[enrolment.track.id] ?? [], now) === "closing",
+        (enrolment) => phaseOf(reports?.[enrolment.track.id] ?? [], now) === "closing",
       ).length,
     };
   }, [enrolments, reports, submissions]);
 
   return {
     signedIn,
-    loading:
-      sessionLoading || (signedIn && (enrolmentsLoading || submissionsLoading)),
+    loading: sessionLoading || (signedIn && (enrolmentsLoading || submissionsLoading)),
     enrolments,
     submissions,
     stats,

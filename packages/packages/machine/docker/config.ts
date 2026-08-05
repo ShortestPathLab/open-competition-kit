@@ -66,8 +66,7 @@ export const config = {
         id: "cpus",
         label: "CPU limit",
         kind: "number",
-        description:
-          "CPU share per container, where 1 is one core and 0.5 is half of one.",
+        description: "CPU share per container, where 1 is one core and 0.5 is half of one.",
       },
       {
         id: "pids",

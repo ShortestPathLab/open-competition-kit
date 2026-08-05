@@ -40,10 +40,7 @@ export const Route = createFileRoute("/api/files/upload")({
             sdk.files.put({
               key,
               body: request.body,
-              contentType:
-                request.headers.get("content-type") ??
-                row.contentType ??
-                undefined,
+              contentType: request.headers.get("content-type") ?? row.contentType ?? undefined,
             }),
           );
 

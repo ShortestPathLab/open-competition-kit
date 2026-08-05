@@ -2,9 +2,7 @@ import { enrolments, submissions, unsafe } from "@open-competition-kit/sdk";
 import { listCompetitionSummaries } from "./summaries";
 import type { EnrolmentSummary, UserSubmissionSummary } from "./types";
 
-export async function listUserEnrolments(
-  userId: string,
-): Promise<EnrolmentSummary[]> {
+export async function listUserEnrolments(userId: string): Promise<EnrolmentSummary[]> {
   const [userEnrolments, userSubmissions, allCompetitions] = await Promise.all([
     unsafe(enrolments.list({ user: userId })),
     unsafe(submissions.list({ user: userId })),
@@ -16,9 +14,7 @@ export async function listUserEnrolments(
       competition.tracks.some((track) => track.id === enrolment.track),
     );
 
-    const track = competition?.tracks.find(
-      (track) => track.id === enrolment.track,
-    );
+    const track = competition?.tracks.find((track) => track.id === enrolment.track);
 
     // An enrolment outlives its track. Tracks come from the competition config,
     // so dropping one there leaves rows behind that point at nothing. Skip those
@@ -44,9 +40,7 @@ export async function listUserEnrolments(
   });
 }
 
-export async function listUserSubmissions(
-  userId: string,
-): Promise<UserSubmissionSummary[]> {
+export async function listUserSubmissions(userId: string): Promise<UserSubmissionSummary[]> {
   const enrolments = await listUserEnrolments(userId);
   return enrolments.flatMap((enrolment) =>
     enrolment.submissions.map((submission) => ({

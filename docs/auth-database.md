@@ -5,7 +5,7 @@ database behind its own `db` implementation point. Do we need to write a
 better-auth ⇄ OCK adapter? Is that even possible?
 
 **Answer:** It is possible, but you almost certainly should not do it. The problem
-you actually have — *"auth data is in `auth.sqlite` and I want it in Postgres"* —
+you actually have — _"auth data is in `auth.sqlite` and I want it in Postgres"_ —
 does not require an adapter at all.
 
 ---
@@ -36,8 +36,8 @@ From `createAdapterFactory` (`@better-auth/core`, `src/db/adapter/`):
   and `offset`.
 - **`update` must return the updated row**; `updateMany`/`deleteMany` return counts.
 - **Joins are mandatory, and they are on the hot path.** Core issues
-  `findOne({ model: "session", where: [...], join: { user: true } })` on *every
-  authenticated request*. Ignore `join` and session resolution returns a session
+  `findOne({ model: "session", where: [...], join: { user: true } })` on _every
+  authenticated request_. Ignore `join` and session resolution returns a session
   with no user, so nobody can log in. (It can be faked as an N+1 fetch-and-stitch,
   which is what the built-in memory adapter effectively does.)
 - **Models must be dynamic.** Plugins add tables, users can rename tables and
@@ -71,17 +71,17 @@ And the Prisma implementation is a straight passthrough — `list` is
 
 The gap, point by point:
 
-| better-auth needs | OCK has | Verdict |
-|---|---|---|
-| Arbitrary, dynamic models | `collection: keyof typeof schemas` — 7 hardcoded tables | **Blocker** |
-| 11 `where` operators, AND/OR, case-insensitivity | equality-only partial match | **Blocker** |
-| `sortBy`, `limit`, `offset`, `count` | none | **Blocker** |
-| `updateMany`, `deleteMany`, update-by-`where` | update/delete by `id`, returning `void` | **Blocker** |
-| `join` on every authed request | no join concept | Workable (N+1 in the adapter) |
-| Atomic `consumeOne` | no transactions, no atomic ops | Security risk |
-| `user` with email/emailVerified/image/timestamps | `user` is `{ name }` | Name collision |
+| better-auth needs                                | OCK has                                                 | Verdict                       |
+| ------------------------------------------------ | ------------------------------------------------------- | ----------------------------- |
+| Arbitrary, dynamic models                        | `collection: keyof typeof schemas` — 7 hardcoded tables | **Blocker**                   |
+| 11 `where` operators, AND/OR, case-insensitivity | equality-only partial match                             | **Blocker**                   |
+| `sortBy`, `limit`, `offset`, `count`             | none                                                    | **Blocker**                   |
+| `updateMany`, `deleteMany`, update-by-`where`    | update/delete by `id`, returning `void`                 | **Blocker**                   |
+| `join` on every authed request                   | no join concept                                         | Workable (N+1 in the adapter) |
+| Atomic `consumeOne`                              | no transactions, no atomic ops                          | Security risk                 |
+| `user` with email/emailVerified/image/timestamps | `user` is `{ name }`                                    | Name collision                |
 
-Four of those are blockers, and every one of them is a change to *core*, not to a
+Four of those are blockers, and every one of them is a change to _core_, not to a
 package.
 
 The one encouraging detail: `toPrisma.ts` **generates** `schema.prisma` from
@@ -92,7 +92,7 @@ is simply not built.
 
 ## The options
 
-### A. Point better-auth at the same Postgres — *chosen, and implemented*
+### A. Point better-auth at the same Postgres — _chosen, and implemented_
 
 The config already carries the connection details:
 
@@ -126,13 +126,13 @@ Postgres database as the kit.
 
 - **Effort:** roughly ten lines; replaces the bun:sqlite in `auth-base-config.ts`.
 - **No adapter, no core changes, no custom query layer to keep correct.**
-- Keeps the architecture you already chose: OCK abstracts *its* database; the
+- Keeps the architecture you already chose: OCK abstracts _its_ database; the
   frontend owns auth and picks the better-auth adapter matching the same `db:` block.
 - **Cost:** auth's portability becomes better-auth's matrix (Postgres, MySQL,
   SQLite, MongoDB natively, plus Prisma/Drizzle) rather than Prisma's. In practice
   these overlap almost completely.
 - Still two logical schemas in one database, so `configure-user.ts` stays. But
-  one database means you *could* later make that mirror write transactional.
+  one database means you _could_ later make that mirror write transactional.
 
 ### B. Use better-auth's official Prisma adapter against the generated client
 

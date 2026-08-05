@@ -21,9 +21,7 @@ function FilterButton({
       aria-pressed={active}
       className={cn(
         "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-        active ?
-          "bg-brand-subtle text-primary"
-        : "text-muted-foreground hover:text-foreground",
+        active ? "bg-brand-subtle text-primary" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
@@ -67,11 +65,7 @@ export function TrackFilters({
         aria-label="Filter tracks"
         className="flex gap-1 rounded-lg border border-border bg-card p-1"
       >
-        <FilterButton
-          active={filter === "all"}
-          count={totalCount}
-          onClick={() => setFilter("all")}
-        >
+        <FilterButton active={filter === "all"} count={totalCount} onClick={() => setFilter("all")}>
           All
         </FilterButton>
         <FilterButton

@@ -1,44 +1,36 @@
 import { assert, flattenDeep, head } from "es-toolkit";
-import {
-  find,
-  has,
-  isArray,
-  isObject,
-  isString,
-  keys,
-} from "es-toolkit/compat";
+import { find, has, isArray, isObject, isString, keys } from "es-toolkit/compat";
 import { Config } from "../config";
 import { Effect as E, Data as D } from "effect";
 
 declare const __value: unique symbol;
 
 export type Accessor<T = Config> =
-  T extends ReadonlyArray<infer R> ?
-    R extends { id: string; with: readonly string[] } ?
-      (string & { [__value]?: R }) | { [K in keyof R]?: Accessor<R[K]> }
-    : never
-  : T extends Record<string, unknown> ?
-    T extends { with: readonly string[] } ?
-      | {
-          [K in keyof T as T[K] extends undefined ? never : K]?: Accessor<T[K]>;
-        }
-      | (true & { [__value]?: T })
-    : { [K in keyof T as T[K] extends undefined ? never : K]?: Accessor<T[K]> }
-  : never;
+  T extends ReadonlyArray<infer R>
+    ? R extends { id: string; with: readonly string[] }
+      ? (string & { [__value]?: R }) | { [K in keyof R]?: Accessor<R[K]> }
+      : never
+    : T extends Record<string, unknown>
+      ? T extends { with: readonly string[] }
+        ?
+            | {
+                [K in keyof T as T[K] extends undefined ? never : K]?: Accessor<T[K]>;
+              }
+            | (true & { [__value]?: T })
+        : { [K in keyof T as T[K] extends undefined ? never : K]?: Accessor<T[K]> }
+      : never;
 
-export type AccessorValue<T, TBase = Accessor> =
-  T extends string | true ?
-    TBase extends { [__value]?: infer R } ?
-      R
+export type AccessorValue<T, TBase = Accessor> = T extends string | true
+  ? TBase extends { [__value]?: infer R }
+    ? R
     : never
-  : T extends Record<string, unknown> ?
-    TBase extends Record<string, unknown> ?
-      {
-        [K in keyof T]: K extends keyof TBase ? AccessorValue<T[K], TBase[K]>
-        : never;
-      }[keyof T]
-    : never
-  : never;
+  : T extends Record<string, unknown>
+    ? TBase extends Record<string, unknown>
+      ? {
+          [K in keyof T]: K extends keyof TBase ? AccessorValue<T[K], TBase[K]> : never;
+        }[keyof T]
+      : never
+    : never;
 
 export class ConfigAccessorError extends D.TaggedError("ConfigAccessorError")<{
   cause: unknown;
@@ -60,9 +52,7 @@ export const accessRecursive = <T extends Accessor>(
     return find(obj, { id: accessor }) as AccessorValue<T>;
   }
   if (isObject(accessor)) {
-    const key = head(keys(accessor)) as
-      | (string & keyof typeof accessor)
-      | undefined;
+    const key = head(keys(accessor)) as (string & keyof typeof accessor) | undefined;
     assert(key, "Accessor is empty.");
     if (isArray(obj)) {
       return accessRecursive(
@@ -83,10 +73,7 @@ export const accessRecursive = <T extends Accessor>(
         has(obj, key),
         `Attempted to access non-existent property: ${key}, on ${JSON.stringify(obj, null, 2)}`,
       );
-      return accessRecursive(
-        accessor[key] as Accessor<T>,
-        obj[key],
-      ) as AccessorValue<T>;
+      return accessRecursive(accessor[key] as Accessor<T>, obj[key]) as AccessorValue<T>;
     }
   }
   throw new Error("Malformed accessor.");

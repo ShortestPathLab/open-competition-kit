@@ -5,15 +5,8 @@ import { Stat } from "@/components/stat-strip";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { Loader2, Plus, RotateCcw } from "lucide-react";
-import type {
-  SubmissionDetail,
-  SubmissionJob,
-} from "@/lib/submission-fn";
-import {
-  describeJobStatus,
-  formatResultValue,
-  type ResultReadout,
-} from "@/lib/submission-readout";
+import type { SubmissionDetail, SubmissionJob } from "@/lib/submission-fn";
+import { describeJobStatus, formatResultValue, type ResultReadout } from "@/lib/submission-readout";
 import { CopyId, ResultStat } from "./parts";
 
 const findMeta = (readout: ResultReadout, keys: string[]) =>
@@ -48,9 +41,7 @@ export function SubmissionHeader({
       title={
         <span className="flex flex-wrap items-center gap-3">
           {detail.trackName}
-          {jobs.length > 0 ?
-            <JobStatusBadge status={jobs.at(-1)?.status} />
-          : null}
+          {jobs.length > 0 ? <JobStatusBadge status={jobs.at(-1)?.status} /> : null}
         </span>
       }
       description={
@@ -70,9 +61,7 @@ export function SubmissionHeader({
             onClick={onRerun}
             disabled={rerunning}
           >
-            {rerunning ?
-              <Loader2 className="animate-spin" />
-            : <RotateCcw />}
+            {rerunning ? <Loader2 className="animate-spin" /> : <RotateCcw />}
             Run again
           </Button>
           <Button
@@ -108,18 +97,10 @@ export function SubmissionHeader({
               </span>
             }
           />
-          {runtime ?
-            <Stat
-              label={runtime.label}
-              value={formatResultValue(runtime.value)}
-            />
-          : null}
-          {warnings ?
-            <Stat
-              label={warnings.label}
-              value={formatResultValue(warnings.value)}
-            />
-          : null}
+          {runtime ? <Stat label={runtime.label} value={formatResultValue(runtime.value)} /> : null}
+          {warnings ? (
+            <Stat label={warnings.label} value={formatResultValue(warnings.value)} />
+          ) : null}
         </HeaderStats>
       }
     />

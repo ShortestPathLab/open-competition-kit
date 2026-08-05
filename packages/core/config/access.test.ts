@@ -39,10 +39,7 @@ const config = {
 
 describe("accessRecursive", () => {
   test("selects an item from an extendable collection by id", () => {
-    const competition = accessRecursive(
-      { competitions: "alpha" } as never,
-      config,
-    );
+    const competition = accessRecursive({ competitions: "alpha" } as never, config);
 
     expect(competition).toMatchObject({
       id: "alpha",
@@ -52,10 +49,7 @@ describe("accessRecursive", () => {
   });
 
   test("flattens nested collections before selecting by id", () => {
-    const track = accessRecursive(
-      { competitions: { tracks: "secondary" } } as never,
-      config,
-    );
+    const track = accessRecursive({ competitions: { tracks: "secondary" } } as never, config);
 
     expect(track).toMatchObject({
       id: "secondary",
@@ -65,10 +59,7 @@ describe("accessRecursive", () => {
   });
 
   test("returns the current extendable object for a true accessor", () => {
-    const competition = accessRecursive(
-      true as never,
-      config.competitions[0],
-    ) as unknown;
+    const competition = accessRecursive(true as never, config.competitions[0]) as unknown;
 
     expect(competition).toBe(config.competitions[0]);
   });
