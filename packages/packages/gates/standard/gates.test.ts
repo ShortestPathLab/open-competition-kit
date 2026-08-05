@@ -7,7 +7,7 @@ import {
   rateReport,
   windowGate,
   windowReport,
-} from "./gates";
+} from "./gates-impl";
 
 const at = (iso: string) => Date.parse(iso);
 
@@ -46,10 +46,7 @@ describe("windowGate", () => {
 });
 
 describe("attemptsGate", () => {
-  const mine = [
-    submissionAt("2026-08-01T00:00:00Z"),
-    submissionAt("2026-08-02T00:00:00Z"),
-  ];
+  const mine = [submissionAt("2026-08-01T00:00:00Z"), submissionAt("2026-08-02T00:00:00Z")];
 
   it("allows when no ceiling is configured", () => {
     expect(attemptsGate({}, mine)).toEqual([]);
@@ -91,10 +88,7 @@ describe("rateGate", () => {
   });
 
   it("refuses once the window is full", () => {
-    const mine = [
-      submissionAt("2026-08-01T11:30:00Z"),
-      submissionAt("2026-08-01T11:45:00Z"),
-    ];
+    const mine = [submissionAt("2026-08-01T11:30:00Z"), submissionAt("2026-08-01T11:45:00Z")];
     const [refusal] = rateGate({ rateLimit }, mine, now);
     expect(refusal?.gate).toBe("rate");
     expect(refusal?.detail).toMatchObject({ used: 2, count: 2 });
@@ -103,10 +97,7 @@ describe("rateGate", () => {
   // The window slides, so the slot that frees up next belongs to the oldest
   // submission still inside it, not to the most recent one.
   it("points at when the oldest submission in the window ages out", () => {
-    const mine = [
-      submissionAt("2026-08-01T11:30:00Z"),
-      submissionAt("2026-08-01T11:45:00Z"),
-    ];
+    const mine = [submissionAt("2026-08-01T11:30:00Z"), submissionAt("2026-08-01T11:45:00Z")];
     const [refusal] = rateGate({ rateLimit }, mine, now);
     expect(refusal?.detail?.retryAt).toBe("2026-08-01T12:30:00.000Z");
   });
@@ -182,10 +173,7 @@ describe("windowReport", () => {
   });
 
   it("says a track with no deadline has none", () => {
-    const [report] = windowReport(
-      { opensAt: track.opensAt },
-      at("2026-08-15T00:00:00Z"),
-    );
+    const [report] = windowReport({ opensAt: track.opensAt }, at("2026-08-15T00:00:00Z"));
     expect(report).toMatchObject({ state: "ok", detail: "No closing date." });
     expect(report).not.toHaveProperty("at");
   });
@@ -197,19 +185,14 @@ describe("windowReport", () => {
       at("2026-10-01T00:00:00Z"),
     ]) {
       const refused = windowGate(track, now).length > 0;
-      const blocked = windowReport(track, now).some(
-        (report) => report.state === "blocked",
-      );
+      const blocked = windowReport(track, now).some((report) => report.state === "blocked");
       expect(blocked).toBe(refused);
     }
   });
 });
 
 describe("attemptsReport", () => {
-  const mine = [
-    submissionAt("2026-08-01T00:00:00Z"),
-    submissionAt("2026-08-02T00:00:00Z"),
-  ];
+  const mine = [submissionAt("2026-08-01T00:00:00Z"), submissionAt("2026-08-02T00:00:00Z")];
 
   it("says nothing when no ceiling is configured", () => {
     expect(attemptsReport({}, mine, true)).toEqual([]);
@@ -272,10 +255,7 @@ describe("rateReport", () => {
   });
 
   it("points at the instant the next slot frees up", () => {
-    const mine = [
-      submissionAt("2026-08-01T11:30:00Z"),
-      submissionAt("2026-08-01T11:45:00Z"),
-    ];
+    const mine = [submissionAt("2026-08-01T11:30:00Z"), submissionAt("2026-08-01T11:45:00Z")];
     expect(rateReport({ rateLimit }, mine, now, true)[0]).toMatchObject({
       state: "blocked",
       at: "2026-08-01T12:30:00.000Z",
@@ -284,10 +264,7 @@ describe("rateReport", () => {
   });
 
   it("agrees with the gate about whether the competitor is refused", () => {
-    const full = [
-      submissionAt("2026-08-01T11:30:00Z"),
-      submissionAt("2026-08-01T11:45:00Z"),
-    ];
+    const full = [submissionAt("2026-08-01T11:30:00Z"), submissionAt("2026-08-01T11:45:00Z")];
     for (const mine of [[], full]) {
       const refused = rateGate({ rateLimit }, mine, now).length > 0;
       const blocked = rateReport({ rateLimit }, mine, now, true).some(

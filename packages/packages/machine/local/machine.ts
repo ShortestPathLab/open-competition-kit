@@ -76,10 +76,11 @@ const warnOnce = () => {
   if (warned) return;
   warned = true;
   console.warn(
-    "[standard] No machine package is installed, so evaluations run as child " +
-      "processes of this service, with the same access it has and no memory, " +
-      "process or network limit. Fine while you are the only one submitting. " +
-      "Install @open-competition-kit/machine-docker before anybody else is.",
+    "[machine-local] Evaluations are running as child processes of this " +
+      "service, with the same access it has and no memory, process or network " +
+      "limit. That is what you get when no other machine is installed, and it " +
+      "is fine while you are the only one submitting. Install " +
+      "@open-competition-kit/machine-docker before anybody else is.",
   );
 };
 
@@ -297,19 +298,14 @@ const run = async (request: Run): Promise<Ran> => {
       if (missing) placed.created.add(missing);
     }
 
-    const proc = await started(
-      request.command,
-      request.cwd,
-      environment(request.env),
-    );
+    const proc = await started(request.command, request.cwd, environment(request.env));
 
     // Our own timer rather than Bun's `timeout`, so that the answer to "was it
     // killed by the clock" is something we know rather than something inferred
     // from a signal that several other things also produce.
     let timedOut = false;
-    const timer =
-      request.timeoutMs ?
-        setTimeout(() => {
+    const timer = request.timeoutMs
+      ? setTimeout(() => {
           timedOut = true;
           proc.kill("SIGKILL");
         }, request.timeoutMs)

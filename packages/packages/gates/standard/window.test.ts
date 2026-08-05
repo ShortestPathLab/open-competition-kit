@@ -2,12 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { load } from "js-yaml";
 import { propagateExtendable } from "@open-competition-kit/sdk";
 import { gatedTrack, timestamp } from "./config";
-import {
-  describeWindowState,
-  formatInstant,
-  isOpenAt,
-  windowStateAt,
-} from "./window";
+import { describeWindowState, formatInstant, isOpenAt, windowStateAt } from "./window";
 
 const at = (iso: string) => Date.parse(iso);
 const decodeTimestamp = (input: unknown) => timestamp.safeParse(input);
@@ -90,9 +85,7 @@ describe("gatedTrack", () => {
       closesAt: "2026-08-01T00:00:00Z",
     });
     expect(result.success).toBe(false);
-    expect(JSON.stringify(result.error?.issues)).toContain(
-      "closesAt must be after opensAt",
-    );
+    expect(JSON.stringify(result.error?.issues)).toContain("closesAt must be after opensAt");
   });
 
   test("rejects a window that closes exactly when it opens", () => {
@@ -132,10 +125,7 @@ describe("timestamp", () => {
   // js-yaml resolves an unquoted YAML timestamp to a Date, so organisers who
   // leave the quotes off must not get a parse error for their trouble.
   test("accepts the Date js-yaml produces for an unquoted timestamp", () => {
-    const document = load("closesAt: 2026-09-01T09:00:00Z") as Record<
-      string,
-      unknown
-    >;
+    const document = load("closesAt: 2026-09-01T09:00:00Z") as Record<string, unknown>;
     const parsed = document.closesAt;
     expect(parsed).toBeInstanceOf(Date);
     expect(decodeTimestamp(parsed)).toMatchObject({

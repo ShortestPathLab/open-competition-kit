@@ -35,10 +35,7 @@ export type WindowState =
  * 09:00:00.000 late, which is the reading a competitor is least likely to feel
  * cheated by.
  */
-export const windowStateAt = (
-  window: SubmissionWindow,
-  now: number,
-): WindowState => {
+export const windowStateAt = (window: SubmissionWindow, now: number): WindowState => {
   if (window.opensAt && now < Date.parse(window.opensAt)) {
     return { status: "upcoming", opensAt: window.opensAt };
   }

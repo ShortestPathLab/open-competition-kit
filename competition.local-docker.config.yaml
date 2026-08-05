@@ -1,6 +1,10 @@
+# The first three are the defaults, named here anyway because this is a
+# checkout: an unnamed default resolves as an npm package and would be fetched,
+# where an entry pointing at the working tree is the code being worked on.
 with:
   - ./packages/packages/noop
   - ./packages/packages/standard
+  - ./packages/packages/machine/local
   - ./packages/packages/db/prisma
 appName: GPPC
 appDescription: GPPC is etc.etc.
@@ -77,11 +81,7 @@ competitions:
             must be made before the deadline.
         form:
           shape: []
-    runner:
-      body: |
-        ({
-          ok: true,
-          track: submission.track,
-          submission: JSON.parse(submission.body),
-        })
+    # No runner package is installed here, so nothing evaluates a submission.
+    # Install one (`runner-script`, say) and configure it under this block.
+    runner: {}
     leaderboards: []

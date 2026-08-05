@@ -25,11 +25,7 @@ export async function standardRefusals(
   const def = await gatesOf(track);
   const mine = needsHistory(def) ? await historyFor(user, track) : [];
 
-  return [
-    ...windowGate(def, now),
-    ...attemptsGate(def, mine),
-    ...rateGate(def, mine, now),
-  ];
+  return [...windowGate(def, now), ...attemptsGate(def, mine), ...rateGate(def, mine, now)];
 }
 
 /**

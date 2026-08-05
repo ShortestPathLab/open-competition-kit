@@ -1,16 +1,9 @@
-import type {
-  GateReport,
-  Refusal,
-  Submission,
-} from "@open-competition-kit/sdk";
+import type { GateReport, Refusal, Submission } from "@open-competition-kit/sdk";
 import type { GatedTrack } from "../config";
 import { plural } from "./shared";
 
 /** Refuses once a competitor has spent every attempt the track allows. */
-export const attemptsGate = (
-  track: GatedTrack,
-  mine: Submission[],
-): Refusal[] => {
+export const attemptsGate = (track: GatedTrack, mine: Submission[]): Refusal[] => {
   const max = track.maxSubmissions;
   if (!max || mine.length < max) return [];
 
@@ -54,13 +47,8 @@ export const attemptsReport = (
   return [
     {
       gate: "attempts",
-      state:
-        left === 0 ? "blocked"
-        : left <= 1 ? "pending"
-        : "ok",
-      label:
-        left === 0 ? "No attempts left"
-        : `${plural(left, "attempt")} left`,
+      state: left === 0 ? "blocked" : left <= 1 ? "pending" : "ok",
+      label: left === 0 ? "No attempts left" : `${plural(left, "attempt")} left`,
       detail: `You have used ${mine.length} of ${plural(max, "submission")}.`,
       data: { used: mine.length, max, left },
     },

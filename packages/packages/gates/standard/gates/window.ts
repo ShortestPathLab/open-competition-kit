@@ -18,9 +18,7 @@ export const windowGate = (track: GatedTrack, now: number): Refusal[] => {
       gate: "window",
       reason: describeWindowState(state),
       detail:
-        state.status === "upcoming" ?
-          { opensAt: state.opensAt }
-        : { closesAt: state.closesAt },
+        state.status === "upcoming" ? { opensAt: state.opensAt } : { closesAt: state.closesAt },
     },
   ];
 };

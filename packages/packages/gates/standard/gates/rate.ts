@@ -23,20 +23,14 @@ const inWindow = (mine: Submission[], windowMinutes: number, now: number) => {
  * next is the one held by the oldest submission still inside it. That instant is
  * worth returning, since "try again later" without a time is not an answer.
  */
-export const rateGate = (
-  track: GatedTrack,
-  mine: Submission[],
-  now: number,
-): Refusal[] => {
+export const rateGate = (track: GatedTrack, mine: Submission[], now: number): Refusal[] => {
   const limit = track.rateLimit;
   if (!limit) return [];
 
   const recent = inWindow(mine, limit.windowMinutes, now);
   if (recent.length < limit.count) return [];
 
-  const retryAt = new Date(
-    recent[0]! + limit.windowMinutes * 60_000,
-  ).toISOString();
+  const retryAt = new Date(recent[0]! + limit.windowMinutes * 60_000).toISOString();
 
   return [
     {
@@ -72,9 +66,8 @@ export const rateReport = (
 
   const recent = inWindow(mine, limit.windowMinutes, now);
   const spent = recent.length >= limit.count;
-  const retryAt =
-    spent ?
-      new Date(recent[0]! + limit.windowMinutes * 60_000).toISOString()
+  const retryAt = spent
+    ? new Date(recent[0]! + limit.windowMinutes * 60_000).toISOString()
     : undefined;
 
   return [
@@ -82,9 +75,8 @@ export const rateReport = (
       gate: "rate",
       state: spent ? "blocked" : "ok",
       label: spent ? "Rate limited" : rule,
-      detail:
-        retryAt ?
-          `You may make ${rule}. You can submit again from ${formatInstant(retryAt)}.`
+      detail: retryAt
+        ? `You may make ${rule}. You can submit again from ${formatInstant(retryAt)}.`
         : `You have made ${recent.length} of ${limit.count} in the last ${describeWindow(limit.windowMinutes)}.`,
       at: retryAt,
       ...(retryAt ? { atLabel: "Next attempt" } : {}),

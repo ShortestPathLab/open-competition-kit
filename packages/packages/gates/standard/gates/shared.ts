@@ -10,8 +10,7 @@ import { gatedTrack, type GatedTrack } from "../config";
  */
 export const CLOSING_SOON_MS = 3 * 24 * 60 * 60 * 1000;
 
-export const plural = (count: number, word: string) =>
-  `${count} ${word}${count === 1 ? "" : "s"}`;
+export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 /**
  * "hour" and "day" rather than "60 minutes" and "1440 minutes", because that is
