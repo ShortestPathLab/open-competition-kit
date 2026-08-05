@@ -2,27 +2,32 @@
 
 Draws a leaderboard as a bar, line, or area chart, using Recharts.
 
-Implements `leaderboard.ui`. It renders whatever rows the `leaderboard.loader`
-hook produced — see `@open-competition-kit/standard` for how rows are built from
-job outputs.
+A whole board, not half of one. It implements `leaderboard.ui` to draw the chart
+and `leaderboard.loader` to compute what goes in it, so installing this is all it
+takes to get standings out of job outputs and onto a page.
 
 ## Using it
 
-A leaderboard's own `with:` is applied *after* the ones it inherits, so naming
-this package on a single board overrides the default renderer for that board
-only. One competition can mix a table, cards, and a chart.
+Install it once, at the top of the config, and each board that wants a chart says
+so with `kind: chart`. Every installed renderer answers for the kinds it draws
+and passes the rest inward, so one competition mixes a table, cards, and a chart
+without any board installing a package of its own.
 
 ```yaml
+with:
+  - "@open-competition-kit/leaderboard-chart"
+
+# ...
+
 leaderboards:
   - id: score-distribution
     name: Score Distribution
-    with:
-      - "@open-competition-kit/leaderboard-chart"
+    kind: chart
     from:
       track: main
       rank: { field: score, order: desc }
     options:
-      kind: bar
+      plot: bar
       x: user
       series: [score]
     shape:
@@ -35,17 +40,17 @@ leaderboards:
 
 ## `options`
 
-| Key | Default | Meaning |
-|---|---|---|
-| `kind` | `bar` | `bar`, `line`, or `area`. |
-| `x` | first non-numeric column | The category axis. |
-| `series` | the first numeric column | Which columns to plot. |
-| `stacked` | `false` | Stack series (`bar` and `area`). |
-| `height` | `360` | Chart height in pixels. |
+| Key       | Default                  | Meaning                          |
+| --------- | ------------------------ | -------------------------------- |
+| `plot`    | `bar`                    | `bar`, `line`, or `area`.        |
+| `x`       | first non-numeric column | The category axis.               |
+| `series`  | the first numeric column | Which columns to plot.           |
+| `stacked` | `false`                  | Stack series (`bar` and `area`). |
+| `height`  | `360`                    | Chart height in pixels.          |
 
-### Why `series` defaults to *one* column
+### Why `series` defaults to _one_ column
 
-Leaderboard columns routinely differ by orders of magnitude — a score of `98`
+Leaderboard columns routinely differ by orders of magnitude, a score of `98`
 next to an elapsed time of `1610`. Plotting both against a single axis makes the
 smaller one a flat sliver and the chart useless. So only the first numeric column
 is plotted unless you ask for more, and `rank` is never plotted at all (it is an

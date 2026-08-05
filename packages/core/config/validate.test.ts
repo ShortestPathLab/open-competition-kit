@@ -61,9 +61,9 @@ const upper = {
 const pkg = (config: ConfigExtensions) => ({ config });
 
 const resolverFor = (modules: Record<string, unknown>) => (specifier: string) =>
-  specifier in modules ?
-    E.succeed(modules[specifier])
-  : E.fail(new Error(`no such package: ${specifier}`));
+  specifier in modules
+    ? E.succeed(modules[specifier])
+    : E.fail(new Error(`no such package: ${specifier}`));
 
 const base = () => ({
   appName: "Kit",
@@ -120,9 +120,7 @@ describe("validateConfig", () => {
       maxSubmissions: 3,
     } as never;
 
-    const result = await run(
-      validateConfig(config as never, { resolve: resolverFor({ gates }) }),
-    );
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ gates }) }));
 
     expect(result._tag).toBe("Right");
   });
@@ -137,9 +135,7 @@ describe("validateConfig", () => {
       closesat: "2026-09-01T00:00:00Z",
     } as never;
 
-    const result = await run(
-      validateConfig(config as never, { resolve: resolverFor({ gates }) }),
-    );
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ gates }) }));
 
     expect(result._tag).toBe("Left");
     const message = String((result as { left: unknown }).left);
@@ -174,24 +170,18 @@ describe("validateConfig", () => {
       maxSubmissions: "three",
     } as never;
 
-    const result = await run(
-      validateConfig(config as never, { resolve: resolverFor({ gates }) }),
-    );
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ gates }) }));
 
     expect(result._tag).toBe("Left");
-    expect(String((result as { left: unknown }).left)).toContain(
-      "maxSubmissions",
-    );
+    expect(String((result as { left: unknown }).left)).toContain("maxSubmissions");
   });
 
   test("reports a cross-field rule at the node that broke it", async () => {
     const windows = pkg({
       track: {
-        schema: object(
-          { opensAt: "string", closesAt: "string" },
-          (value) =>
-            value.opensAt && value.closesAt && value.closesAt <= value.opensAt ?
-              "closesAt must be after opensAt"
+        schema: object({ opensAt: "string", closesAt: "string" }, (value) =>
+          value.opensAt && value.closesAt && value.closesAt <= value.opensAt
+            ? "closesAt must be after opensAt"
             : undefined,
         ),
       },
@@ -210,9 +200,7 @@ describe("validateConfig", () => {
     );
 
     expect(result._tag).toBe("Left");
-    expect(String((result as { left: unknown }).left)).toContain(
-      "closesAt must be after opensAt",
-    );
+    expect(String((result as { left: unknown }).left)).toContain("closesAt must be after opensAt");
   });
 
   // A package that normalises has to have its work kept, or the normalisation is
@@ -228,9 +216,7 @@ describe("validateConfig", () => {
       shout: "hello",
     } as never;
 
-    const result = await run(
-      validateConfig(config as never, { resolve: resolverFor({ shouty }) }),
-    );
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ shouty }) }));
 
     expect(result).toMatchObject({
       right: {
@@ -249,16 +235,15 @@ describe("validateConfig", () => {
       shout: "hello",
     } as never;
 
-    await run(
-      validateConfig(config as never, { resolve: resolverFor({ shouty }) }),
-    );
+    await run(validateConfig(config as never, { resolve: resolverFor({ shouty }) }));
 
-    expect(
-      (config.competitions[0]!.tracks[0] as unknown as { shout: string }).shout,
-    ).toBe("hello");
+    expect((config.competitions[0]!.tracks[0] as unknown as { shout: string }).shout).toBe("hello");
   });
 
-  test("refuses to let two packages own the same field", async () => {
+  // Two packages declaring the same field is a declaration contributed twice, not
+  // a dispute. A leaderboard renderer that ships the loader it needs declares the
+  // loader's fields with it, so installing two renderers does exactly this.
+  test("lets two packages declare the same field when they agree", async () => {
     const one = pkg({ track: { schema: object({ deadline: "string" }) } });
     const two = pkg({ track: { schema: object({ deadline: "string" }) } });
 
@@ -273,11 +258,47 @@ describe("validateConfig", () => {
       validateConfig(config as never, { resolve: resolverFor({ one, two }) }),
     );
 
+    expect(result._tag).toBe("Right");
+  });
+
+  // A field name is expected to have one definition. Two that normalise it
+  // differently have two, and whichever ran last would win silently, leaving the
+  // other package reading a value it never agreed to.
+  test("refuses two packages that disagree about what a field becomes", async () => {
+    const asIs = pkg({ track: { schema: object({ deadline: "string" }) } });
+    const shouty = pkg({
+      track: {
+        schema: {
+          "~standard": {
+            version: 1 as const,
+            vendor: "test",
+            validate: (input: unknown) => {
+              const node = input as { deadline?: string };
+              return {
+                value: node.deadline === undefined ? {} : { deadline: node.deadline.toUpperCase() },
+              };
+            },
+          },
+        },
+      },
+    });
+
+    const config = base();
+    config.with = ["asIs", "shouty"];
+    config.competitions[0]!.tracks[0]! = {
+      ...config.competitions[0]!.tracks[0]!,
+      deadline: "2026-09-01t00:00:00z",
+    } as never;
+
+    const result = await run(
+      validateConfig(config as never, { resolve: resolverFor({ asIs, shouty }) }),
+    );
+
     expect(result._tag).toBe("Left");
     const message = String((result as { left: unknown }).left);
-    expect(message).toContain("claimed by both");
-    expect(message).toContain("one");
-    expect(message).toContain("two");
+    expect(message).toContain("do not agree");
+    expect(message).toContain("asIs");
+    expect(message).toContain("shouty");
   });
 
   // A package installed on one track does not license a field on another. This
@@ -286,17 +307,12 @@ describe("validateConfig", () => {
     const config = base();
     config.with = [];
     config.competitions[0]!.tracks[0]!.with = ["gates"] as never;
-    (config.competitions[0] as unknown as Record<string, unknown>)
-      .maxSubmissions = 3;
+    (config.competitions[0] as unknown as Record<string, unknown>).maxSubmissions = 3;
 
-    const result = await run(
-      validateConfig(config as never, { resolve: resolverFor({ gates }) }),
-    );
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ gates }) }));
 
     expect(result._tag).toBe("Left");
-    expect(String((result as { left: unknown }).left)).toContain(
-      "config.competitions.c1",
-    );
+    expect(String((result as { left: unknown }).left)).toContain("config.competitions.c1");
   });
 
   // A broken integration should not be able to stop a competition from booting.
@@ -305,17 +321,13 @@ describe("validateConfig", () => {
   test("a package that fails to import contributes nothing and does not throw", async () => {
     const config = base();
 
-    const result = await run(
-      validateConfig(config as never, { resolve: resolverFor({}) }),
-    );
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({}) }));
 
     expect(result._tag).toBe("Right");
   });
 
   test("`with` is never treated as an unrecognised field", async () => {
-    const result = await run(
-      validateConfig(base() as never, { resolve: resolverFor({ gates }) }),
-    );
+    const result = await run(validateConfig(base() as never, { resolve: resolverFor({ gates }) }));
     expect(result._tag).toBe("Right");
   });
 
@@ -325,9 +337,7 @@ describe("validateConfig", () => {
     const config = base();
     config.with = [];
 
-    const result = await run(
-      validateConfig(config as never, { resolve: resolverFor({}) }),
-    );
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({}) }));
 
     expect(result._tag).toBe("Right");
   });
@@ -356,9 +366,7 @@ describe("describeConfig", () => {
       maxSubmissions: 20,
     } as never;
 
-    const result = await run(
-      describeConfig(config as never, resolverFor({ gates })),
-    );
+    const result = await run(describeConfig(config as never, resolverFor({ gates })));
 
     const track = (result as { right: Array<{ path: string }> }).right.find(
       (node) => node.path === "config.competitions.c1.tracks.t1",
@@ -383,13 +391,11 @@ describe("describeConfig", () => {
   // A field the organiser never set still has to appear, or an editor has no
   // way to offer it. It just has no value yet.
   test("describes a declared field the config does not set", async () => {
-    const result = await run(
-      describeConfig(base() as never, resolverFor({ gates })),
-    );
+    const result = await run(describeConfig(base() as never, resolverFor({ gates })));
 
-    const track = (
-      result as { right: Array<{ path: string; sections: unknown[] }> }
-    ).right.find((node) => node.path === "config.competitions.c1.tracks.t1")!;
+    const track = (result as { right: Array<{ path: string; sections: unknown[] }> }).right.find(
+      (node) => node.path === "config.competitions.c1.tracks.t1",
+    )!;
 
     // No `shape` field matched a value, so nothing is claimed and the section
     // still lists what could be set.
@@ -409,17 +415,15 @@ describe("describeConfig", () => {
       maxSubmissions: 5,
     } as never;
 
-    const result = await run(
-      describeConfig(config as never, resolverFor({ bare })),
-    );
+    const result = await run(describeConfig(config as never, resolverFor({ bare })));
 
-    const track = (
-      result as { right: Array<{ path: string; sections: unknown[] }> }
-    ).right.find((node) => node.path === "config.competitions.c1.tracks.t1")!;
+    const track = (result as { right: Array<{ path: string; sections: unknown[] }> }).right.find(
+      (node) => node.path === "config.competitions.c1.tracks.t1",
+    )!;
 
-    expect(
-      (track.sections[0] as { fields: Array<{ id: string }> }).fields,
-    ).toEqual([{ id: "maxSubmissions", value: 5 } as never]);
+    expect((track.sections[0] as { fields: Array<{ id: string }> }).fields).toEqual([
+      { id: "maxSubmissions", value: 5 } as never,
+    ]);
   });
 });
 

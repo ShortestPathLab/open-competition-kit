@@ -1,4 +1,4 @@
-import type { ComponentDef, $props } from "@open-competition-kit/sdk";
+import type { ComponentDef, LeaderboardViewProps } from "@open-competition-kit/sdk";
 import type { ColDef } from "ag-grid-community";
 import { AllCommunityModule, themeQuartz } from "ag-grid-community";
 import { AgGridProvider, AgGridReact } from "ag-grid-react";
@@ -7,7 +7,7 @@ import { meta, shape, value } from "@open-competition-kit/sdk/z";
 import { useHostDarkMode } from "@open-competition-kit/sdk/theme";
 import { z } from "zod";
 
-type LeaderboardProps = typeof $props.leaderboard.ui;
+type LeaderboardProps = LeaderboardViewProps;
 type LeaderboardDef = LeaderboardProps["def"];
 type LeaderboardItem = LeaderboardDef["items"][number];
 
@@ -135,10 +135,7 @@ function useContainerWidth() {
 export function Leaderboard({ def }: LeaderboardProps) {
   const isDark = useHostDarkMode();
   const [containerRef, containerWidth] = useContainerWidth();
-  const result = z.safeParse(
-    propsSchema as z.ZodType<ParsedLeaderboardDef>,
-    def,
-  );
+  const result = z.safeParse(propsSchema as z.ZodType<ParsedLeaderboardDef>, def);
   if (!result.success)
     throw new Error(
       `Error: ${z.prettifyError(result.error)}\nReceived: ${JSON.stringify(def, null, 2)}`,
@@ -152,50 +149,40 @@ export function Leaderboard({ def }: LeaderboardProps) {
   // to read every score through. Under this width the table scrolls whole.
   const narrow = containerWidth !== undefined && containerWidth < 640;
 
-  const columnDefs = leaderboard.shape.map<ColDef<LeaderboardItem>>(
-    (shapeItem, index) => {
-      const pinned = !narrow && index < 2;
+  const columnDefs = leaderboard.shape.map<ColDef<LeaderboardItem>>((shapeItem, index) => {
+    const pinned = !narrow && index < 2;
 
-      return {
-        field: shapeItem.id,
-        headerName: shapeItem.name,
-        // A number column holds a score or a duration, so it needs room for a
-        // heading and little else. Giving it the same floor as a name column
-        // pushed a board with four component scores into a horizontal scroll
-        // on a desktop that had the width for all of them.
-        minWidth:
-          index === 0 ? 110
-          : shapeItem.kind === "number" ? 120
-          : 160,
-        // A pinned column cannot flex, so it needs a width of its own or it
-        // takes AG Grid's default 200: as much for a one digit rank as for a
-        // full name. Sized to what they hold, and the slack goes to the scores.
-        width:
-          index === 0 ? 110
-          : pinned ? 260
-          : undefined,
-        // Flex belongs to the scrolling columns. It used to sit on the second
-        // one, which is pinned, and AG Grid ignores flex on a pinned column, so
-        // a four column board stopped short of the right edge and left a third
-        // of the table empty. Sharing the slack between the unpinned columns
-        // fills the width, and `minWidth` still wins when there are too many
-        // columns to fit.
-        //
-        // `null`, not `undefined`. Pinning and flex are state as well as
-        // configuration, and on an update AG Grid reads `undefined` as "leave
-        // it as it is", so a grid that narrowed past the breakpoint kept the
-        // pinned columns it was told to drop. `null` is the way to say none.
-        flex: pinned || index === 0 ? null : 1,
-        pinned: pinned ? ("left" as const) : null,
-        sort: index === 0 ? "asc" : undefined,
-        cellDataType:
-          shapeItem.kind === "number" ? "number"
-          : shapeItem.kind === "boolean" ? "boolean"
-          : "text",
-        valueFormatter: ({ value }) => formatCellValue(value),
-      };
-    },
-  );
+    return {
+      field: shapeItem.id,
+      headerName: shapeItem.name,
+      // A number column holds a score or a duration, so it needs room for a
+      // heading and little else. Giving it the same floor as a name column
+      // pushed a board with four component scores into a horizontal scroll
+      // on a desktop that had the width for all of them.
+      minWidth: index === 0 ? 110 : shapeItem.kind === "number" ? 120 : 160,
+      // A pinned column cannot flex, so it needs a width of its own or it
+      // takes AG Grid's default 200: as much for a one digit rank as for a
+      // full name. Sized to what they hold, and the slack goes to the scores.
+      width: index === 0 ? 110 : pinned ? 260 : undefined,
+      // Flex belongs to the scrolling columns. It used to sit on the second
+      // one, which is pinned, and AG Grid ignores flex on a pinned column, so
+      // a four column board stopped short of the right edge and left a third
+      // of the table empty. Sharing the slack between the unpinned columns
+      // fills the width, and `minWidth` still wins when there are too many
+      // columns to fit.
+      //
+      // `null`, not `undefined`. Pinning and flex are state as well as
+      // configuration, and on an update AG Grid reads `undefined` as "leave
+      // it as it is", so a grid that narrowed past the breakpoint kept the
+      // pinned columns it was told to drop. `null` is the way to say none.
+      flex: pinned || index === 0 ? null : 1,
+      pinned: pinned ? ("left" as const) : null,
+      sort: index === 0 ? "asc" : undefined,
+      cellDataType:
+        shapeItem.kind === "number" ? "number" : shapeItem.kind === "boolean" ? "boolean" : "text",
+      valueFormatter: ({ value }) => formatCellValue(value),
+    };
+  });
 
   return (
     <div

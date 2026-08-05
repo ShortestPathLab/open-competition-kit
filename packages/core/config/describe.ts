@@ -12,6 +12,7 @@
  * claimed each field.
  */
 import { Effect as E } from "effect";
+import { isEqual } from "es-toolkit";
 import type { Meta, Shape } from "../common/shape";
 import type { SerialisableValue } from "../serialisable";
 import type { NodeKind, ResolvedExtension } from "./extension";
@@ -63,15 +64,10 @@ const isSerialisable = (value: unknown): value is SerialisableValue =>
  * field names come from what its schema accepted, which is the honest fallback
  * and keeps the cost of contributing config low.
  */
-const fieldsOf = (
-  extension: ResolvedExtension,
-  node: Node,
-): ConfigFieldDescription[] => {
+const fieldsOf = (extension: ResolvedExtension, node: Node): ConfigFieldDescription[] => {
   const valueOf = (id: string) => {
     const raw = node[id];
-    return raw !== undefined && isSerialisable(raw) ?
-        { value: raw as SerialisableValue }
-      : {};
+    return raw !== undefined && isSerialisable(raw) ? { value: raw as SerialisableValue } : {};
   };
 
   if (extension.shape?.length) {
@@ -88,6 +84,27 @@ const fieldsOf = (
     .filter((key) => key in node)
     .map((id) => ({ id, ...valueOf(id) }));
 };
+
+/**
+ * One section per declaration, rather than one per package that made it.
+ *
+ * A field may be declared by several packages, and several deliberately do it: a
+ * leaderboard renderer ships the loader it needs and declares the loader's fields
+ * along with it, so installing two renderers means two identical declarations.
+ * Validation treats that as one declaration contributed twice. An editor showing
+ * "Row source" once per renderer would be showing the organiser a consequence of
+ * how packaging works, which is not a thing they can act on.
+ *
+ * Kept is the first, so the section is attributed to the outermost package that
+ * declared it and the order an organiser sees follows `with:`.
+ */
+const dedupe = (sections: ConfigSectionDescription[]) =>
+  sections.filter(
+    (section, index) =>
+      sections.findIndex(
+        (other) => other.group?.id === section.group?.id && isEqual(other.fields, section.fields),
+      ) === index,
+  );
 
 /**
  * Every node an organiser could edit, with the package fields that apply to it.
@@ -112,13 +129,15 @@ export const describeConfig = <R = never>(
         path,
         label,
         coreKeys: CORE_KEYS[kind],
-        sections: extensions
-          .map((extension) => ({
-            source: extension.source,
-            ...(extension.group ? { group: extension.group } : {}),
-            fields: fieldsOf(extension, node),
-          }))
-          .filter((section) => section.fields.length > 0),
+        sections: dedupe(
+          extensions
+            .map((extension) => ({
+              source: extension.source,
+              ...(extension.group ? { group: extension.group } : {}),
+              fields: fieldsOf(extension, node),
+            }))
+            .filter((section) => section.fields.length > 0),
+        ),
       });
     }
 

@@ -15,6 +15,7 @@
  * deadline silently fails to fire.
  */
 import { Data, Effect as E } from "effect";
+import { isEqual } from "es-toolkit";
 import type { Meta, Shape } from "../common/shape";
 
 /**
@@ -29,9 +30,7 @@ export type StandardSchemaV1<Output = unknown> = {
   readonly "~standard": {
     readonly version: 1;
     readonly vendor: string;
-    readonly validate: (
-      value: unknown,
-    ) => StandardResult<Output> | Promise<StandardResult<Output>>;
+    readonly validate: (value: unknown) => StandardResult<Output> | Promise<StandardResult<Output>>;
   };
 };
 
@@ -109,9 +108,7 @@ export type ResolvedExtension = ConfigExtension & {
   source: string;
 };
 
-export class ConfigExtensionError extends Data.TaggedError(
-  "ConfigExtensionError",
-)<{
+export class ConfigExtensionError extends Data.TaggedError("ConfigExtensionError")<{
   /** Dotted path to the offending node, e.g. `competitions.fit5047.tracks.main`. */
   path: string;
   kind: NodeKind;
@@ -152,9 +149,7 @@ export const extensionsOf = (
 
 const formatIssue = (issue: StandardIssue) => {
   const path = (issue.path ?? [])
-    .map((segment) =>
-      typeof segment === "object" ? String(segment.key) : String(segment),
-    )
+    .map((segment) => (typeof segment === "object" ? String(segment.key) : String(segment)))
     .join(".");
   return path ? `${path}: ${issue.message}` : issue.message;
 };
@@ -172,16 +167,10 @@ const formatIssue = (issue: StandardIssue) => {
 const runSchema = (extension: ResolvedExtension, node: Record<string, unknown>) =>
   E.gen(function* () {
     const raw = extension.schema["~standard"].validate(node);
-    const result = yield* (
-      raw instanceof Promise ?
-        E.promise(() => raw)
-      : E.succeed(raw)
-    );
+    const result = yield* raw instanceof Promise ? E.promise(() => raw) : E.succeed(raw);
 
     if (result.issues) {
-      return yield* E.fail(
-        result.issues.map(formatIssue).join("; ") || "invalid",
-      );
+      return yield* E.fail(result.issues.map(formatIssue).join("; ") || "invalid");
     }
 
     const value = (result.value ?? {}) as Record<string, unknown>;
@@ -233,10 +222,7 @@ export type ValidateNodeOptions = {
  * Returns the node with coerced values written back, so a package schema that
  * normalises (an ISO instant out of a YAML timestamp, say) has its work kept.
  */
-export const validateNode = (
-  node: Record<string, unknown>,
-  options: ValidateNodeOptions,
-) =>
+export const validateNode = (node: Record<string, unknown>, options: ValidateNodeOptions) =>
   E.gen(function* () {
     // The path leads the sentence rather than being carried alongside it. An
     // organiser reads this out of a crashed boot log, where the field they got
@@ -250,7 +236,7 @@ export const validateNode = (
       });
 
     const value: Record<string, unknown> = { ...node };
-    const claimedBy = new Map<string, string>();
+    const claimedBy = new Map<string, { source: string; value: unknown }>();
 
     for (const extension of options.extensions) {
       const result = yield* runSchema(extension, node).pipe(
@@ -259,23 +245,39 @@ export const validateNode = (
 
       for (const key of result.claimed) {
         const existing = claimedBy.get(key);
-        if (existing && existing !== extension.source) {
-          return yield* fail(
-            `"${key}" is claimed by both ${existing} and ${extension.source}. ` +
-              `Only one package may own a field. Ask one of them to namespace ` +
-              `it, e.g. "${extension.source.split("/").pop()}:${key}".`,
-          );
+        // Two packages may declare the same field, and several deliberately do:
+        // a renderer that ships the loader it needs declares the loader's fields
+        // alongside it, and installing two renderers means two packages claiming
+        // the same key. That is one declaration contributed twice rather than a
+        // dispute, so it is allowed.
+        //
+        // What is not allowed is the two of them disagreeing about what the value
+        // becomes. Every claimant's schema runs, and if their normalised results
+        // differ then whichever happened to run last would win, and the package
+        // that lost would read a value it never agreed to. A field name is
+        // expected to have one definition; this is the part of that expectation
+        // a machine can check.
+        if (existing && existing.source !== extension.source) {
+          if (!isEqual(existing.value, result.value[key])) {
+            return yield* fail(
+              `"${key}" is claimed by both ${existing.source} and ${extension.source}, ` +
+                `and they do not agree on what it means: one reads it as ` +
+                `${JSON.stringify(existing.value)} and the other as ` +
+                `${JSON.stringify(result.value[key])}. A field name has one ` +
+                `definition, so either they should share it or one should ` +
+                `namespace its own, e.g. "${extension.source.split("/").pop()}:${key}".`,
+            );
+          }
+          continue;
         }
-        claimedBy.set(key, extension.source);
+        claimedBy.set(key, { source: extension.source, value: result.value[key] });
         value[key] = result.value[key];
       }
     }
 
     if (options.strict) {
       const known = new Set([...options.coreKeys, ...claimedBy.keys()]);
-      const unknown = Object.keys(node).filter(
-        (key) => !known.has(key) && !RESERVED.has(key),
-      );
+      const unknown = Object.keys(node).filter((key) => !known.has(key) && !RESERVED.has(key));
 
       if (unknown.length) {
         const named = unknown.map((key) => `"${key}"`).join(", ");
@@ -295,9 +297,8 @@ export const validateNode = (
           );
         }
 
-        const consulted =
-          options.extensions.length ?
-            options.extensions.map((e) => e.source).join(", ")
+        const consulted = options.extensions.length
+          ? options.extensions.map((e) => e.source).join(", ")
           : "none";
 
         return yield* fail(

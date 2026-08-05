@@ -4,22 +4,27 @@ Draws a leaderboard as a row of stat cards — one card per row, with a headline
 number. Good for podiums, "overall best" callouts, and any board where the point
 is a single figure rather than a table.
 
-Implements `leaderboard.ui`. It renders whatever rows the `leaderboard.loader`
-hook produced — see `@open-competition-kit/standard` for how rows are built from
-job outputs.
+A whole board, not half of one. It implements `leaderboard.ui` to draw the cards
+and `leaderboard.loader` to compute what goes on them, so installing this is all
+it takes to get standings out of job outputs and onto a page.
 
 ## Using it
 
-A leaderboard's own `with:` is applied *after* the ones it inherits, so naming
-this package on a single board overrides the default renderer for that board
-only.
+Install it once, at the top of the config, and each board that wants cards says
+so with `kind: card`. Every installed renderer answers for the kinds it draws and
+passes the rest inward, so a competition can put a podium above a table without
+either board installing a package of its own.
 
 ```yaml
+with:
+  - "@open-competition-kit/leaderboard-card"
+
+# ...
+
 leaderboards:
   - id: podium
     name: Podium
-    with:
-      - "@open-competition-kit/leaderboard-card"
+    kind: card
     from:
       track: main
       rank: { field: score, order: desc }
@@ -42,12 +47,12 @@ leaderboards:
 
 ## `options`
 
-| Key | Default | Meaning |
-|---|---|---|
-| `metric` | first numeric column that isn't `rank` | The headline number on each card. |
-| `title` | first non-numeric column | The card's heading — usually the competitor. |
-| `limit` | all rows | How many cards to show. |
-| `columns` | up to 3 | Maximum cards per row. |
+| Key       | Default                                | Meaning                                      |
+| --------- | -------------------------------------- | -------------------------------------------- |
+| `metric`  | first numeric column that isn't `rank` | The headline number on each card.            |
+| `title`   | first non-numeric column               | The card's heading — usually the competitor. |
+| `limit`   | all rows                               | How many cards to show.                      |
+| `columns` | up to 3                                | Maximum cards per row.                       |
 
 Every column that is not the `metric`, the `title`, or `rank` becomes a
 supporting stat line underneath the headline. `rank` is shown as a badge.

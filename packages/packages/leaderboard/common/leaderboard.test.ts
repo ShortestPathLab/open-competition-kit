@@ -31,9 +31,7 @@ describe("toRows", () => {
   });
 
   it("stringifies nested values instead of silently losing them", () => {
-    expect(toRows({ score: 5, detail: { a: 1 } })).toEqual([
-      { score: 5, detail: '{"a":1}' },
-    ]);
+    expect(toRows({ score: 5, detail: { a: 1 } })).toEqual([{ score: 5, detail: '{"a":1}' }]);
   });
 
   it("treats absent output as no rows at all", () => {
@@ -92,11 +90,7 @@ describe("rank", () => {
   });
 
   it("compares numerically, not lexically", () => {
-    const ranked = rank(
-      [{ score: 9 }, { score: 100 }],
-      { rank: { field: "score" } },
-      shape,
-    );
+    const ranked = rank([{ score: 9 }, { score: 100 }], { rank: { field: "score" } }, shape);
     expect(ranked[0]?.score).toBe(100);
   });
 
@@ -111,11 +105,7 @@ describe("rank", () => {
   });
 
   it("leaves a runner-supplied rank untouched", () => {
-    const ranked = rank(
-      [{ user: "ada", score: 80, rank: 7 }],
-      { rank: { field: "score" } },
-      shape,
-    );
+    const ranked = rank([{ user: "ada", score: 80, rank: 7 }], { rank: { field: "score" } }, shape);
     expect(ranked[0]?.rank).toBe(7);
   });
 });

@@ -22,15 +22,10 @@ const UNFINISHED = new Set(["pending", "running", "queued", "prepared"]);
 const FAILED = new Set(["failed", "error", "cancelled", "timeout"]);
 
 const isValue = (v: unknown): v is Value =>
-  v === null ||
-  typeof v === "string" ||
-  typeof v === "number" ||
-  typeof v === "boolean";
+  v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean";
 
 const toIso = (v: unknown) =>
-  v instanceof Date ? v.toISOString()
-  : typeof v === "string" ? v
-  : null;
+  v instanceof Date ? v.toISOString() : typeof v === "string" ? v : null;
 
 /**
  * Turn one job output into zero or more leaderboard rows.
@@ -88,8 +83,7 @@ async function collect(competition: string, from: LeaderboardSource) {
   const owner = config.competitions.find((c) => c.id === competition);
   if (!owner) return [];
 
-  const trackIds =
-    from.track ? [from.track] : owner.tracks.map((track) => track.id);
+  const trackIds = from.track ? [from.track] : owner.tracks.map((track) => track.id);
   const outputReference = from.output ?? reference.std.output;
   const names = new Map<string, string>();
   const rows: Row[] = [];
@@ -109,9 +103,7 @@ async function collect(competition: string, from: LeaderboardSource) {
         if (!produced.length) continue;
 
         if (!names.has(submission.user)) {
-          const user = await unsafe(users.get(submission.user)).catch(
-            () => undefined,
-          );
+          const user = await unsafe(users.get(submission.user)).catch(() => undefined);
           names.set(submission.user, user?.name || submission.user);
         }
 
@@ -173,11 +165,7 @@ export function select(rows: Row[], from: LeaderboardSource) {
 }
 
 /** Order the winners, trim to `limit`, and number them. */
-export function rank(
-  winners: Row[],
-  from: LeaderboardSource,
-  shape: readonly { id: string }[],
-) {
+export function rank(winners: Row[], from: LeaderboardSource, shape: readonly { id: string }[]) {
   const rows = [...winners];
   const field = from.rank?.field;
 
@@ -208,9 +196,7 @@ export async function load(def: Leaderboard, competition: string) {
   // `from` is this package's field, not core's, so it is read back through the
   // schema that declared it. A board configured for some other loader has no
   // `from` here and falls through to its literal rows.
-  const parsed = leaderboardSource.optional().safeParse(
-    (def as { from?: unknown }).from,
-  );
+  const parsed = leaderboardSource.optional().safeParse((def as { from?: unknown }).from);
   const from = parsed.success ? parsed.data : undefined;
 
   if (!from) return [...(def.items ?? [])] as Row[];

@@ -1,4 +1,4 @@
-import type { ComponentDef, $props } from "@open-competition-kit/sdk";
+import type { ComponentDef, LeaderboardViewProps } from "@open-competition-kit/sdk";
 import { meta, shape, value } from "@open-competition-kit/sdk/z";
 import { useHostDarkMode } from "@open-competition-kit/sdk/theme";
 import React from "react";
@@ -19,7 +19,7 @@ import {
 import { z } from "zod";
 import { dark, light, seriesColour, type Theme } from "./theme";
 
-type ChartProps = typeof $props.leaderboard.ui;
+type ChartProps = LeaderboardViewProps;
 type ChartDef = ChartProps["def"];
 
 const propsSchema = z.object({
@@ -32,8 +32,14 @@ const propsSchema = z.object({
 type Parsed = z.infer<typeof propsSchema> & ChartDef;
 type Item = Parsed["items"][number];
 
-const KINDS = ["bar", "line", "area"] as const;
-type Kind = (typeof KINDS)[number];
+/**
+ * Written `options.plot` rather than `options.kind`, because a board already has
+ * a `kind:` of its own and that one is what picks this package over the table or
+ * the cards. Two fields a line apart both called kind, meaning different things
+ * at different depths, is a config nobody can read.
+ */
+const PLOTS = ["bar", "line", "area"] as const;
+type Plot = (typeof PLOTS)[number];
 
 const asNumber = (v: unknown) => {
   if (typeof v === "number") return v;
@@ -159,15 +165,12 @@ export function Chart({ def }: ChartProps) {
   const items = [...board.items];
   const options = board.options ?? {};
 
-  const kind = (
-    KINDS.includes(options.kind as Kind) ? options.kind : "bar"
-  ) as Kind;
+  const plot = (PLOTS.includes(options.plot as Plot) ? options.plot : "bar") as Plot;
   const stacked = options.stacked === true;
   const height = typeof options.height === "number" ? options.height : 360;
 
   const declared = new Map(board.shape.map((s) => [s.id, s.kind]));
-  const labelOf = (id: string) =>
-    board.shape.find((s) => s.id === id)?.name ?? id;
+  const labelOf = (id: string) => board.shape.find((s) => s.id === id)?.name ?? id;
 
   // The category axis defaults to the first non-numeric column — on a
   // leaderboard that is almost always the competitor.
@@ -187,9 +190,7 @@ export function Chart({ def }: ChartProps) {
     )
     .map((s) => s.id);
 
-  const configured = Array.isArray(options.series)
-    ? (options.series as string[])
-    : undefined;
+  const configured = Array.isArray(options.series) ? (options.series as string[]) : undefined;
 
   // Default to a single measure. Columns on a leaderboard routinely differ by
   // orders of magnitude (a score of 98 beside 1,610ms), and stacking them on one
@@ -224,11 +225,9 @@ export function Chart({ def }: ChartProps) {
   // A legend is mandatory for two or more series so identity never rests on
   // colour alone — and it doubles as the secondary encoding the dark palette needs.
   const legend =
-    series.length > 1 ?
-      <Legend
-        wrapperStyle={{ color: theme.textSecondary, fontSize: 12, paddingTop: 8 }}
-      />
-    : null;
+    series.length > 1 ? (
+      <Legend wrapperStyle={{ color: theme.textSecondary, fontSize: 12, paddingTop: 8 }} />
+    ) : null;
 
   const tooltip = (
     <Tooltip
@@ -237,9 +236,7 @@ export function Chart({ def }: ChartProps) {
     />
   );
 
-  const grid = (
-    <CartesianGrid stroke={theme.grid} strokeDasharray="3 3" vertical={false} />
-  );
+  const grid = <CartesianGrid stroke={theme.grid} strokeDasharray="3 3" vertical={false} />;
 
   const common = { data, margin: { bottom: 4, left: 4, right: 12, top: 8 } };
 
@@ -261,7 +258,7 @@ export function Chart({ def }: ChartProps) {
       }}
     >
       <ResponsiveContainer height={height} width="100%">
-        {kind === "line" ?
+        {plot === "line" ? (
           <LineChart {...common}>
             {grid}
             <XAxis dataKey={category} {...axis} />
@@ -281,7 +278,7 @@ export function Chart({ def }: ChartProps) {
               />
             ))}
           </LineChart>
-        : kind === "area" ?
+        ) : plot === "area" ? (
           <AreaChart {...common}>
             {grid}
             <XAxis dataKey={category} {...axis} />
@@ -302,7 +299,8 @@ export function Chart({ def }: ChartProps) {
               />
             ))}
           </AreaChart>
-        : <BarChart {...common} barCategoryGap="20%">
+        ) : (
+          <BarChart {...common} barCategoryGap="20%">
             {grid}
             <XAxis dataKey={category} {...axis} />
             <YAxis {...axis} />
@@ -325,7 +323,7 @@ export function Chart({ def }: ChartProps) {
               />
             ))}
           </BarChart>
-        }
+        )}
       </ResponsiveContainer>
     </div>
   );

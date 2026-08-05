@@ -1,7 +1,6 @@
 {
-  "name": "@open-competition-kit/leaderboard-ag-grid",
+  "name": "@open-competition-kit/leaderboard-common",
   "version": "0.0.11",
-  "private": false,
   "type": "module",
   "module": "index.ts",
   "types": "index.ts",
@@ -9,21 +8,14 @@
     "registry": "https://npm.pkg.github.com"
   },
   "dependencies": {
-    "@open-competition-kit/leaderboard-common": "workspace:*",
     "@open-competition-kit/sdk": "workspace:*",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "ag-grid-community": "^35.2.1",
-    "ag-grid-react": "^35.2.1",
     "es-toolkit": "^1.46.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5 || ^6 || ^7"
+    "typescript": "^5.9.3 || ^6.0.0 || ^7.0.0"
   }
 }

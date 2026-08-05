@@ -90,53 +90,45 @@ function LeaderboardsPage() {
         title="Leaderboards"
         description="Public standings, rebuilt from every submission that has been scored."
         meta={
-          leaderboards.length ?
+          leaderboards.length ? (
             <HeaderStats>
               <Stat label="Boards" value={leaderboards.length} />
             </HeaderStats>
-          : undefined
+          ) : undefined
         }
         tabs
       />
       <PageBody>
-        {
-          !leaderboards.length ?
-            <Empty className="rounded-2xl border border-dashed border-border">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Trophy />
-                </EmptyMedia>
-                <EmptyTitle>No leaderboards yet</EmptyTitle>
-                <EmptyDescription>
-                  No leaderboards have been configured for this competition yet.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-            // Every board on one page. A competition's boards are usually the
-            // same standings cut different ways: a table, a podium, a chart.
-            // Reading one against another used to cost a page load each, behind a
-            // picker that presented them as alternatives. Stacked, comparing them
-            // is scrolling.
-          : <div className="space-y-14">
-              {leaderboards.map((leaderboard) => (
-                <LeaderboardSection
-                  key={leaderboard.id}
-                  leaderboard={leaderboard}
-                />
-              ))}
-            </div>
-
-        }
+        {!leaderboards.length ? (
+          <Empty className="rounded-2xl border border-dashed border-border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Trophy />
+              </EmptyMedia>
+              <EmptyTitle>No leaderboards yet</EmptyTitle>
+              <EmptyDescription>
+                No leaderboards have been configured for this competition yet.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          // Every board on one page. A competition's boards are usually the
+          // same standings cut different ways: a table, a podium, a chart.
+          // Reading one against another used to cost a page load each, behind a
+          // picker that presented them as alternatives. Stacked, comparing them
+          // is scrolling.
+          <div className="space-y-14">
+            {leaderboards.map((leaderboard) => (
+              <LeaderboardSection key={leaderboard.id} leaderboard={leaderboard} />
+            ))}
+          </div>
+        )}
       </PageBody>
     </>
   );
 }
 
-function LeaderboardSection({
-  leaderboard,
-}: {
-  leaderboard: LeaderboardSummary;
-}) {
+function LeaderboardSection({ leaderboard }: { leaderboard: LeaderboardSummary }) {
   const {
     data: def,
     isPending,
@@ -145,11 +137,16 @@ function LeaderboardSection({
     refetch,
   } = useLoadedLeaderboard(leaderboard.id);
 
-  // Resolve the renderer against *this* leaderboard, not the root config: a
-  // board's own `with:` is applied last and so overrides the inherited default,
-  // which is what lets one competition mix a table, cards, and a chart.
-  const { Component: Leaderboard } = useKitComponent("leaderboard.ui", {
+  // The board's `kind:` picks the renderer, and each installed leaderboard
+  // package answers for the kinds it draws and passes the rest inward. A board
+  // with no kind gets whatever answers for the empty string, which is how a
+  // package offers a default look.
+  //
+  // Still resolved against *this* board rather than the root config, since a
+  // board may install a renderer of its own that nothing above it has.
+  const { Component: Leaderboard, isError: noRenderer } = useKitComponent("leaderboard.ui", {
     accessor: { competitions: { leaderboards: leaderboard.id } },
+    args: { kind: leaderboard.kind ?? "" },
   });
 
   const headingId = `leaderboard-${leaderboard.id}`;
@@ -157,32 +154,26 @@ function LeaderboardSection({
   return (
     // `scroll-mt` clears the sticky tab bar, so a link to one board lands with
     // its heading in view rather than under the chrome.
-    <section
-      id={leaderboard.id}
-      aria-labelledby={headingId}
-      className="scroll-mt-24"
-    >
+    <section id={leaderboard.id} aria-labelledby={headingId} className="scroll-mt-24">
       <div className="mb-4">
         <h2 id={headingId} className="text-lg font-semibold tracking-tight">
           {leaderboard.name}
         </h2>
-        {leaderboard.description ?
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            {leaderboard.description}
-          </p>
-        : null}
+        {leaderboard.description ? (
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{leaderboard.description}</p>
+        ) : null}
       </div>
 
       {/* No panel around the renderer. Each one draws its own surface: the
           grid is a bordered table, the podium a row of cards. Wrapping that in
           another card made a card inside a card. */}
-      {isPending ?
+      {isPending ? (
         <Skeleton
           className="h-72 w-full rounded-xl"
           role="status"
           aria-label={`Loading ${leaderboard.name}`}
         />
-      : isError ?
+      ) : isError ? (
         <Empty className="rounded-xl border border-dashed border-border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -190,21 +181,38 @@ function LeaderboardSection({
             </EmptyMedia>
             <EmptyTitle>These standings didn't load</EmptyTitle>
             <EmptyDescription>
-              The server didn't return this leaderboard. Try again, or reload
-              the page.
+              The server didn't return this leaderboard. Try again, or reload the page.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={isFetching}
-            >
+            <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
               {isFetching ? "Trying again..." : "Try again"}
             </Button>
           </EmptyContent>
         </Empty>
-      : <Leaderboard def={def} />}
+      ) : noRenderer ? (
+        // Named rather than folded into the error above, because the fix is
+        // different and only the organiser can make it. Without this the board
+        // sat on a spinner for good: nothing answered for its `kind`, so the
+        // component query failed while the rows query was perfectly happy, and
+        // the renderer's own "still loading" state is indistinguishable from
+        // that.
+        <Empty className="rounded-xl border border-dashed border-border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <TriangleAlert />
+            </EmptyMedia>
+            <EmptyTitle>Nothing draws this board</EmptyTitle>
+            <EmptyDescription>
+              {leaderboard.kind
+                ? `No installed package renders a leaderboard of kind "${leaderboard.kind}".`
+                : "No leaderboard package is installed."}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <Leaderboard def={def} />
+      )}
     </section>
   );
 }

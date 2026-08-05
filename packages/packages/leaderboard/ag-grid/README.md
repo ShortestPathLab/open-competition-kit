@@ -1,17 +1,31 @@
 # @open-competition-kit/leaderboard-ag-grid
 
-`@open-competition-kit/leaderboard-ag-grid` provides a leaderboard UI for Open Competition Kit using AG Grid. It converts a configured leaderboard shape and item list into a sortable, filterable, resizable React grid with sensible formatting for text, numbers, booleans, and empty values.
+`@open-competition-kit/leaderboard-ag-grid` draws a leaderboard as a sortable,
+filterable, resizable grid, using AG Grid. It formats text, numbers, booleans and
+empty cells from the column types the board declares.
 
-Open Competition Kit is a modular toolkit for running programming competitions. A competition is described in `competition.config.yaml`, then extended with packages that provide storage, submission forms, enrolment behavior, runners, integrations, and leaderboards.
+A whole board, not half of one. It implements `leaderboard.ui` to draw the grid
+and `leaderboard.loader` to compute what fills it, so installing this is all it
+takes to get standings out of job outputs and onto a page.
 
-To use the AG Grid leaderboard package, add it to the relevant `with` section in your `competition.config.yaml`:
+Open Competition Kit is a modular toolkit for running programming competitions. A
+competition is described in `competition.config.yaml`, then extended with
+packages that provide storage, submission forms, enrolment behaviour, runners,
+integrations, and leaderboards.
+
+## Using it
+
+Install it once, at the top of the config:
 
 ```yaml
 with:
   - "@open-competition-kit/leaderboard-ag-grid"
 ```
 
-A leaderboard definition should provide a `shape` for the columns and `items` for the rows. The UI service loads this package as the renderer when displaying configured leaderboards.
+This is the renderer a board gets when it names no `kind:` at all, as well as the
+one that answers `kind: table`. A board declares a `shape` for its columns, and
+either a `from:` block saying which jobs' outputs become rows or a literal
+`items` list.
 
 ## What it draws
 

@@ -1,6 +1,6 @@
 import { createServerFn, useServerFn } from "@tanstack/react-start";
 import { skipToken, useQuery } from "@tanstack/react-query";
-import sdk, { enrolments, unsafe, type $props } from "@open-competition-kit/sdk";
+import sdk, { enrolments, unsafe, type LeaderboardUiDef } from "@open-competition-kit/sdk";
 import { uniq } from "es-toolkit";
 import { z } from "zod";
 import { getAuthSession } from "./auth-server";
@@ -10,6 +10,14 @@ export type LeaderboardSummary = {
   id: string;
   name: string;
   description?: string;
+  /**
+   * What the board should look like, carried through so the page can ask for the
+   * matching renderer. An open string core never interprets: each installed
+   * leaderboard package answers for the kinds it draws and passes the rest
+   * inward, and an absent kind arrives as `""`, which is how a package offers a
+   * default look.
+   */
+  kind?: string;
   competitionId: string;
   competitionName: string;
 };
@@ -42,9 +50,7 @@ const participantIdOf = (row: Record<string, Cell>): string | undefined => {
  * their id, which only happens for someone who never signed in through the app
  * that upserts the name.
  */
-async function participantNames(
-  rows: Record<string, Cell>[],
-): Promise<Map<string, string>> {
+async function participantNames(rows: Record<string, Cell>[]): Promise<Map<string, string>> {
   // By id rather than by listing everyone: a board is capped at its own `limit`,
   // where the user table grows with the whole cohort.
   const ids = uniq(rows.flatMap((row) => participantIdOf(row) ?? []));
@@ -56,11 +62,7 @@ async function participantNames(
     }),
   );
 
-  return new Map(
-    named.flatMap(([id, name]) =>
-      name ? [[id, name] as [string, string]] : [],
-    ),
-  );
+  return new Map(named.flatMap(([id, name]) => (name ? [[id, name] as [string, string]] : [])));
 }
 
 /** A row with its competitor named rather than identified. */
@@ -82,7 +84,7 @@ export const getLoadedLeaderboard = createServerFn({ method: "GET" })
   .handler(async ({ data: leaderboardId }) => {
     const def = await unsafe(sdk.leaderboards.load(leaderboardId));
     const items = def.items as Record<string, Cell>[] | undefined;
-    if (!items?.length) return def as (typeof $props.leaderboard.ui)["def"];
+    if (!items?.length) return def as LeaderboardUiDef;
 
     // Renamed here rather than in the renderer, so every board gets it whatever
     // package draws it, and so no competitor's email crosses the wire.
@@ -91,7 +93,7 @@ export const getLoadedLeaderboard = createServerFn({ method: "GET" })
     return {
       ...def,
       items: items.map((row) => nameParticipant(row, names)),
-    } as (typeof $props.leaderboard.ui)["def"];
+    } as LeaderboardUiDef;
   });
 
 export const getCompetitionLeaderboards = createServerFn({ method: "GET" })
@@ -105,6 +107,7 @@ export const getCompetitionLeaderboards = createServerFn({ method: "GET" })
       id: leaderboard.id,
       name: leaderboard.name ?? leaderboard.label ?? leaderboard.id,
       description: leaderboard.description,
+      kind: leaderboard.kind,
       competitionId: competition.id,
       competitionName: competition.name ?? competition.id,
     }));
@@ -119,8 +122,7 @@ export function useLoadedLeaderboard(leaderboardId?: string) {
   const fetch = useServerFn(getLoadedLeaderboard);
   return useQuery({
     queryKey: ["leaderboard", leaderboardId],
-    queryFn:
-      leaderboardId ? () => fetch({ data: leaderboardId }) : skipToken,
+    queryFn: leaderboardId ? () => fetch({ data: leaderboardId }) : skipToken,
   });
 }
 
@@ -128,8 +130,7 @@ export function useCompetitionLeaderboards(competitionId?: string) {
   const fetch = useServerFn(getCompetitionLeaderboards);
   return useQuery({
     queryKey: ["competition-leaderboards", competitionId],
-    queryFn:
-      competitionId ? () => fetch({ data: competitionId }) : skipToken,
+    queryFn: competitionId ? () => fetch({ data: competitionId }) : skipToken,
   });
 }
 
@@ -176,123 +177,103 @@ const standingsInput = z.object({
  */
 export const getCompetitionStandings = createServerFn({ method: "GET" })
   .inputValidator(standingsInput)
-  .handler(
-    async ({ data }): Promise<CompetitionStandings | null> => {
-      const limit = data.limit ?? 5;
-      const config = await unsafe(sdk.config.get());
-      const competition = config.competitions.find(
-        (candidate) => candidate.id === data.competitionId,
+  .handler(async ({ data }): Promise<CompetitionStandings | null> => {
+    const limit = data.limit ?? 5;
+    const config = await unsafe(sdk.config.get());
+    const competition = config.competitions.find(
+      (candidate) => candidate.id === data.competitionId,
+    );
+    if (!competition) return null;
+
+    /**
+     * How a board says its rows are ordered.
+     *
+     * `from` belongs to whichever package loads the board rather than to core,
+     * so this reads it loosely and asks only what it needs: is there a ranking
+     * field, and which track do the rows come from. A board loaded by some
+     * other package answers neither and is passed over, which is the right
+     * outcome for one this page cannot describe.
+     */
+    const sourceOf = (board: unknown) =>
+      (board as { from?: { track?: string; rank?: { field?: string } } }).from;
+
+    // Only boards whose rows are computed and ordered. A board with literal
+    // `items` and no `rank` is a table the organiser wrote by hand, and
+    // calling row three of it "third place" would be putting words in their
+    // mouth.
+    const ranked = competition.leaderboards.filter((board) => sourceOf(board)?.rank?.field);
+    if (!ranked.length) return null;
+
+    const session = await getAuthSession();
+    const viewer = session?.user ? resolveId(session.user) : undefined;
+
+    // Config order decides the default, since that is the order the organiser
+    // already put the boards in. A competitor who has entered a track beats
+    // it: the standings they care about are the ones they are standing in.
+    let board = ranked[0]!;
+    if (viewer) {
+      const entered = new Set(
+        (await unsafe(enrolments.list({ user: viewer }))).map((enrolment) => enrolment.track),
       );
-      if (!competition) return null;
+      board =
+        ranked.find((candidate) => {
+          const track = sourceOf(candidate)?.track;
+          return track && entered.has(track);
+        }) ?? board;
+    }
 
-      /**
-       * How a board says its rows are ordered.
-       *
-       * `from` belongs to whichever package loads the board rather than to core,
-       * so this reads it loosely and asks only what it needs: is there a ranking
-       * field, and which track do the rows come from. A board loaded by some
-       * other package answers neither and is passed over, which is the right
-       * outcome for one this page cannot describe.
-       */
-      const sourceOf = (board: unknown) =>
-        (board as { from?: { track?: string; rank?: { field?: string } } }).from;
+    const field = sourceOf(board)!.rank!.field!;
+    const def = await unsafe(sdk.leaderboards.load(board.id));
+    // Already grouped, ordered and trimmed by whichever package loaded them,
+    // so position in this array is position on the board.
+    const rows = (def.items ?? []) as Array<Record<string, Cell>>;
 
-      // Only boards whose rows are computed and ordered. A board with literal
-      // `items` and no `rank` is a table the organiser wrote by hand, and
-      // calling row three of it "third place" would be putting words in their
-      // mouth.
-      const ranked = competition.leaderboards.filter(
-        (board) => sourceOf(board)?.rank?.field,
-      );
-      if (!ranked.length) return null;
+    const names = await participantNames(rows);
 
-      const session = await getAuthSession();
-      const viewer = session?.user ? resolveId(session.user) : undefined;
-
-      // Config order decides the default, since that is the order the organiser
-      // already put the boards in. A competitor who has entered a track beats
-      // it: the standings they care about are the ones they are standing in.
-      let board = ranked[0]!;
-      if (viewer) {
-        const entered = new Set(
-          (await unsafe(enrolments.list({ user: viewer }))).map(
-            (enrolment) => enrolment.track,
-          ),
-        );
-        board =
-          ranked.find((candidate) => {
-            const track = sourceOf(candidate)?.track;
-            return track && entered.has(track);
-          }) ?? board;
-      }
-
-      const field = sourceOf(board)!.rank!.field!;
-      const def = await unsafe(sdk.leaderboards.load(board.id));
-      // Already grouped, ordered and trimmed by whichever package loaded them,
-      // so position in this array is position on the board.
-      const rows = (def.items ?? []) as Array<Record<string, Cell>>;
-
-      const names = await participantNames(rows);
-
-      const toEntry = (row: Record<string, Cell>, index: number) => {
-        const participant = participantIdOf(row);
-
-        return {
-          // `rank` is only materialised as a column when the board's `shape`
-          // asks for it. Falling back to the index is safe because the rows
-          // arrive ordered.
-          rank: Number(row.rank) || index + 1,
-          competitor:
-            participant ?
-              (names.get(participant) ?? participant)
-            : "Unknown",
-          score: row[field] ?? null,
-          isYou: !!viewer && participant === viewer,
-        };
-      };
-
-      // Both halves read the participant the same way. Matching on `userId`
-      // alone missed every board that writes the column `groupBy: user` gives
-      // it, which is all of them, so nobody was ever shown their own row.
-      const yourIndex =
-        viewer ? rows.findIndex((row) => participantIdOf(row) === viewer) : -1;
-
-      const from = sourceOf(board);
-      const trackName =
-        from?.track ?
-          (competition.tracks.find((track) => track.id === from.track)?.name ??
-            from.track)
-        : undefined;
-      const metric =
-        board.shape.find((column) => column.id === field)?.name ?? field;
+    const toEntry = (row: Record<string, Cell>, index: number) => {
+      const participant = participantIdOf(row);
 
       return {
-        leaderboardId: board.id,
-        leaderboardName: board.name ?? board.label ?? board.id,
-        caption: [trackName, metric].filter(Boolean).join(" · "),
-        total: rows.length,
-        top: rows.slice(0, limit).map(toEntry),
-        you:
-          yourIndex >= limit ?
-            toEntry(rows[yourIndex]!, yourIndex)
-          : undefined,
+        // `rank` is only materialised as a column when the board's `shape`
+        // asks for it. Falling back to the index is safe because the rows
+        // arrive ordered.
+        rank: Number(row.rank) || index + 1,
+        competitor: participant ? (names.get(participant) ?? participant) : "Unknown",
+        score: row[field] ?? null,
+        isYou: !!viewer && participant === viewer,
       };
-    },
-  );
+    };
+
+    // Both halves read the participant the same way. Matching on `userId`
+    // alone missed every board that writes the column `groupBy: user` gives
+    // it, which is all of them, so nobody was ever shown their own row.
+    const yourIndex = viewer ? rows.findIndex((row) => participantIdOf(row) === viewer) : -1;
+
+    const from = sourceOf(board);
+    const trackName = from?.track
+      ? (competition.tracks.find((track) => track.id === from.track)?.name ?? from.track)
+      : undefined;
+    const metric = board.shape.find((column) => column.id === field)?.name ?? field;
+
+    return {
+      leaderboardId: board.id,
+      leaderboardName: board.name ?? board.label ?? board.id,
+      caption: [trackName, metric].filter(Boolean).join(" · "),
+      total: rows.length,
+      top: rows.slice(0, limit).map(toEntry),
+      you: yourIndex >= limit ? toEntry(rows[yourIndex]!, yourIndex) : undefined,
+    };
+  });
 
 /**
  * `sessionUserId` never reaches the server, which reads the caller from the
  * session. It is here to keep one signed-in competitor's cached standings apart
  * from the next's, since the same board highlights a different row for each.
  */
-export function useCompetitionStandings(
-  competitionId?: string,
-  sessionUserId?: string,
-) {
+export function useCompetitionStandings(competitionId?: string, sessionUserId?: string) {
   const fetch = useServerFn(getCompetitionStandings);
   return useQuery({
     queryKey: ["competition-standings", competitionId, sessionUserId],
-    queryFn:
-      competitionId ? () => fetch({ data: { competitionId } }) : skipToken,
+    queryFn: competitionId ? () => fetch({ data: { competitionId } }) : skipToken,
   });
 }

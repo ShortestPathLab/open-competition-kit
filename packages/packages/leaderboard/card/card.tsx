@@ -1,11 +1,11 @@
-import type { ComponentDef, $props } from "@open-competition-kit/sdk";
+import type { ComponentDef, LeaderboardViewProps } from "@open-competition-kit/sdk";
 import { meta, shape, value } from "@open-competition-kit/sdk/z";
 import { useHostDarkMode } from "@open-competition-kit/sdk/theme";
 import React from "react";
 import { z } from "zod";
 import { dark, light, seriesColour, type Theme } from "./theme";
 
-type CardProps = typeof $props.leaderboard.ui;
+type CardProps = LeaderboardViewProps;
 type CardDef = CardProps["def"];
 
 const propsSchema = z.object({
@@ -43,9 +43,11 @@ const format = (v: unknown) => {
   if (typeof v === "boolean") return v ? "Yes" : "No";
   const n = asNumber(v);
   if (n === undefined) return String(v);
-  return Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, {
-    maximumFractionDigits: 2,
-  });
+  return Number.isInteger(n)
+    ? n.toLocaleString()
+    : n.toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      });
 };
 
 export function Cards({ def }: CardProps) {
@@ -67,9 +69,7 @@ export function Cards({ def }: CardProps) {
   const limit = typeof options.limit === "number" ? options.limit : undefined;
   const items = limit && limit > 0 ? all.slice(0, limit) : all;
 
-  const numericFields = board.shape.filter((s) =>
-    isNumeric(s.id, all, declared.get(s.id)),
-  );
+  const numericFields = board.shape.filter((s) => isNumeric(s.id, all, declared.get(s.id)));
 
   // The headline number, and the label that identifies whose it is.
   const metric =
@@ -83,8 +83,7 @@ export function Cards({ def }: CardProps) {
       (s) => s.id !== metric && s.id !== "rank" && !isNumeric(s.id, all, declared.get(s.id)),
     )?.id;
 
-  const labelOf = (id: string) =>
-    board.shape.find((s) => s.id === id)?.name ?? id;
+  const labelOf = (id: string) => board.shape.find((s) => s.id === id)?.name ?? id;
 
   // Everything else becomes a supporting stat line on the card.
   const supporting = board.shape.filter(
@@ -92,8 +91,7 @@ export function Cards({ def }: CardProps) {
   );
 
   const columns =
-    typeof options.columns === "number" ? options.columns
-    : Math.min(Math.max(items.length, 1), 3);
+    typeof options.columns === "number" ? options.columns : Math.min(Math.max(items.length, 1), 3);
 
   if (!items.length) {
     return (
@@ -179,7 +177,7 @@ export function Cards({ def }: CardProps) {
               </span>
             </div>
 
-            {metric ?
+            {metric ? (
               <div style={{ display: "grid", gap: 2 }}>
                 <span
                   style={{
@@ -192,13 +190,11 @@ export function Cards({ def }: CardProps) {
                 >
                   {format(item[metric])}
                 </span>
-                <span style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  {labelOf(metric)}
-                </span>
+                <span style={{ color: theme.textSecondary, fontSize: 12 }}>{labelOf(metric)}</span>
               </div>
-            : null}
+            ) : null}
 
-            {supporting.length ?
+            {supporting.length ? (
               <div
                 style={{
                   borderTop: `1px solid ${theme.grid}`,
@@ -233,7 +229,7 @@ export function Cards({ def }: CardProps) {
                   </div>
                 ))}
               </div>
-            : null}
+            ) : null}
           </div>
         );
       })}
