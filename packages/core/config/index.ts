@@ -1,23 +1,17 @@
 import { FileSystem, Path } from "@effect/platform";
-import {
-  Config as C,
-  Data,
-  Effect as E,
-  Match as M,
-  Option as O,
-  pipe,
-  Schema as S,
-} from "effect";
+import { Config as C, Data, Effect as E, Match as M, Option as O, pipe, Schema as S } from "effect";
 import { load as _load, YAMLException } from "js-yaml";
 import { mapValues, uniq } from "es-toolkit";
-import { createPackageResolver } from "../resolve";
+import { OpenCompetitionKitPackages } from "../package/registry";
 import { describeConfig } from "./describe";
 import { migrate } from "./migrate";
 import { decode, Extendable } from "./schema";
 import { transform } from "./transform";
 import { validateConfig } from "./validate";
+import { applyWith } from "./with";
 
 export * from "./schema";
+export * from "./with";
 export * from "./access";
 export * from "./transform";
 export * from "./extension";
@@ -26,8 +20,7 @@ export * from "./walk";
 export * from "./describe";
 export * from "./visibility";
 
-const load = (s: string) =>
-  E.try({ try: () => _load(s), catch: (e) => e as YAMLException });
+const load = (s: string) => E.try({ try: () => _load(s), catch: (e) => e as YAMLException });
 
 export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
   const ctx = O.match(S.decodeUnknownOption(Extendable)(t), {
@@ -35,13 +28,9 @@ export const propagateExtendable = <T>(t: T, w: string[] = []): T => {
     onSome: (t) => uniq([...w, ...t.with]),
   });
   return M.value(t).pipe(
-    M.when(M.instanceOf(Array), (t) =>
-      t.map((v) => propagateExtendable(v, ctx)),
-    ),
+    M.when(M.instanceOf(Array), (t) => t.map((v) => propagateExtendable(v, ctx))),
     M.when(M.instanceOf(Object), (t) => ({
-      ...mapValues(t as Record<string, unknown>, (v) =>
-        propagateExtendable(v, ctx),
-      ),
+      ...mapValues(t as Record<string, unknown>, (v) => propagateExtendable(v, ctx)),
       with: ctx,
     })),
     M.orElse(() => t),
@@ -96,6 +85,8 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
        * list of strings until it resolves, and a schema applied first would
        * reject it for not being a list of competitions.
        */
+      const packages = yield* OpenCompetitionKitPackages;
+
       const raw = pipe(
         fs.readFileString(path),
         E.andThen(load),
@@ -104,18 +95,32 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
         E.andThen(migrate),
         E.andThen((config) => transform(cwd, config)),
         E.andThen(decode),
+        // After decode, so an absent `with:` is already the empty list, and before
+        // anything reads one, since both `walkNodes` and `propagateExtendable`
+        // derive everything they know about packages from these lists.
+        E.tap((config) => applyWith(config as unknown as Record<string, unknown>, { cwd })),
+        // Discharged here rather than by each consumer. `transform` reads files
+        // and `applyWith` reads a `package.json` or two, and a requirement left in
+        // this channel reaches the `kit` proxy in the SDK, which only unwraps an
+        // effect that needs nothing.
+        E.provideService(FileSystem.FileSystem, fs),
+        E.provideService(Path.Path, pathService),
       );
-
-      const resolve = createPackageResolver(path);
 
       const config = pipe(
         raw,
+        E.tap((config) =>
+          // Every package resolved once, before anybody asks what one contains.
+          // `collectExtensions` forgives a package that will not load, so without
+          // this a missing one that declares no config fields would surface as a
+          // chain quietly short of a link, much later and somewhere else.
+          packages.preflight((config as unknown as { with: string[] }).with),
+        ),
         E.andThen((config) =>
           E.gen(function* () {
-            const validated = yield* validateConfig(
-              config as unknown as Record<string, unknown>,
-              { resolve: yield* resolve },
-            );
+            const validated = yield* validateConfig(config as unknown as Record<string, unknown>, {
+              resolve: packages.load,
+            });
             return validated as unknown as typeof config;
           }),
         ),
@@ -141,12 +146,7 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
         pipe(
           raw,
           E.andThen((config) =>
-            E.gen(function* () {
-              return yield* describeConfig(
-                config as unknown as Record<string, unknown>,
-                yield* resolve,
-              );
-            }),
+            describeConfig(config as unknown as Record<string, unknown>, packages.load),
           ),
           E.provideService(FileSystem.FileSystem, fs),
           E.provideService(Path.Path, pathService),

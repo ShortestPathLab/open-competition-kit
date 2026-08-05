@@ -1,6 +1,9 @@
 {
   "name": "open-competition-kit",
   "private": false,
+  "workspaces": [
+    "packages/**"
+  ],
   "scripts": {
     "tsc:all": "bash ./tsc.sh",
     "lint": "oxlint",
@@ -9,11 +12,9 @@
     "format:check": "oxfmt --check",
     "db:prisma:generate": "bun packages/packages/db/prisma/generate.ts",
     "db:prisma:studio": "DATABASE_URL=postgres://postgres:postgres@localhost:5433/postgres bunx prisma studio --config packages/packages/db/prisma/prisma.config.ts",
-    "db:prisma:reset": "bunx prisma migrate reset --schema packages/packages/db/prisma/schemas/schema.prisma --config packages/packages/db/prisma/prisma.config.ts"
+    "db:prisma:reset": "bunx prisma migrate reset --schema packages/packages/db/prisma/schemas/schema.prisma --config packages/packages/db/prisma/prisma.config.ts",
+    "packages:install": "bun packages/core/package/cli.ts"
   },
-  "workspaces": [
-    "packages/**"
-  ],
   "devDependencies": {
     "oxfmt": "^0.62.0",
     "oxlint": "^1.77.0",

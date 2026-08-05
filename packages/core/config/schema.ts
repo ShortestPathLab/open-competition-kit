@@ -24,28 +24,22 @@ import { Item, Meta, Shape, Value } from "../common/shape";
  * read in the host's timezone, which is rarely the one the deadline was written
  * in. Prefer a trailing `Z` or an explicit `+10:00`.
  */
-export const Timestamp = S.transformOrFail(
-  S.Union(S.String, S.DateFromSelf),
-  S.String,
-  {
-    strict: true,
-    decode: (input, _options, ast) => {
-      const parsed = input instanceof Date ? input : new Date(input);
-      return (
-        Number.isNaN(parsed.getTime()) ?
-          ParseResult.fail(
-            new ParseResult.Type(
-              ast,
-              input,
-              `Expected an ISO 8601 date-time, got ${JSON.stringify(input)}`,
-            ),
-          )
-        : ParseResult.succeed(parsed.toISOString())
-      );
-    },
-    encode: (value) => ParseResult.succeed(value),
+export const Timestamp = S.transformOrFail(S.Union(S.String, S.DateFromSelf), S.String, {
+  strict: true,
+  decode: (input, _options, ast) => {
+    const parsed = input instanceof Date ? input : new Date(input);
+    return Number.isNaN(parsed.getTime())
+      ? ParseResult.fail(
+          new ParseResult.Type(
+            ast,
+            input,
+            `Expected an ISO 8601 date-time, got ${JSON.stringify(input)}`,
+          ),
+        )
+      : ParseResult.succeed(parsed.toISOString());
   },
-);
+  encode: (value) => ParseResult.succeed(value),
+});
 
 /**
  * A node packages can be installed on.
@@ -101,7 +95,19 @@ export const FormNode = S.Struct({
 export const LeaderboardConfig = S.Struct({
   ...Meta.fields,
   shape: S.Array(Shape),
-  /** Literal rows. Used when no loader produces any — handy for demos and static boards. */
+  /**
+   * What this board should look like.
+   *
+   * An open string, for the same reason a form field's `kind` is one: `card` and
+   * `chart` are supplied by leaderboard packages and core has never heard of
+   * either. Each installed renderer answers for the kinds it knows and passes the
+   * rest inward, so this picks between them without the board having to install a
+   * package of its own.
+   *
+   * Absent means whatever a renderer offers as its default look.
+   */
+  kind: S.optional(S.String),
+  /** Literal rows. Used when no loader produces any, which suits demos and static boards. */
   items: S.optional(S.Array(S.Record({ key: S.String, value: Value }))),
   /** Renderer-specific settings, passed through to whichever package draws this board. */
   options: S.optional(S.Record({ key: S.String, value: S.Any })),
@@ -118,8 +124,13 @@ export const LeaderboardNode = S.Struct({
  *
  * Core declares that a track's competition has a runner and which packages are
  * installed on it, and stops there. What a runner is configured *with* is the
- * runner package's own vocabulary: `standard` takes a `body:` of JavaScript, and
- * a package that runs a container image or a workflow graph would take neither.
+ * runner package's own vocabulary: `runner-script` takes a `command:` and the
+ * files to run it against, and a package that dispatches to a workflow graph or
+ * a hosted evaluation service would take neither.
+ *
+ * Nothing here means a competition with no runner package installed stores
+ * submissions and scores none of them, which is a working state to write a
+ * competition in and not one to open it in.
  */
 export const RunnerNode = S.Struct({ ...Extendable.fields });
 
@@ -266,6 +277,16 @@ export const Config = S.Struct({
   admins: S.optional(S.Array(S.String)),
   files: S.optional(FilesNode),
   machine: S.optional(MachineNode),
+  /**
+   * Default packages to leave out. Root only, and the only thing it may name is a
+   * default, since everything else is already absent unless `with:` asks for it.
+   *
+   * A list rather than a flag, because dropping `standard` to replace the whole
+   * submission workflow while keeping `noop` at the bottom of the chain is the
+   * case worth supporting, and a flag would make somebody re-list `noop` by hand
+   * to get it.
+   */
+  without: S.optional(S.Array(S.String)),
   ...Extendable.fields,
 });
 

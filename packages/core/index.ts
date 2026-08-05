@@ -32,8 +32,12 @@ export {
   type ResolvedExtension,
   type StandardSchemaV1,
 } from "./config";
-export { createPackageResolver } from "./resolve";
-export type { Package, Hooks } from "./hook";
+export * from "./package/uri";
+export * from "./package/cache";
+export * from "./package/loader";
+export * from "./package/registry";
+export * from "./package/install";
+export type { Package, Hooks, LeaderboardUiDef, LeaderboardViewProps } from "./hook";
 export { OpenCompetitionKit } from "./open-competition-kit";
 export type {
   Competition,
@@ -59,15 +63,7 @@ export type {
   UserUpdate,
 } from "./hook/db";
 
-export {
-  FileRef,
-  isFile,
-  keyOf,
-  makeKey,
-  toFileRef,
-  type FileBody,
-  type FileMeta,
-} from "./file";
+export { FileRef, isFile, keyOf, makeKey, toFileRef, type FileBody, type FileMeta } from "./file";
 
 export {
   describeRefusals,
