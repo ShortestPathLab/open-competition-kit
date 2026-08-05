@@ -1,36 +1,20 @@
 import { Data, Effect as E, Schema as S } from "effect";
-import { isFunction, mergeWith } from "es-toolkit";
 import type { Meta, Shape, Value } from "../common/shape";
-import {
-  OpenCompetitionKitConfig,
-  type Form,
-  type Leaderboard,
-} from "../config";
+import { OpenCompetitionKitConfig, type Form, type Leaderboard } from "../config";
 import { access, type Accessor } from "../config/access";
 import type { ConfigExtensions } from "../config/extension";
-import { createPackageResolver } from "../resolve";
-import type {
-  SerialisableObject,
-  SerialisableValue,
-} from "../serialisable";
-import type {
-  GateReport,
-  GateRequest,
-  GateStatusRequest,
-  Refusal,
-} from "../gate";
-import type {
-  SurfaceItem,
-  SurfaceRequest,
-  SurfaceViewProps,
-} from "../surface";
+import { OpenCompetitionKitPackages } from "../package/registry";
+import type { SerialisableObject, SerialisableValue } from "../serialisable";
+import type { GateReport, GateRequest, GateStatusRequest, Refusal } from "../gate";
+import type { SurfaceItem, SurfaceRequest, SurfaceViewProps } from "../surface";
+import { assembleHooks } from "./chain";
 import { componentSource, type Source } from "./component";
 import { db } from "./db";
 import { files } from "./files";
 import { hook } from "./hook";
 import { machine } from "./machine";
 
-type LeaderboardUiDef = Meta & {
+export type LeaderboardUiDef = Meta & {
   name?: string;
   shape: readonly Shape[];
   items: readonly Record<string, Value>[];
@@ -38,6 +22,15 @@ type LeaderboardUiDef = Meta & {
   // the type has to prove it can survive the trip.
   options?: SerialisableObject;
 };
+
+/**
+ * What a leaderboard renderer is handed.
+ *
+ * Named rather than inferred from the hook, because `leaderboard.ui` is a chained
+ * lookup now and not a `componentSource`, so `PropTypes` has nothing to read. The
+ * same is true of `SurfaceViewProps`, for the same reason.
+ */
+export type LeaderboardViewProps = { def: LeaderboardUiDef };
 
 export const Hooks = S.Struct({
   db,
@@ -47,7 +40,7 @@ export const Hooks = S.Struct({
     enrol: hook<{ track: string; user: string }, string>(),
   }),
   user: S.Struct({}),
-  track: S.Struct({ enrol: S.Unknown }),
+  track: S.Struct({}),
   form: S.Struct({
     loader: hook<{ def: Form; user: string }, { def: Form }>(),
     ui: componentSource<{
@@ -56,14 +49,25 @@ export const Hooks = S.Struct({
       // the submission body is JSON regardless.
       onSubmit?: (values: Record<string, SerialisableValue>) => Promise<void>;
     }>(),
-    submit: S.Unknown,
   }),
   leaderboard: S.Struct({
-    loader: hook<
-      { def: Leaderboard; competition: string },
-      { def: LeaderboardUiDef }
-    >(),
-    ui: componentSource<{ def: LeaderboardUiDef }>(),
+    loader: hook<{ def: Leaderboard; competition: string }, { def: LeaderboardUiDef }>(),
+    /**
+     * The renderer for one board, chosen by its `kind:`.
+     *
+     * A chained lookup rather than a `componentSource`, for the reason
+     * `surface.view` gives: a component source takes no arguments, so it cannot
+     * delegate, and the last package listed would take every board on the site.
+     * The only way to say "this board looks different" was then to install a
+     * different package at that board's own `with:`, which is the package system
+     * doing a job config should be doing.
+     *
+     * Each package answers for the kinds it knows and passes anything else
+     * inward, so several renderers coexist and an organiser writes `kind: card`.
+     * A board with no `kind` gets whatever answers for the empty string, which is
+     * how a package supplies a default look.
+     */
+    ui: hook<{ kind: string }, Source<LeaderboardViewProps> | undefined>(),
   }),
   submissions: S.Struct({
     submit: hook<
@@ -110,7 +114,6 @@ export const Hooks = S.Struct({
     status: hook<GateStatusRequest, readonly GateReport[]>(),
   }),
   runner: S.Struct({
-    ui: S.Unknown,
     /**
      * Work a runner needs doing once, before any job exists. Called per competition
      * when a runner service starts, and the only hook with no job to point at.
@@ -150,11 +153,11 @@ export const Hooks = S.Struct({
     content: hook<SurfaceRequest, readonly SurfaceItem[]>(),
     /**
      * The renderer for one `kind: "component"` item. A chained lookup rather than a
-     * `componentSource`, because those do not compose: the merge hands the later
-     * package's function the earlier one as an argument it ignores, so the last
-     * package listed would quietly take the whole region. Here each package answers
-     * for its own view ids and passes anything else inward, which also keeps the
-     * wire honest since only the bundle a page renders crosses it.
+     * `componentSource`, because those do not compose: a component source takes no
+     * arguments, so it is resolved as an override and the last package listed would
+     * take the whole region. Here each package answers for its own view ids and
+     * passes anything else inward, which also keeps the wire honest since only the
+     * bundle a page renders crosses it.
      */
     view: hook<{ view: string }, Source<SurfaceViewProps> | undefined>(),
   }),
@@ -162,8 +165,8 @@ export const Hooks = S.Struct({
 
 export type Hooks = S.Schema.Type<typeof Hooks>;
 
-type DeepPartial<T> =
-  T extends { [key: string]: unknown } ? { [P in keyof T]?: DeepPartial<T[P]> }
+type DeepPartial<T> = T extends { [key: string]: unknown }
+  ? { [P in keyof T]?: DeepPartial<T[P]> }
   : T;
 
 export type Package = {
@@ -181,9 +184,9 @@ export type Package = {
 
 /** Dot-notation keys for a nested object. Arrays and functions are leaves. */
 type DotNotationKeys<T, Prev extends string = ""> = {
-  [K in keyof T & string]: T[K] extends object ?
-    `${Prev}${Prev extends "" ? "" : "."}${K}.${DotNotationKeys<T[K]>}`
-  : `${Prev}${Prev extends "" ? "" : "."}${K}`;
+  [K in keyof T & string]: T[K] extends object
+    ? `${Prev}${Prev extends "" ? "" : "."}${K}.${DotNotationKeys<T[K]>}`
+    : `${Prev}${Prev extends "" ? "" : "."}${K}`;
 }[keyof T & string];
 
 export type HookKey = DotNotationKeys<Hooks>;
@@ -196,21 +199,13 @@ export class AccessorError extends Data.TaggedError("AccessorError")<{
   config: any;
 }> {}
 
-const mergeHooks = <T extends object>(acc: T, next: T): T =>
-  mergeWith(acc, next, (f, g) => {
-    if (isFunction(f) && isFunction(g)) {
-      return (...args: unknown[]) => g(...args, f);
-    }
-    if (isFunction(f) || isFunction(g)) return f ?? g;
-  });
-
 export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>()(
   "open-competition-kit/Hooks",
   {
     effect: E.gen(function* () {
       const c = yield* OpenCompetitionKitConfig;
       const config = yield* c.config;
-      const resolve = createPackageResolver(c.path);
+      const packages = yield* OpenCompetitionKitPackages;
       return {
         try:
           <T extends unknown[], U>(f: (...args: T) => Promise<U>) =>
@@ -222,14 +217,9 @@ export class OpenCompetitionKitHooks extends E.Service<OpenCompetitionKitHooks>(
         get: (accessor: Accessor = true) =>
           E.gen(function* () {
             const a = (yield* access(accessor, config)) as { with: string[] };
-            if (!a)
-              return yield* E.fail(new AccessorError({ accessor, config }));
-            const merged = yield* E.mergeAll(
-              a.with.map(yield* resolve),
-              {},
-              mergeHooks,
-            );
-            return yield* decode(merged);
+            if (!a) return yield* E.fail(new AccessorError({ accessor, config }));
+            const modules = yield* E.all(a.with.map(packages.load));
+            return yield* decode(assembleHooks(modules, Hooks));
           }),
       };
     }),
