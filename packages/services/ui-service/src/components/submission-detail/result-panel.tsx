@@ -1,7 +1,12 @@
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/panel";
 import { ValueTree } from "@/components/value-tree";
 import type { SubmissionJob } from "@/lib/submission-fn";
-import { formatResultValue, formatScore, type ResultReadout } from "@/lib/submission-readout";
+import {
+  formatResultValue,
+  formatScore,
+  type ResultReadout,
+  scoreCeiling,
+} from "@/lib/submission-readout";
 import { LogConsole, RawDisclosure } from "./parts";
 
 /** What the selected run produced, or why there is nothing to show. */
@@ -14,6 +19,8 @@ export function ResultPanel({
   readout: ResultReadout;
   runNumber: number;
 }) {
+  const ceiling = scoreCeiling(readout);
+
   return (
     <Panel>
       <PanelHeader>
@@ -59,13 +66,13 @@ export function ResultPanel({
                 <span className="font-mono text-sm font-semibold tabular-nums">
                   {formatScore(score.value)}
                 </span>
-                {/* A bar only where one is honest: a score outside 0 to 1 has no
-                    stated ceiling to draw against. */}
-                {score.value >= 0 && score.value <= 1 ? (
+                {/* One ceiling for the whole run, so every row is drawn to the same
+                    scale and a bar means the same thing in each of them. */}
+                {ceiling ? (
                   <span className="col-span-2 h-1 overflow-hidden rounded-full bg-muted">
                     <span
                       className="block h-full bg-primary/60"
-                      style={{ width: `${score.value * 100}%` }}
+                      style={{ width: `${(score.value / ceiling) * 100}%` }}
                     />
                   </span>
                 ) : null}

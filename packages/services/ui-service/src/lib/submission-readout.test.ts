@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { decodeValue, readBody, readResult, summariseBody } from "./submission-readout";
+import {
+  decodeValue,
+  readBody,
+  readResult,
+  scoreCeiling,
+  summariseBody,
+} from "./submission-readout";
 
 /**
  * The body `github:ref-select` writes: an object of answers whose single answer
@@ -130,5 +136,33 @@ describe("readResult", () => {
       label: "Total",
       value: 3.54,
     });
+  });
+});
+
+describe("scoreCeiling", () => {
+  const ceilingOf = (raw: Parameters<typeof readResult>[0]) => scoreCeiling(readResult(raw));
+
+  it("draws marks above 1 against the largest number in the run", () => {
+    expect(ceilingOf({ total: 10, score1: 10, score2: 0, score3: 0 })).toBe(10);
+  });
+
+  it("keeps 1 for a run scored in fractions", () => {
+    expect(ceilingOf({ accuracy: 0.9, recall: 0.4 })).toBe(1);
+  });
+
+  it("counts the total, so a component reads as its share of it", () => {
+    expect(ceilingOf({ total: 10, score1: 4, score2: 6 })).toBe(10);
+  });
+
+  it("still measures a run that scored nothing", () => {
+    expect(ceilingOf({ score1: 0, score2: 0 })).toBe(1);
+  });
+
+  it("refuses a run carrying a negative number", () => {
+    expect(ceilingOf({ score1: 8, penalty: -2 })).toBeUndefined();
+  });
+
+  it("has nothing to measure without a number", () => {
+    expect(ceilingOf({ status: "failed" })).toBeUndefined();
   });
 });

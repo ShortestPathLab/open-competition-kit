@@ -106,3 +106,28 @@ export function readResult(raw: JsonValue | null | undefined): ResultReadout {
     present: true,
   };
 }
+
+/**
+ * The number a run's score bars are drawn against, or nothing when no bar can be
+ * honest.
+ *
+ * A runner writing `score1: 10` says nowhere what 10 is out of, so the ceiling has
+ * to come from the run itself: its largest number, counting the total, which is
+ * how a component reads as its share of the mark it fed. A run whose numbers all
+ * fit in 0 to 1 keeps 1, so a 0.9 does not fill the track for being the best of a
+ * weak run. One negative number stops every bar in the run, because a proportion
+ * needs a floor and a runner that goes below zero has not named one.
+ *
+ * The ceiling belongs to the run rather than the row, so a row cannot lose its bar
+ * for scoring well while the zeros beside it keep theirs.
+ */
+export function scoreCeiling(readout: ResultReadout): number | undefined {
+  const values = readout.scores.map((score) => score.value);
+  if (readout.headline) values.push(readout.headline.value);
+  if (!values.length) return undefined;
+  if (values.some((value) => !Number.isFinite(value) || value < 0)) return undefined;
+
+  // An all-zero run still draws its empty tracks, which read as scored-and-got-none
+  // rather than as a panel that forgot to render.
+  return Math.max(1, ...values);
+}
