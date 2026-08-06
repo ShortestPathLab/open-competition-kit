@@ -15,7 +15,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 const getAppConfig = createServerFn({ method: "GET" }).handler(async () => {
   const config = (await sdk.config.get()).value;
-  return { name: config?.appName, description: config?.appDescription };
+  return { name: config?.name, description: config?.description };
 });
 
 export const Route = createRootRoute({

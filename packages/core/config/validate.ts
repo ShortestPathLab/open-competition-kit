@@ -22,6 +22,7 @@ import {
   FormNode,
   LeaderboardNode,
   MachineNode,
+  RENAMED_FIELDS,
   RunnerNode,
   TrackNode,
 } from "./schema";
@@ -123,6 +124,7 @@ export const validateConfig = <R = never>(
         kind,
         path,
         coreKeys: CORE_KEYS[kind],
+        renamed: RENAMED_FIELDS[kind],
         extensions: byKind.get(kind) ?? [],
         unloadable,
         strict,

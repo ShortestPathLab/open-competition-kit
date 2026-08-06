@@ -3,8 +3,8 @@ import { Effect as E } from "effect";
 import { access, accessRecursive } from "./access";
 
 const config = {
-  appName: "Test Kit",
-  appDescription: "A test config",
+  name: "Test Kit",
+  description: "A test config",
   auth: {},
   db: {},
   secrets: {},

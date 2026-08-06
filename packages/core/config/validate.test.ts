@@ -66,8 +66,8 @@ const resolverFor = (modules: Record<string, unknown>) => (specifier: string) =>
     : E.fail(new Error(`no such package: ${specifier}`));
 
 const base = () => ({
-  appName: "Kit",
-  appDescription: "",
+  name: "Kit",
+  description: "",
   auth: {},
   db: {},
   with: ["gates"],
@@ -144,6 +144,72 @@ describe("validateConfig", () => {
     // Naming who was asked is what turns "unrecognised field" into something an
     // organiser can act on: install a package, or fix the spelling.
     expect(message).toContain("gates");
+  });
+
+  // A config that worked before an upgrade is not a config with a typo in it,
+  // and the ordinary error would send its author to check `appName` against a
+  // list it has just been taken off.
+  test("names the rename when a root field moved", async () => {
+    const config = { ...base(), appName: "Kit" };
+    delete (config as { name?: string }).name;
+
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ gates }) }));
+
+    expect(result._tag).toBe("Left");
+    const message = String((result as { left: unknown }).left);
+    expect(message).toContain("`appName` is now `name`");
+    // And says nothing about spelling or about which packages were consulted,
+    // which is the advice that would send them the wrong way.
+    expect(message).not.toContain("Check the spelling");
+  });
+
+  test("names both when both moved", async () => {
+    const config = { ...base(), appName: "Kit", appDescription: "x" };
+    delete (config as { name?: string }).name;
+    delete (config as { description?: string }).description;
+
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ gates }) }));
+
+    const message = String((result as { left: unknown }).left);
+    expect(message).toContain("`appName` is now `name`");
+    expect(message).toContain("`appDescription` is now `description`");
+  });
+
+  test("accepts a root with no name, description or auth", async () => {
+    // All three used to be required. The navigation bar has always had a default
+    // name, `auth: {}` and no `auth:` mean the same thing, and a deployment with
+    // no one-line blurb is a deployment, so requiring them bought nothing.
+    const config = base();
+    delete (config as { name?: string }).name;
+    delete (config as { description?: string }).description;
+    delete (config as { auth?: object }).auth;
+
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ gates }) }));
+
+    expect(result._tag).toBe("Right");
+  });
+
+  test("still checks the db block against its package when nobody wrote one", async () => {
+    // Why `db` decodes to `{}` rather than to nothing. Core declares no fields
+    // inside it, so the block is only ever checked against the installed db
+    // package, and `walkNodes` can only offer it a block that is there. Left
+    // undefined, a deployment with no connection string would boot and find out
+    // at the first query.
+    const withDb = pkg({
+      db: {
+        schema: object({ provider: "string", url: "string" }, (value) =>
+          value.provider === undefined ? "provider is required" : undefined,
+        ),
+      },
+    });
+    const config = { ...base(), db: {}, with: ["withDb"] };
+
+    const result = await run(validateConfig(config as never, { resolve: resolverFor({ withDb }) }));
+
+    expect(result._tag).toBe("Left");
+    const message = String((result as { left: unknown }).left);
+    expect(message).toContain("config.db");
+    expect(message).toContain("provider");
   });
 
   test("passes an undeclared field through when strict is off", async () => {

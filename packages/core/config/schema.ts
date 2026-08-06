@@ -262,12 +262,65 @@ export const FilesNode = S.Struct({});
 export const MachineNode = S.Struct({});
 
 export const Config = S.Struct({
-  appName: S.String,
-  appDescription: S.String,
-  auth: S.Record({ key: S.String, value: S.Any }),
-  competitions: S.Array(CompetitionConfig),
-  /** Connection settings for whichever package implements the `db` hooks. */
-  db: DbNode,
+  /**
+   * What this deployment is called, shown in the navigation bar and used to
+   * generate the site's avatar.
+   *
+   * `name` rather than `appName`, which is what it used to be. A competition and
+   * a track each call their own display name `name`, and the root had a second
+   * spelling for the same idea only because it was written before there was a
+   * node hierarchy to be consistent with. `RENAMED_ROOT_FIELDS` below turns the
+   * old spelling into an error that says so.
+   *
+   * Optional, because the navigation bar already falls back to the kit's own name
+   * and always did. A required field the UI has a default for is a field that is
+   * required by nobody except the schema.
+   */
+  name: S.optional(S.String),
+  /** One line about what this deployment is for. Shown on the about page. */
+  description: S.optional(S.String),
+  /**
+   * Sign-in methods, keyed by provider, each block passed to better-auth.
+   *
+   * Optional and defaulted, because `auth: {}` and no `auth:` at all mean the
+   * same thing and only one of them was accepted. Defaulted rather than left
+   * undefined so that everything downstream still reads an object: the UI service
+   * strips a key off this record on its way to better-auth, and it should not have
+   * to ask whether there is a record first.
+   */
+  auth: S.optionalWith(S.Record({ key: S.String, value: S.Any }), {
+    default: () => ({}) as Record<string, unknown>,
+    nullable: true,
+  }),
+  /**
+   * The competitions this deployment runs.
+   *
+   * Defaulted to none rather than required, so that a config can be written and
+   * booted before the first competition is. Every reader iterates or searches
+   * this list without checking it exists, which is why it defaults to an empty
+   * array and not to `undefined`.
+   */
+  competitions: S.optionalWith(S.Array(CompetitionConfig), {
+    default: () => [] as readonly CompetitionConfig[],
+    nullable: true,
+  }),
+  /**
+   * Connection settings for whichever package implements the `db` hooks.
+   *
+   * Defaulted to an empty block, which is what an organiser had to write by hand
+   * until now: core declares nothing inside it, so `db: {}` and no `db:` at all
+   * described the same config and only one of them was accepted.
+   *
+   * Defaulted rather than left undefined for a reason worth keeping. The fields
+   * inside are declared by the installed db package, and `walkNodes` only offers
+   * a block to that package's schema if the block is there to offer. Leaving it
+   * undefined would skip the check, and a deployment missing its connection
+   * string would find out at the first query instead of at boot.
+   */
+  db: S.optionalWith(DbNode, {
+    default: () => ({}) as S.Schema.Type<typeof DbNode>,
+    nullable: true,
+  }),
   secrets: S.optional(S.Record({ key: S.String, value: S.String })),
   /**
    * Email addresses permitted to reach the organiser dashboard. Absent or empty
@@ -289,6 +342,25 @@ export const Config = S.Struct({
   without: S.optional(S.Array(S.String)),
   ...Extendable.fields,
 });
+
+/**
+ * Fields that used to be spelled differently, and where they went.
+ *
+ * A renamed key is indistinguishable from a typo to the validator, and the error
+ * it produces sends the reader to check their spelling against a list the old
+ * name is no longer on. That is the worst possible advice for somebody whose
+ * config worked yesterday, so the rename is named instead.
+ *
+ * Keyed by node kind because nothing says a competition will not rename a field
+ * one day, and a map that only ever describes the root would have to be reshaped
+ * on the day it does.
+ */
+export const RENAMED_FIELDS: Partial<Record<string, Record<string, string>>> = {
+  root: {
+    appName: "name",
+    appDescription: "description",
+  },
+};
 
 export type Config = S.Schema.Type<typeof Config>;
 export type Form = S.Schema.Type<typeof FormConfig>;

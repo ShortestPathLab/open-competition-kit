@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { editDocument, type DocumentEdit } from "./document";
 
 const SOURCE = `# What this file is for.
-appName: GPPC
+name: GPPC
 competitions:
   - id: alpha
     name: Alpha # the friendly name
@@ -43,7 +43,7 @@ describe("editDocument", () => {
     expect(out).toContain("name: Alpha Cup # the friendly name");
     // And leaves everything else exactly as it was.
     expect(out).toContain("    # Shown at the top of the competition page.\n");
-    expect(out).toContain("appName: GPPC\n");
+    expect(out).toContain("name: GPPC\n");
   });
 
   it("writes multi-line text as a block scalar", () => {
@@ -64,11 +64,11 @@ describe("editDocument", () => {
   it("adds a field to a file that stops mid-line", () => {
     // A hand-edited file often has no newline at the end, and appending to one
     // without noticing puts the new key on the end of the old value.
-    const result = editDocument("appName: GPPC\nname: Alpha", [
+    const result = editDocument("name: GPPC\ndescription: The first one", [
       edit("c", [], { organiser: "Monash" }),
     ]);
 
-    expect(result.source).toBe("appName: GPPC\nname: Alpha\norganiser: Monash\n");
+    expect(result.source).toBe("name: GPPC\ndescription: The first one\norganiser: Monash\n");
   });
 
   it("removes a field rather than setting it to nothing", () => {
@@ -81,7 +81,7 @@ describe("editDocument", () => {
   });
 
   it("leaves a long line somewhere else exactly as it was", () => {
-    const long = `appName: GPPC\nicon: \${{ dataUrl("../a-rather-long-relative-path/assets/competition-icon.svg") }}\nname: Alpha\n`;
+    const long = `description: GPPC\nicon: \${{ dataUrl("../a-rather-long-relative-path/assets/competition-icon.svg") }}\nname: Alpha\n`;
     const result = editDocument(long, [edit("c", [], { name: "Alpha Cup" })]);
 
     // The reason this file goes through the concrete syntax tree at all. The
@@ -168,9 +168,7 @@ describe("editDocument", () => {
   });
 
   it("reports a node that is not in the file at all", () => {
-    const result = editDocument(SOURCE, [
-      edit("c.gamma", ["competitions", 7], { name: "Gamma" }),
-    ]);
+    const result = editDocument(SOURCE, [edit("c.gamma", ["competitions", 7], { name: "Gamma" })]);
 
     expect(result.source).toBeUndefined();
     expect(result.issues[0]?.message).toContain("changed since this page loaded");

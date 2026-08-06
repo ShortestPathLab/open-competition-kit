@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { setConfig, type ConfigEdit, type ConfigWriteResult } from "./write";
 
 const SOURCE = `# The competition, as authored.
-appName: GPPC
+name: GPPC
 competitions:
   - id: alpha
     name: Alpha # the friendly name
@@ -19,7 +19,7 @@ competitions:
 
 /** The tree the file above parses to, as far as `walkNodes` is concerned. */
 const tree = () => ({
-  appName: "GPPC",
+  name: "GPPC",
   competitions: [
     { id: "alpha", name: "Alpha", organiser: "Monash", tracks: [{ id: "main", name: "Main" }] },
   ],
@@ -76,9 +76,7 @@ describe("setConfig", () => {
   it("refuses a value core's own schema will not have, and writes nothing", async () => {
     const path = fileWith();
 
-    const result = await save(path, [
-      { path: "config.competitions.alpha", values: { name: 42 } },
-    ]);
+    const result = await save(path, [{ path: "config.competitions.alpha", values: { name: 42 } }]);
 
     expect(result.accepted).toBe(false);
     expect(result.stored).toBe(false);

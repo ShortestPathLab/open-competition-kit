@@ -36,6 +36,7 @@ import {
   FormFieldNode,
   FormNode,
   LeaderboardNode,
+  RENAMED_FIELDS,
   TrackNode,
 } from "./schema";
 import { CORE_KEYS, collectExtensions, type Resolve } from "./validate";
@@ -306,6 +307,7 @@ export const setConfig = <R = never>({
           kind,
           path: edit.path,
           coreKeys: CORE_KEYS[kind],
+          renamed: RENAMED_FIELDS[kind],
           extensions: byKind.get(kind) ?? [],
           unloadable,
           strict: true,

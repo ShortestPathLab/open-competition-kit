@@ -211,6 +211,14 @@ export type ValidateNodeOptions = {
    */
   unloadable?: readonly string[];
   /**
+   * Old spellings of keys that still exist under another name, as old to new.
+   *
+   * Checked before the spelling advice, because a config that worked before an
+   * upgrade is not a config with a typo in it, and telling its author to check
+   * the name against a list the old one has been taken off is a dead end.
+   */
+  renamed?: Readonly<Record<string, string>>;
+  /**
    * Whether a key nobody claimed is an error.
    *
    * On by default. Before packages could declare fields, an unrecognised key was
@@ -286,6 +294,20 @@ export const validateNode = (node: Record<string, unknown>, options: ValidateNod
       if (unknown.length) {
         const named = unknown.map((key) => `"${key}"`).join(", ");
         const fields = unknown.length === 1 ? "field" : "fields";
+
+        // A rename is checked first and answered exactly, since it is the one
+        // case where the tool knows precisely what the reader meant. Reporting it
+        // as a possible typo would be technically true and useless.
+        const renames = unknown
+          .map((key) => [key, options.renamed?.[key]] as const)
+          .filter((pair): pair is readonly [string, string] => pair[1] !== undefined);
+
+        if (renames.length) {
+          const moves = renames.map(([from, to]) => `\`${from}\` is now \`${to}\``).join(", ");
+          return yield* fail(
+            `${moves}. Rename ${renames.length === 1 ? "it" : "them"} in your config.`,
+          );
+        }
 
         // An import failure is the likelier explanation and the more urgent one,
         // so it goes first and the spelling advice is dropped entirely. A

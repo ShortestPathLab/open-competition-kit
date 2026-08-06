@@ -35,8 +35,8 @@ describe("transform then decode", () => {
 
     const source = [
       "with: []",
-      "appName: GPPC",
-      "appDescription: A competition",
+      "name: GPPC",
+      "description: A competition",
       "auth: {}",
       "db: {}",
       'logo: ${{ dataUrl("./assets/logo.svg") }}',
@@ -75,8 +75,8 @@ describe("transform then decode", () => {
 
     const source = [
       "with: []",
-      "appName: GPPC",
-      "appDescription: A competition",
+      "name: GPPC",
+      "description: A competition",
       "auth: {}",
       "db: {}",
       "competitions:",
@@ -113,8 +113,8 @@ describe("transform then decode", () => {
 describe("decode", () => {
   test("fills in an absent `with`, so a node that installs nothing writes nothing", async () => {
     const source = [
-      "appName: GPPC",
-      "appDescription: A competition",
+      "name: GPPC",
+      "description: A competition",
       "auth: {}",
       "db: {}",
       "competitions:",
@@ -139,6 +139,34 @@ describe("decode", () => {
     expect(config.competitions[0].leaderboards[0].with).toEqual([]);
     expect(config.competitions[0].tracks[0].with).toEqual([]);
     expect(config.competitions[0].tracks[0].form.with).toEqual([]);
+  });
+
+  test("accepts a config that is nothing but a list of packages", async () => {
+    const config = (await E.runPromise(
+      decode(load(`with:\n  - "npm:@open-competition-kit/db-prisma@0.0.11"\n`)),
+    )) as Record<string, any>;
+
+    // What is left once every field with a sensible absent-value is allowed to
+    // be absent. Somebody setting a deployment up should be able to boot it,
+    // reach the site and add competitions from there, rather than having to
+    // guess at four blocks before the first page renders.
+    expect(config.competitions).toEqual([]);
+    expect(config.db).toEqual({});
+    expect(config.auth).toEqual({});
+    expect(config.name).toBeUndefined();
+  });
+
+  test("reads a block left empty the same as a block left out", async () => {
+    // Both keys resolve to null through js-yaml, and an organiser who typed the
+    // key and then thought better of what goes under it meant the same thing as
+    // one who never typed it.
+    const config = (await E.runPromise(decode(load("with: []\ndb:\ncompetitions:\n")))) as Record<
+      string,
+      any
+    >;
+
+    expect(config.db).toEqual({});
+    expect(config.competitions).toEqual([]);
   });
 });
 

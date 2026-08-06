@@ -42,13 +42,13 @@ const MARKDOWN = "The page is rendered as Markdown.";
 export const CORE_FIELDS: Partial<Record<NodeKind, readonly FieldPresentation[]>> = {
   root: [
     {
-      id: "appName",
+      id: "name",
       label: "Site name",
       kind: "text",
       description: "Shown in the navigation bar and used to generate the site's avatar.",
     },
     {
-      id: "appDescription",
+      id: "description",
       label: "Site description",
       kind: "text",
       description: "One line about what this deployment is for.",

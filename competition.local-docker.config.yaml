@@ -6,8 +6,8 @@ with:
   - ./packages/packages/standard
   - ./packages/packages/machine/local
   - ./packages/packages/db/prisma
-appName: GPPC
-appDescription: GPPC is etc.etc.
+name: GPPC
+description: GPPC is etc.etc.
 auth:
   email:
     providerOptions: {}

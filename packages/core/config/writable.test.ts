@@ -26,7 +26,7 @@ describe("probeWritable", () => {
   it("reports an ordinary file as writable, replaced by rename", async () => {
     const directory = temporary();
     const path = join(directory, "competition.config.yaml");
-    writeFileSync(path, "appName: GPPC\n");
+    writeFileSync(path, "name: GPPC\n");
 
     const report = await run(probeWritable(path).pipe(E.provide(BunContext.layer)));
 
@@ -40,7 +40,7 @@ describe("probeWritable", () => {
   it("reports a file this user cannot write", async () => {
     const directory = temporary();
     const path = join(directory, "competition.config.yaml");
-    writeFileSync(path, "appName: GPPC\n");
+    writeFileSync(path, "name: GPPC\n");
     chmodSync(path, 0o444);
 
     const report = await run(probeWritable(path).pipe(E.provide(BunContext.layer)));
@@ -65,25 +65,25 @@ describe("writeConfigFile", () => {
   it("replaces the file and keeps the previous contents beside it", async () => {
     const directory = temporary();
     const path = join(directory, "competition.config.yaml");
-    writeFileSync(path, "appName: Old\n");
+    writeFileSync(path, "name: Old\n");
 
     await run(
       writeConfigFile({
         path,
-        previous: "appName: Old\n",
-        next: "appName: New\n",
+        previous: "name: Old\n",
+        next: "name: New\n",
         strategy: "rename",
       }).pipe(E.provide(BunContext.layer), E.orDie),
     );
 
-    expect(readFileSync(path, "utf8")).toBe("appName: New\n");
-    expect(readFileSync(backupOf(path), "utf8")).toBe("appName: Old\n");
+    expect(readFileSync(path, "utf8")).toBe("name: New\n");
+    expect(readFileSync(backupOf(path), "utf8")).toBe("name: Old\n");
   });
 
   it("keeps the permissions the config file had", async () => {
     const directory = temporary();
     const path = join(directory, "competition.config.yaml");
-    writeFileSync(path, "appName: Old\n");
+    writeFileSync(path, "name: Old\n");
     // A config holds secrets, and somebody who tightened this file did it on
     // purpose. Renaming a fresh file over it would hand it back at 0644.
     chmodSync(path, 0o600);
@@ -91,8 +91,8 @@ describe("writeConfigFile", () => {
     await run(
       writeConfigFile({
         path,
-        previous: "appName: Old\n",
-        next: "appName: New\n",
+        previous: "name: Old\n",
+        next: "name: New\n",
         strategy: "rename",
       }).pipe(E.provide(BunContext.layer), E.orDie),
     );
@@ -103,19 +103,19 @@ describe("writeConfigFile", () => {
   it("writes through the same file when it cannot be replaced", async () => {
     const directory = temporary();
     const path = join(directory, "competition.config.yaml");
-    writeFileSync(path, "appName: Old\n");
+    writeFileSync(path, "name: Old\n");
     const before = statSync(path).ino;
 
     await run(
       writeConfigFile({
         path,
-        previous: "appName: Old\n",
-        next: "appName: New\n",
+        previous: "name: Old\n",
+        next: "name: New\n",
         strategy: "inPlace",
       }).pipe(E.provide(BunContext.layer), E.orDie),
     );
 
-    expect(readFileSync(path, "utf8")).toBe("appName: New\n");
+    expect(readFileSync(path, "utf8")).toBe("name: New\n");
     // The same file, not a replacement for it. This is the path a config bind
     // mounted on its own takes, where replacing the inode is what fails.
     expect(statSync(path).ino).toBe(before);
@@ -124,13 +124,13 @@ describe("writeConfigFile", () => {
   it("leaves no temporary file behind", async () => {
     const directory = temporary();
     const path = join(directory, "competition.config.yaml");
-    writeFileSync(path, "appName: Old\n");
+    writeFileSync(path, "name: Old\n");
 
     await run(
       writeConfigFile({
         path,
-        previous: "appName: Old\n",
-        next: "appName: New\n",
+        previous: "name: Old\n",
+        next: "name: New\n",
         strategy: "rename",
       }).pipe(E.provide(BunContext.layer), E.orDie),
     );
