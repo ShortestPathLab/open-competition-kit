@@ -22,7 +22,8 @@
  */
 import { FileSystem, Path } from "@effect/platform";
 import { Effect as E } from "effect";
-import { canonicalise, isPackageUriError, type PackageRef } from "../package/uri";
+import packageJson from "../package.json" with { type: "json" };
+import { canonicalise, isPackageUriError, parseRef, type PackageRef } from "../package/uri";
 
 /**
  * Applied to every configuration, without being written in one.
@@ -39,12 +40,25 @@ import { canonicalise, isPackageUriError, type PackageRef } from "../package/uri
  * configuration answer to it forever. That is the whole reason `standard` no
  * longer holds the gates, and why the ordering below reads noop, then a machine,
  * then the submission workflow.
+ *
+ * Pinned to this copy of core's own version, because `publish.sh` bumps and
+ * publishes every package in the repository together: whatever version core is,
+ * the three below exist at that version and are the three it was tested against.
+ * Left unpinned they resolved to whatever the registry served that morning, which
+ * made every configuration unreproducible through packages nobody typed and could
+ * not see.
  */
-export const DEFAULT_PACKAGES: readonly string[] = [
-  "npm:@open-competition-kit/noop",
-  "npm:@open-competition-kit/machine-local",
-  "npm:@open-competition-kit/standard",
+const version = (packageJson as { version?: string }).version;
+
+const DEFAULT_NAMES: readonly string[] = [
+  "@open-competition-kit/noop",
+  "@open-competition-kit/machine-local",
+  "@open-competition-kit/standard",
 ];
+
+export const DEFAULT_PACKAGES: readonly string[] = DEFAULT_NAMES.map((name) =>
+  version ? `npm:${name}@${version}` : `npm:${name}`,
+);
 
 const isNode = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -130,11 +144,20 @@ export const applyWith = (
     );
 
     const all = options.defaults ?? DEFAULT_PACKAGES;
-    // Matched on the name rather than the uri, so both `@open-competition-kit/standard`
-    // and `npm:@open-competition-kit/standard` work. One of them is what an
-    // organiser would think to write and there is no reading of the other that
-    // means something different.
-    const nameOf = (uri: string) => uri.trim().replace(/^npm:/, "");
+    // Matched on the name rather than the uri, so `@open-competition-kit/standard`,
+    // `npm:@open-competition-kit/standard` and a pinned
+    // `npm:@open-competition-kit/standard@0.0.11` are all the same package. One of
+    // them is what an organiser would think to write and there is no reading of
+    // the others that means something different.
+    //
+    // Through `parseRef` rather than by trimming a prefix, because the version has
+    // to come off too and the separator is an `@` that a scoped name also starts
+    // with. Splitting on the first one turns `@open-competition-kit/standard` into
+    // a package called `` at version `open-competition-kit/standard`.
+    const nameOf = (uri: string) => {
+      const ref = parseRef(uri.trim());
+      return isPackageUriError(ref) ? uri.trim() : ref.id;
+    };
     const dropped = (Array.isArray(config.without) ? config.without : []).map(String);
 
     // A `without:` naming something that is not a default is a typo, and every

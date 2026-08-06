@@ -41,6 +41,16 @@ export type InstalledRecord = {
   /** Where the package itself ended up, which is not the cache directory. */
   dir: string;
   installedAt: string;
+  /**
+   * The exact artifact, as the package manager named it: `1.2.3` for a registry
+   * package, a commit for a git one.
+   *
+   * Distinct from `version`, which is whatever the package's own `package.json`
+   * claims. Those agree for npm and do not for github, where the manifest says
+   * something like `7.0.0` for every commit on the branch. This is the one that
+   * can be written back into `with:` and mean the same thing tomorrow.
+   */
+  resolved?: string;
 };
 
 export const RECORD_FILE = "open-competition-kit.installed.json";

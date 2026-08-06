@@ -30,11 +30,16 @@ const failure = async (config: Record<string, unknown>) => {
  * The defaults with one of them taken out.
  *
  * Derived rather than written down, so that adding a default is a one-line change
- * to the list and not a sweep through this file. Both things these tests are about
- * — a checkout standing in for a default, and `without:` dropping one — are about
+ * to the list and not a sweep through this file. Both things these tests are about,
+ * a checkout standing in for a default and `without:` dropping one, are about
  * which single entry disappears, not about how many there are.
+ *
+ * Matched on the prefix because the defaults carry a version. Comparing whole
+ * strings would tie every one of these tests to whatever core's version is on the
+ * day, and they have nothing to say about versions.
  */
-const defaultsExcept = (name: string) => DEFAULT_PACKAGES.filter((uri) => uri !== `npm:${name}`);
+const defaultsExcept = (name: string) =>
+  DEFAULT_PACKAGES.filter((uri) => uri !== `npm:${name}` && !uri.startsWith(`npm:${name}@`));
 
 beforeEach(() => {
   cwd = mkdtempSync(join(tmpdir(), "ock-with-"));

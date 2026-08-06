@@ -17,6 +17,7 @@
 import { Command, CommandExecutor, FileSystem, Path } from "@effect/platform";
 import { Data, Effect as E } from "effect";
 import { cacheDirFor, RECORD_FILE, type InstalledRecord } from "./cache";
+import { resolvedFromLock, versionOf } from "./pin";
 import { isPackageUriError, parseRef, type PackageRef } from "./uri";
 
 export class InstallError extends Data.TaggedError("InstallError")<{
@@ -84,15 +85,29 @@ export const install = (uri: string, root: string, now: string) =>
     const installed = yield* resolveInstalledDir(modules, ref);
 
     const manifest = yield* fs.readFileString(path.join(installed, "package.json")).pipe(
-      E.map((text) => JSON.parse(text) as { version?: string }),
-      E.orElseSucceed(() => ({}) as { version?: string }),
+      E.map((text) => JSON.parse(text) as { name?: string; version?: string }),
+      E.orElseSucceed(() => ({}) as { name?: string; version?: string }),
     );
+
+    // What bun settled on, which for a git package is a commit and is the only
+    // thing that can be written back into `with:` and still mean this. Read from
+    // the lockfile because the installed manifest does not carry it: a github
+    // package's `version` field is whatever its author last wrote there, and is
+    // the same string for every commit since.
+    const name = manifest.name ?? (ref.scheme === "npm" ? ref.id : undefined);
+    const resolved = name
+      ? yield* fs.readFileString(path.join(dir, "bun.lock")).pipe(
+          E.map((lock) => resolvedFromLock(lock, name)),
+          E.orElseSucceed(() => undefined),
+        )
+      : undefined;
 
     const record: InstalledRecord = {
       uri,
       version: manifest.version,
       dir: installed,
       installedAt: now,
+      resolved: resolved && name ? versionOf(resolved, name) : undefined,
     };
     yield* fs.writeFileString(path.join(dir, RECORD_FILE), `${JSON.stringify(record, null, 2)}\n`);
     return record;
