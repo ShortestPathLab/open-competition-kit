@@ -37,7 +37,11 @@ jobs:
       packages: write
 
     strategy:
-      fail-fast: false
+      # Dependencies before dependents, one at a time. See the note in
+      # publish-packages.yml: a parallel matrix discards the ordering and ships
+      # packages pinned to versions that do not exist yet.
+      max-parallel: 1
+      fail-fast: true
       matrix:
         path: ${{ fromJSON(needs.list-packages.outputs.packages) }}
 

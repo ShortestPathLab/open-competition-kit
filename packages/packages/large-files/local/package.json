@@ -2,12 +2,28 @@
   "name": "@open-competition-kit/large-files-local",
   "version": "0.0.11",
   "private": false,
+  "description": "Stores Open Competition Kit large files on the local filesystem. The default backend.",
+  "keywords": [
+    "autograder",
+    "competition",
+    "grading",
+    "leaderboard",
+    "open-competition-kit",
+    "programming-contest"
+  ],
+  "homepage": "https://github.com/ShortestPathLab/open-competition-kit#readme",
+  "bugs": {
+    "url": "https://github.com/ShortestPathLab/open-competition-kit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShortestPathLab/open-competition-kit.git",
+    "directory": "packages/packages/large-files/local"
+  },
   "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "dependencies": {
     "@open-competition-kit/sdk": "workspace:*",
     "es-toolkit": "^1.46.1",

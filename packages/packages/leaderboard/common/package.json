@@ -1,12 +1,28 @@
 {
   "name": "@open-competition-kit/leaderboard-common",
   "version": "0.0.11",
+  "description": "Shared row loading and column shaping for the Open Competition Kit leaderboard renderers.",
+  "keywords": [
+    "autograder",
+    "competition",
+    "grading",
+    "leaderboard",
+    "open-competition-kit",
+    "programming-contest"
+  ],
+  "homepage": "https://github.com/ShortestPathLab/open-competition-kit#readme",
+  "bugs": {
+    "url": "https://github.com/ShortestPathLab/open-competition-kit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShortestPathLab/open-competition-kit.git",
+    "directory": "packages/packages/leaderboard/common"
+  },
   "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "dependencies": {
     "@open-competition-kit/sdk": "workspace:*",
     "es-toolkit": "^1.46.1",

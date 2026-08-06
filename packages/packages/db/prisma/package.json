@@ -2,12 +2,28 @@
   "name": "@open-competition-kit/db-prisma",
   "version": "0.0.11",
   "private": false,
+  "description": "Provides the Open Competition Kit database hooks backed by Prisma and the generated Prisma client.",
+  "keywords": [
+    "autograder",
+    "competition",
+    "grading",
+    "leaderboard",
+    "open-competition-kit",
+    "programming-contest"
+  ],
+  "homepage": "https://github.com/ShortestPathLab/open-competition-kit#readme",
+  "bugs": {
+    "url": "https://github.com/ShortestPathLab/open-competition-kit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShortestPathLab/open-competition-kit.git",
+    "directory": "packages/packages/db/prisma"
+  },
   "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "dependencies": {
     "@open-competition-kit/sdk": "workspace:*",
     "@prisma/adapter-pg": "^7.0.0",

@@ -2,12 +2,28 @@
   "name": "@open-competition-kit/sdk",
   "version": "0.0.11",
   "private": false,
+  "description": "The interface a package is written against. Wraps the Open Competition Kit core in the plain async API a package author uses.",
+  "keywords": [
+    "autograder",
+    "competition",
+    "grading",
+    "leaderboard",
+    "open-competition-kit",
+    "programming-contest"
+  ],
+  "homepage": "https://github.com/ShortestPathLab/open-competition-kit#readme",
+  "bugs": {
+    "url": "https://github.com/ShortestPathLab/open-competition-kit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShortestPathLab/open-competition-kit.git",
+    "directory": "packages/sdk"
+  },
   "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "dependencies": {
     "@effect/platform": "^0.92.1",
     "@effect/platform-bun": "^0.81.1",

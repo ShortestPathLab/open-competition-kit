@@ -2,12 +2,28 @@
   "name": "@open-competition-kit/form-json",
   "version": "0.0.11",
   "private": false,
+  "description": "Renders configured Open Competition Kit form definitions as JSON Schema forms with React and shadcn components.",
+  "keywords": [
+    "autograder",
+    "competition",
+    "grading",
+    "leaderboard",
+    "open-competition-kit",
+    "programming-contest"
+  ],
+  "homepage": "https://github.com/ShortestPathLab/open-competition-kit#readme",
+  "bugs": {
+    "url": "https://github.com/ShortestPathLab/open-competition-kit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShortestPathLab/open-competition-kit.git",
+    "directory": "packages/packages/form/json"
+  },
   "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "scripts": {
     "build:css": "bun theme/build.ts"
   },

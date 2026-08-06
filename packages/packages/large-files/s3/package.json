@@ -2,12 +2,28 @@
   "name": "@open-competition-kit/large-files-s3",
   "version": "0.0.11",
   "private": false,
+  "description": "Stores Open Competition Kit large files in any S3-compatible bucket, using Bun's native S3 client. Presigns URLs so uploads and downloads bypass the app server.",
+  "keywords": [
+    "autograder",
+    "competition",
+    "grading",
+    "leaderboard",
+    "open-competition-kit",
+    "programming-contest"
+  ],
+  "homepage": "https://github.com/ShortestPathLab/open-competition-kit#readme",
+  "bugs": {
+    "url": "https://github.com/ShortestPathLab/open-competition-kit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShortestPathLab/open-competition-kit.git",
+    "directory": "packages/packages/large-files/s3"
+  },
   "type": "module",
   "module": "index.ts",
   "types": "index.ts",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "dependencies": {
     "@open-competition-kit/sdk": "workspace:*",
     "es-toolkit": "^1.46.1",
