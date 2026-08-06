@@ -28,11 +28,7 @@ export function CompetitionCard({
       params={{ id }}
       className="group block overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-ring"
     >
-      {/* The only slot here that is not square, and the only one that contains
-          rather than covers. Cropping a square logo to 4:3 takes a bite out of
-          its top and bottom; letterboxed against the muted fill it reads as
-          deliberate instead. */}
-      <CompetitionIcon name={name} icon={icon} fit="contain" className="aspect-4/3 w-full" />
+      <CompetitionIcon name={name} icon={icon} fit="cover" className="aspect-4/3 w-full" />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <p className="font-semibold tracking-tight group-hover:underline">{name}</p>
