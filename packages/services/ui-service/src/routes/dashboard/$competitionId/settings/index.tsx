@@ -9,7 +9,6 @@ import { PageBody } from "@/components/page-header-band";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/panel";
 import { SectionHeader } from "@/components/section-header";
 import { PageSkeleton } from "@/components/skeletons";
-import { Badge } from "@/components/ui/badge";
 import {
   Empty,
   EmptyDescription,
@@ -106,7 +105,6 @@ function SettingsPage() {
         competitionName={config.name}
         title="Settings"
         description="What you can change about this competition without editing the config file by hand."
-        meta={<Badge variant="outline">Preview</Badge>}
       />
 
       <PageBody className="flex flex-col gap-10">
@@ -116,10 +114,11 @@ function SettingsPage() {
             description="What this competition is called and how it reads, then every field the installed packages declare here, with their own labels and help text."
           />
 
-          {/* Said where somebody is about to type, not only in the header. The
-              badge above marks the page; this says what the mark means, which is
-              that the config file remains the thing that defines a competition
-              and this is a convenience over it. */}
+          {/* Said where somebody is about to type. A word in the header would be
+              read on the way past and by the time it mattered it would be off
+              the top of the screen, and what it has to say does not fit in one:
+              the config file remains the thing that defines a competition, and
+              this page is a convenience over it. */}
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
             <FlaskConical className="mt-0.5 size-4 shrink-0" />
             <span>
