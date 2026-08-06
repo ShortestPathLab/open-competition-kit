@@ -1,14 +1,24 @@
 import { FileSystem, Path } from "@effect/platform";
-import { Config as C, Data, Effect as E, Match as M, Option as O, pipe, Schema as S } from "effect";
+import {
+  Config as C,
+  Data,
+  Duration,
+  Effect as E,
+  Match as M,
+  Option as O,
+  pipe,
+  Schema as S,
+} from "effect";
 import { load as _load, YAMLException } from "js-yaml";
 import { mapValues, uniq } from "es-toolkit";
 import { OpenCompetitionKitPackages } from "../package/registry";
 import { describeConfig } from "./describe";
-import { migrate } from "./migrate";
 import { decode, Extendable } from "./schema";
 import { transform } from "./transform";
 import { validateConfig } from "./validate";
+import { probeWritable } from "./writable";
 import { applyWith } from "./with";
+import { setConfig, type ConfigEdit } from "./write";
 
 export * from "./schema";
 export * from "./with";
@@ -18,6 +28,10 @@ export * from "./extension";
 export * from "./validate";
 export * from "./walk";
 export * from "./describe";
+export * from "./core-fields";
+export * from "./write";
+export * from "./writable";
+export * from "./document";
 export * from "./visibility";
 
 const load = (s: string) => E.try({ try: () => _load(s), catch: (e) => e as YAMLException });
@@ -87,47 +101,59 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
        */
       const packages = yield* OpenCompetitionKitPackages;
 
-      const raw = pipe(
-        fs.readFileString(path),
-        E.andThen(load),
-        // Straight after parsing, so a block we renamed is under its current
-        // name before anything else looks at it.
-        E.andThen(migrate),
-        E.andThen((config) => transform(cwd, config)),
-        E.andThen(decode),
-        // After decode, so an absent `with:` is already the empty list, and before
-        // anything reads one, since both `walkNodes` and `propagateExtendable`
-        // derive everything they know about packages from these lists.
-        E.tap((config) => applyWith(config as unknown as Record<string, unknown>, { cwd })),
-        // Discharged here rather than by each consumer. `transform` reads files
-        // and `applyWith` reads a `package.json` or two, and a requirement left in
-        // this channel reaches the `kit` proxy in the SDK, which only unwraps an
-        // effect that needs nothing.
-        E.provideService(FileSystem.FileSystem, fs),
-        E.provideService(Path.Path, pathService),
-      );
+      /**
+       * A document's text, parsed and resolved.
+       *
+       * A function of the source rather than of the file, so that the same steps
+       * that decide whether the config on disk loads can be asked about a
+       * document that is not on disk yet. That is what `check` below is for, and
+       * it is the difference between a settings page that writes a file and one
+       * that writes a file the app can still start from.
+       */
+      const rawOf = (source: string) =>
+        pipe(
+          load(source),
+          E.andThen((config) => transform(cwd, config)),
+          E.andThen(decode),
+          // After decode, so an absent `with:` is already the empty list, and before
+          // anything reads one, since both `walkNodes` and `propagateExtendable`
+          // derive everything they know about packages from these lists.
+          E.tap((config) => applyWith(config as unknown as Record<string, unknown>, { cwd })),
+          // Discharged here rather than by each consumer. `transform` reads files
+          // and `applyWith` reads a `package.json` or two, and a requirement left in
+          // this channel reaches the `kit` proxy in the SDK, which only unwraps an
+          // effect that needs nothing.
+          E.provideService(FileSystem.FileSystem, fs),
+          E.provideService(Path.Path, pathService),
+        );
 
-      const config = pipe(
-        raw,
-        E.tap((config) =>
-          // Every package resolved once, before anybody asks what one contains.
-          // `collectExtensions` forgives a package that will not load, so without
-          // this a missing one that declares no config fields would surface as a
-          // chain quietly short of a link, much later and somewhere else.
-          packages.preflight((config as unknown as { with: string[] }).with),
-        ),
-        E.andThen((config) =>
-          E.gen(function* () {
-            const validated = yield* validateConfig(config as unknown as Record<string, unknown>, {
-              resolve: packages.load,
-            });
-            return validated as unknown as typeof config;
-          }),
-        ),
-        // Last, so that no node is carrying an inherited `with` while it is
-        // being checked against the fields a package says it may have.
-        E.map(propagateExtendable),
-      );
+      const raw = pipe(fs.readFileString(path), E.andThen(rawOf));
+
+      /** The rest of boot: every package present, every field checked. */
+      const check = (source: string) =>
+        pipe(
+          rawOf(source),
+          E.tap((config) =>
+            // Every package resolved once, before anybody asks what one contains.
+            // `collectExtensions` forgives a package that will not load, so without
+            // this a missing one that declares no config fields would surface as a
+            // chain quietly short of a link, much later and somewhere else.
+            packages.preflight((config as unknown as { with: string[] }).with),
+          ),
+          E.andThen((config) =>
+            E.gen(function* () {
+              const validated = yield* validateConfig(config as unknown as Record<string, unknown>, {
+                resolve: packages.load,
+              });
+              return validated as unknown as typeof config;
+            }),
+          ),
+          // Last, so that no node is carrying an inherited `with` while it is
+          // being checked against the fields a package says it may have.
+          E.map(propagateExtendable),
+        );
+
+      const config = pipe(fs.readFileString(path), E.andThen(check));
 
       /**
        * The same tree, described for a config editor rather than checked.
@@ -142,7 +168,7 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
        * it discharges the platform services here, where they are in scope, so a
        * caller gets an effect it can run without holding a filesystem.
        */
-      const describe = yield* E.cached(
+      const [describe, forget] = yield* E.cachedInvalidateWithTTL(
         pipe(
           raw,
           E.andThen((config) =>
@@ -151,9 +177,58 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
           E.provideService(FileSystem.FileSystem, fs),
           E.provideService(Path.Path, pathService),
         ),
+        // Invalidated by hand rather than by a timer: the file only changes when
+        // somebody changes it, and `set` below is the one thing here that does.
+        Duration.infinity,
       );
 
-      return { cwd, path, raw, config, describe };
+      /** Whether this deployment can save a config change, and why not. */
+      const writable = pipe(
+        probeWritable(path),
+        E.provideService(FileSystem.FileSystem, fs),
+        E.provideService(Path.Path, pathService),
+      );
+
+      /**
+       * Edited values, checked the way boot would check them, then saved.
+       *
+       * Checked against `raw` for the same reason `describe` is built from it:
+       * that is the tree an organiser edits. The validated one has been through
+       * `propagateExtendable`, which stamps a `with` onto every object it walks,
+       * so re-checking a node there would hand each package schema a value
+       * carrying a key its author never declared.
+       *
+       * Read fresh each time rather than reusing the config this process booted
+       * from. Somebody may have edited the file since, and their lines survive a
+       * save from here because the save starts from what is on disk now.
+       */
+      const set = (edits: readonly ConfigEdit[]) =>
+        pipe(
+          fs.readFileString(path),
+          E.andThen((source) =>
+            pipe(
+              rawOf(source),
+              E.andThen((parsed) =>
+                setConfig({
+                  config: parsed as unknown as Record<string, unknown>,
+                  edits,
+                  resolve: packages.load,
+                  file: { path, source },
+                  check,
+                }),
+              ),
+            ),
+          ),
+          // The description is a cached read of this file, so a save that changed
+          // it makes the cached one wrong. Dropped here rather than by the caller,
+          // since a caller that forgot would leave the settings page showing the
+          // values somebody had just replaced.
+          E.tap((result) => (result.stored ? forget : E.void)),
+          E.provideService(FileSystem.FileSystem, fs),
+          E.provideService(Path.Path, pathService),
+        );
+
+      return { cwd, path, raw, config, check, describe, writable, set };
     }),
   },
 ) {}

@@ -33,6 +33,7 @@ export const config = {
       },
       {
         id: "url",
+        secret: true,
         label: "Connection URL",
         kind: "text",
         description:

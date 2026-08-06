@@ -31,4 +31,8 @@ WORKDIR /packages/services/runner/runner-service
 
 ENV CONFIG=/competition.config.yaml
 
+# The runner exits when the config file changes, so that it comes back reading
+# the new one. See the same line in the UI service's dockerfile.
+ENV OCK_IN_CONTAINER=1
+
 CMD ["bun", "run", "index.ts"]

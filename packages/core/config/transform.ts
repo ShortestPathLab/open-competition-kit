@@ -110,6 +110,22 @@ const parseArguments = (list: string | undefined) =>
 
 const isOperator = (name: string): name is Operator => name in ARITY;
 
+/**
+ * The interpolations in a string that this file would resolve.
+ *
+ * Exported for the config writer, which has to refuse a field whose value came
+ * from one: writing back what an organiser sees would replace
+ * `${{ env("GITHUB_CLIENT_SECRET") }}` with the secret itself, in a file that is
+ * usually committed. Only the calls naming a real operator count, because only
+ * those are substituted. A `rules:` block documenting a GitHub Actions workflow
+ * is full of `${{ hashFiles(...) }}`, which is left as written and is therefore
+ * still an organiser's to edit.
+ */
+export const templatesIn = (value: string): string[] =>
+  [...value.matchAll(CALL_PATTERN)].flatMap(([template, name]) =>
+    template && name && isOperator(name) ? [template] : [],
+  );
+
 const buildCall = (op: Operator, args: string[]): Call =>
   op === "env" ? { op, name: args[0]!, fallback: args[1] } : { op, file: args[0]! };
 

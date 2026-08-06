@@ -29,3 +29,23 @@ export const Meta = S.Struct({
   description: S.optional(S.String),
 });
 export type Meta = S.Schema.Type<typeof Meta>;
+
+/** One choice a field accepts, for a field that accepts a fixed few. */
+export type FieldOption = { value: string; label: string };
+
+/**
+ * A field as a settings editor needs to draw it, which is more than validation
+ * has vocabulary for.
+ *
+ * `options` turns a text box into a picker, for a field whose schema accepts a
+ * short fixed list. `secret` says the value is a credential: an editor shows
+ * whether one is set and takes a new one, and never prints the one it has. A
+ * connection string and an access key are readable by anyone looking over an
+ * organiser's shoulder otherwise, and a settings page is exactly where somebody
+ * screen-shares.
+ */
+export type FieldPresentation = Shape &
+  Meta & {
+    options?: readonly FieldOption[];
+    secret?: boolean;
+  };

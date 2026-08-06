@@ -2,10 +2,12 @@ import { Config, Effect as E } from "effect";
 import { isUndefined } from "es-toolkit";
 import type { OpenCompetitionKitApi } from "./api";
 import { access, type Accessor } from "./config/access";
+import type { ConfigEdit } from "./config/write";
 import { createNamespacedContext } from "./kit/context-store";
 import { createEntities } from "./kit/entities";
 import { MissingContextError } from "./kit/errors";
 import { createFileStore } from "./kit/file-store";
+import { restart, restartSupport } from "./lifecycle";
 import { createParticipation } from "./kit/participation";
 import { makeRuntime } from "./kit/runtime";
 import { createMachine } from "./kit/machine";
@@ -58,6 +60,47 @@ export class OpenCompetitionKit extends E.Service<OpenCompetitionKit>()(
            * that produced it do not and stay on this side.
            */
           describe: () => configService.describe,
+          /**
+           * The file the config was read from, resolved.
+           *
+           * `CONFIG` may name it and the search walks upwards from the working
+           * directory, so the file an organiser is looking at is not always the
+           * one running. A settings page that tells somebody to edit a file owes
+           * them the path to the right one.
+           */
+          path: () => configService.path,
+          /**
+           * Whether a change could be saved, and why not when it could not.
+           *
+           * Worth asking before drawing the form. A config file mounted read
+           * only is a normal way to deploy this, and an editor that only finds
+           * out when somebody presses Save has already wasted their afternoon.
+           */
+          writable: () => configService.writable,
+          /**
+           * Edited values, sent back the way they were handed out.
+           *
+           * Paired with `describe`: an editor renders fields from that and
+           * returns them here, keyed by the same dotted paths, so neither end
+           * has to know which package owns which field. The values are checked
+           * against those packages' own schemas, placed back in the config file
+           * with its comments intact, and only saved once the edited file has
+           * been loaded from scratch and found to boot.
+           *
+           * Takes effect at the next start. See `lifecycle.restart`.
+           */
+          set: (edits: readonly ConfigEdit[]) => configService.set(edits),
+        },
+        /**
+         * Starting again, which is how a config change takes effect.
+         *
+         * Kept away from `config` on purpose. Restarting is a thing done to the
+         * process rather than to the configuration, and the runner service has
+         * reason to do it without anybody editing anything.
+         */
+        lifecycle: {
+          support: () => E.sync(restartSupport),
+          restart: () => restart(),
         },
         ...entities,
         ...participation,

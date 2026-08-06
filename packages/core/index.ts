@@ -18,11 +18,20 @@ export {
   type Visibility,
   ConfigExtensionError,
   CORE_KEYS,
+  CORE_FIELDS,
   describeConfig,
+  hasCoreFields,
+  setConfig,
   walkNodes,
+  type ConfigEdit,
   type ConfigFieldDescription,
   type ConfigNodeDescription,
   type ConfigSectionDescription,
+  type ConfigWriteIssue,
+  type ConfigWriteResult,
+  type ConfigWritability,
+  type ConfigWritabilityReason,
+  type ConfigWriteStrategy,
   isStandardSchema,
   validateConfig,
   validateNode,
@@ -38,6 +47,7 @@ export * from "./package/loader";
 export * from "./package/registry";
 export * from "./package/install";
 export type { Package, Hooks, LeaderboardUiDef, LeaderboardViewProps } from "./hook";
+export { restart, restartSupport, type RestartSupport } from "./lifecycle";
 export { OpenCompetitionKit } from "./open-competition-kit";
 export type {
   Competition,

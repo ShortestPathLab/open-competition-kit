@@ -16,7 +16,7 @@
  */
 import { Data, Effect as E } from "effect";
 import { isEqual } from "es-toolkit";
-import type { Meta, Shape } from "../common/shape";
+import type { FieldPresentation } from "../common/shape";
 
 /**
  * The validation contract, as published by the Standard Schema spec.
@@ -94,8 +94,12 @@ export type ConfigExtension = {
    * The same fields as an editor sees them, in display order. Advisory: a
    * package that omits this still validates, and an editor falls back to the
    * field names the schema accepted.
+   *
+   * Mark a credential `secret: true`. An editor then reports whether one is set
+   * and takes a replacement, rather than printing the one it has onto a page
+   * organisers routinely screen-share.
    */
-  shape?: readonly (Shape & Meta)[];
+  shape?: readonly FieldPresentation[];
   /** A section to gather these fields under, e.g. "Submission gates". */
   group?: { id: string; label: string };
 };

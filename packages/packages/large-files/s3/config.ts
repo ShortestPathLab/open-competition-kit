@@ -73,6 +73,7 @@ export const config = {
       },
       {
         id: "accessKeyId",
+        secret: true,
         label: "Access key ID",
         kind: "text",
         description:
@@ -80,12 +81,14 @@ export const config = {
       },
       {
         id: "secretAccessKey",
+        secret: true,
         label: "Secret access key",
         kind: "text",
         description: "Falls back to S3_SECRET_ACCESS_KEY. Prefer the environment.",
       },
       {
         id: "sessionToken",
+        secret: true,
         label: "Session token",
         kind: "text",
         description: "Falls back to S3_SESSION_TOKEN. Only for temporary credentials.",

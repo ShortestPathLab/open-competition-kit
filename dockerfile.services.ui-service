@@ -14,4 +14,9 @@ EXPOSE 80
 
 ENV CONFIG=/competition.config.yaml
 
+# Lets the service word the restart prompt for a container: it stops, and it is
+# up to the deployment's restart policy to start it again. Nothing about the
+# behaviour depends on this, only what the dashboard says before doing it.
+ENV OCK_IN_CONTAINER=1
+
 CMD ["bunx","--bun","vite","preview","--port","80","--host"]

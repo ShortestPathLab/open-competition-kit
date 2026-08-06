@@ -35,6 +35,13 @@ export function createPollingWorker({ intervalMs, poll, onError = console.error 
       stopped = true;
       if (timer) clearTimeout(timer);
     },
+    /**
+     * Whether a poll is in flight.
+     *
+     * For anything that needs to wait until this worker is between jobs, which
+     * is what restarting to pick up a config change waits for.
+     */
+    busy: () => running,
     tick,
   };
 }

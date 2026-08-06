@@ -12,6 +12,7 @@ export const {
   forms,
   jobs,
   leaderboards,
+  lifecycle,
   outputs,
   machine,
   secrets,

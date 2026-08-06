@@ -99,6 +99,38 @@ export type OpenCompetitionKitApi = {
      * can be set is a field that will be checked.
      */
     describe: unknown;
+    /** The resolved path of the file the config was read from. */
+    path: unknown;
+    /**
+     * Whether the config file can be saved to, and why not when it cannot. A
+     * file mounted read only is an ordinary way to deploy this, so an editor
+     * should ask before it offers to save.
+     */
+    writable: unknown;
+    /**
+     * Edited values, keyed by the same dotted paths `describe` reported.
+     *
+     * Checked against the packages that own the fields, then placed back into
+     * `competition.config.yaml` node by node, so the comments and the key order
+     * an organiser wrote survive the save. Nothing is written until the edited
+     * file has been loaded from scratch and found to start an application.
+     *
+     * The result says what happened: `accepted` for the values, `stored` for the
+     * file, and `reason` when a valid change could not be saved anyway.
+     */
+    set: unknown;
+  };
+
+  /**
+   * The process, rather than anything in it.
+   *
+   * Configuration is read once at startup, so a saved change applies at the next
+   * one. `restart` stops this process for whatever runs it to start again;
+   * `support` says whether that will work here before anybody offers the button.
+   */
+  lifecycle: {
+    support: unknown;
+    restart: unknown;
   };
 
   enrolments: CollectionApi & {

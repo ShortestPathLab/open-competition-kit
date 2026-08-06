@@ -13,11 +13,24 @@ import type { NodeKind } from "./extension";
 
 export type Node = Record<string, unknown>;
 
+/** Keys and indices from the root of the document down to a node. */
+export type Keys = readonly (string | number)[];
+
 export type WalkedNode = {
   node: Node;
   kind: NodeKind;
   /** Dotted path, e.g. `competitions.fit5047.tracks.main`. */
   path: string;
+  /**
+   * The same node, addressed the way the YAML document holds it.
+   *
+   * `path` names a competition by its id because that is what an organiser can
+   * search their file for; the file has it at an index. Both are produced here
+   * so the writer that puts an edit back has the mapping from the one place that
+   * knows the shape, rather than reconstructing it from a dotted string and
+   * getting `tracks.main` wrong the first time somebody names a track `2`.
+   */
+  keys: Keys;
   /** What to call this node on screen. */
   label: string;
   /** Every package installed at this point, outermost first. */
@@ -50,7 +63,7 @@ const nameOf = (node: Node, fallback: string) =>
  */
 export function* walkNodes(config: Node): Generator<WalkedNode> {
   const root = withAt(config, []);
-  yield { node: config, kind: "root", path: "config", label: "Root", installed: root };
+  yield { node: config, kind: "root", path: "config", keys: [], label: "Root", installed: root };
 
   for (const [key, kind] of [
     ["db", "db"],
@@ -63,6 +76,7 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
       node: block,
       kind,
       path: `config.${key}`,
+      keys: [key],
       label: key,
       installed: withAt(block, root),
     };
@@ -75,8 +89,9 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
 
     const name = nameOf(entry, String(index));
     const path = `config.competitions.${name}`;
+    const keys: Keys = ["competitions", index];
     const scope = withAt(entry, root);
-    yield { node: entry, kind: "competition", path, label: name, installed: scope };
+    yield { node: entry, kind: "competition", path, keys, label: name, installed: scope };
 
     const tracks = Array.isArray(entry.tracks) ? entry.tracks : [];
     for (const [trackIndex, track] of tracks.entries()) {
@@ -84,11 +99,13 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
 
       const trackName = nameOf(track, String(trackIndex));
       const trackPath = `${path}.tracks.${trackName}`;
+      const trackKeys: Keys = [...keys, "tracks", trackIndex];
       const trackScope = withAt(track, scope);
       yield {
         node: track,
         kind: "track",
         path: trackPath,
+        keys: trackKeys,
         label: trackName,
         installed: trackScope,
       };
@@ -101,6 +118,7 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
         node: form,
         kind: "form",
         path: `${trackPath}.form`,
+        keys: [...trackKeys, "form"],
         label: `${trackName} form`,
         installed: formScope,
       };
@@ -113,6 +131,7 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
           node: field,
           kind: "formField",
           path: `${trackPath}.form.shape.${fieldName}`,
+          keys: [...trackKeys, "form", "shape", fieldIndex],
           label: fieldName,
           // A form field declares no `with:` of its own; it inherits the form's.
           installed: formScope,
@@ -125,6 +144,7 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
         node: entry.runner,
         kind: "runner",
         path: `${path}.runner`,
+        keys: [...keys, "runner"],
         label: `${name} runner`,
         installed: withAt(entry.runner, scope),
       };
@@ -138,6 +158,7 @@ export function* walkNodes(config: Node): Generator<WalkedNode> {
         node: board,
         kind: "leaderboard",
         path: `${path}.leaderboards.${boardName}`,
+        keys: [...keys, "leaderboards", boardIndex],
         label: boardName,
         installed: withAt(board, scope),
       };

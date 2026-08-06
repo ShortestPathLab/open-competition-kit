@@ -13,22 +13,29 @@
  */
 import { Effect as E } from "effect";
 import { isEqual } from "es-toolkit";
-import type { Meta, Shape } from "../common/shape";
+import type { FieldPresentation } from "../common/shape";
 import type { SerialisableValue } from "../serialisable";
+import { CORE_FIELDS } from "./core-fields";
 import type { NodeKind, ResolvedExtension } from "./extension";
 import { CORE_KEYS, collectExtensions, type Resolve } from "./validate";
 import { walkNodes, type Node } from "./walk";
 
-export type ConfigFieldDescription = Shape &
-  Meta & {
-    /**
-     * What the config currently has here, when it has anything.
-     *
-     * Absent for a field the organiser never set, which an editor renders as an
-     * empty input rather than as a value of nothing.
-     */
-    value?: SerialisableValue;
-  };
+export type ConfigFieldDescription = FieldPresentation & {
+  /**
+   * What the config currently has here, when it has anything.
+   *
+   * Absent for a field the organiser never set, which an editor renders as an
+   * empty input rather than as a value of nothing.
+   */
+  value?: SerialisableValue;
+  /**
+   * Whether a `secret` field has anything in it.
+   *
+   * Stands in for `value`, which is withheld for one. An editor needs to say
+   * "configured" or "missing" without being handed the credential to say it.
+   */
+  set?: boolean;
+};
 
 /** One package's contribution to one node, as an editor should draw it. */
 export type ConfigSectionDescription = {
@@ -43,8 +50,15 @@ export type ConfigNodeDescription = {
   /** Dotted path, matching the one a validation error would name. */
   path: string;
   label: string;
-  /** Fields core itself declares here, so an editor can show the whole node. */
+  /** Every key core declares here, including the ones no editor should offer. */
   coreKeys: readonly string[];
+  /**
+   * Core's own fields, described the way a package's are, so an editor can draw
+   * a competition's name beside a package's deadline without knowing which is
+   * which. The subset an organiser may safely change: see `CORE_FIELDS` for what
+   * is deliberately left out and why.
+   */
+  core: ConfigFieldDescription[];
   sections: ConfigSectionDescription[];
 };
 
@@ -64,14 +78,26 @@ const isSerialisable = (value: unknown): value is SerialisableValue =>
  * field names come from what its schema accepted, which is the honest fallback
  * and keeps the cost of contributing config low.
  */
+/**
+ * What the config has in one field, or whether it has anything.
+ *
+ * A `secret` field reports only the second. The description crosses to the
+ * browser and is rendered on a page an organiser opens in front of other people,
+ * so a connection string or an access key would be on screen every time somebody
+ * checked a deadline. What an editor can do without the value is everything that
+ * matters: say it is set, and take a new one.
+ */
+const valueIn = (node: Node, field: { id: string; secret?: boolean }) => {
+  const raw = node[field.id];
+  if (field.secret) return { set: raw !== undefined && raw !== "" };
+  return raw !== undefined && isSerialisable(raw) ? { value: raw as SerialisableValue } : {};
+};
+
 const fieldsOf = (extension: ResolvedExtension, node: Node): ConfigFieldDescription[] => {
-  const valueOf = (id: string) => {
-    const raw = node[id];
-    return raw !== undefined && isSerialisable(raw) ? { value: raw as SerialisableValue } : {};
-  };
+  const valueOf = (id: string) => valueIn(node, { id });
 
   if (extension.shape?.length) {
-    return extension.shape.map((field) => ({ ...field, ...valueOf(field.id) }));
+    return extension.shape.map((field) => ({ ...field, ...valueIn(node, field) }));
   }
 
   const result = extension.schema["~standard"].validate(node);
@@ -129,6 +155,7 @@ export const describeConfig = <R = never>(
         path,
         label,
         coreKeys: CORE_KEYS[kind],
+        core: (CORE_FIELDS[kind] ?? []).map((field) => ({ ...field, ...valueIn(node, field) })),
         sections: dedupe(
           extensions
             .map((extension) => ({

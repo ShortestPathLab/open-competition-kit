@@ -1,7 +1,18 @@
-import { config, hooks, jobs, type Job, unsafe } from "@open-competition-kit/sdk";
+import { config, hooks, jobs, lifecycle, type Job, unsafe } from "@open-competition-kit/sdk";
+import { stat } from "node:fs/promises";
+import { createConfigWatch } from "./config-watch";
 import { createPollingWorker } from "./polling";
 
 const DEFAULT_PENDING_STATUS = "pending";
+
+/**
+ * How often to look at the config file.
+ *
+ * Slower than the job poll on purpose. A config change is a thing a person did
+ * seconds ago and is willing to wait a moment for, and this runs for the life of
+ * the service.
+ */
+const CONFIG_POLL_MS = 5000;
 
 async function getRunnableJobs() {
   return unsafe(jobs.list({ status: DEFAULT_PENDING_STATUS })) as Promise<readonly Job[]>;
@@ -51,6 +62,51 @@ export async function prepareRunners() {
   }
 }
 
+/** Enough to tell one version of a file from the next, and cheap to ask for. */
+async function stampOf(path: string) {
+  try {
+    const info = await stat(path);
+    return `${info.mtimeMs}:${info.size}`;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Watch the config file, and stand down when it changes.
+ *
+ * Only started where standing down means coming back. A runner started by hand
+ * in a terminal has nothing to restart it, so it says once that it will keep
+ * running against the config it read and leaves it there, rather than exiting
+ * and taking the evaluations with it.
+ */
+async function watchConfigFile(worker: ReturnType<typeof createPollingWorker>) {
+  const support = await unsafe(lifecycle.support());
+
+  if (!support.restartable) {
+    console.log(`runner-service will not restart itself on a config change. ${support.detail}`);
+    return;
+  }
+
+  const path = await unsafe(config.path());
+
+  const watcher = createPollingWorker({
+    intervalMs: CONFIG_POLL_MS,
+    poll: createConfigWatch({
+      stamp: () => stampOf(path),
+      busy: () => worker.busy(),
+      drain: () => worker.stop(),
+      restart: () => unsafe(lifecycle.restart()),
+    }),
+    onError(error) {
+      console.error("runner-service could not check the config file", error);
+    },
+  });
+
+  watcher.start();
+  return watcher;
+}
+
 export async function startBasicRunner() {
   await prepareRunners();
 
@@ -64,8 +120,15 @@ export async function startBasicRunner() {
 
   worker.start();
 
-  process.on("SIGINT", () => worker.stop());
-  process.on("SIGTERM", () => worker.stop());
+  const watcher = await watchConfigFile(worker);
+
+  const stop = () => {
+    worker.stop();
+    watcher?.stop();
+  };
+
+  process.on("SIGINT", stop);
+  process.on("SIGTERM", stop);
 
   console.log("runner-service started");
 }
