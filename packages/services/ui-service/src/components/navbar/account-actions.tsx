@@ -26,6 +26,23 @@ function DashboardButton() {
 }
 
 /**
+ * The organiser's way in before they have proved the address is theirs.
+ *
+ * Takes the slot the Sudo button would have, and does not pretend to be it. The
+ * dashboard is not reachable yet and a button that says so honestly costs less
+ * than one that promises the dashboard and delivers a form.
+ */
+function ConfirmAccountButton() {
+  return (
+    <Link to="/me/verify" className="block">
+      <Button variant="outline" className="w-full">
+        Confirm account
+      </Button>
+    </Link>
+  );
+}
+
+/**
  * Register only when there is a password to register with. An install running
  * on OAuth alone has no form behind that link.
  */
@@ -49,13 +66,14 @@ function SignedOutActions({ emailEnabled, padding }: { emailEnabled: boolean; pa
 
 type ActionsProps = Pick<
   NavbarState,
-  "sessionLoading" | "isLoggedIn" | "isAdmin" | "emailEnabled" | "user"
+  "sessionLoading" | "isLoggedIn" | "isAdmin" | "mayClaim" | "emailEnabled" | "user"
 > & { onSignOut: () => void };
 
 export function DesktopActions({
   sessionLoading,
   isLoggedIn,
   isAdmin,
+  mayClaim,
   emailEnabled,
   user,
   onSignOut,
@@ -77,6 +95,7 @@ export function DesktopActions({
     <>
       <ProfileAvatar user={user} />
       {isAdmin ? <DashboardButton /> : null}
+      {mayClaim ? <ConfirmAccountButton /> : null}
       <Button onClick={onSignOut} variant="outline">
         Sign out
       </Button>
@@ -88,6 +107,7 @@ export function MobileActions({
   sessionLoading,
   isLoggedIn,
   isAdmin,
+  mayClaim,
   emailEnabled,
   user,
   onSignOut,
@@ -108,6 +128,7 @@ export function MobileActions({
             </div>
           </div>
           {isAdmin ? <DashboardButton /> : null}
+          {mayClaim ? <ConfirmAccountButton /> : null}
           <Button onClick={onSignOut} variant="outline">
             Sign out
           </Button>

@@ -328,6 +328,27 @@ export const Config = S.Struct({
    * surface is worse than an unreachable one.
    */
   admins: S.optional(S.Array(S.String)),
+  /**
+   * A shared secret that lets an address in `admins:` prove it belongs to the
+   * person signed in as it.
+   *
+   * Being listed in `admins:` is not on its own proof of anything. Sign-up does
+   * not confirm an address unless the provider confirmed it, so on a deployment
+   * offering email and password there is a window between the first boot and the
+   * organiser registering in which anyone may take the address and the dashboard
+   * with it. This closes that window: the list says who may be an organiser, and
+   * the token says it is really them.
+   *
+   * Usually written as `${{ env("OCK_ADMIN_TOKEN") }}` rather than inline, since
+   * this file is normally in a git repository. Leave it out and the UI service
+   * generates one at startup and prints it, which is the right default for trying
+   * the kit out and the wrong one for a deployment that restarts unattended.
+   *
+   * Not needed by an organiser who signs in through a social provider. The
+   * provider has already confirmed the address, so there is nothing left to
+   * prove.
+   */
+  adminToken: S.optional(S.String),
   files: S.optional(FilesNode),
   machine: S.optional(MachineNode),
   /**

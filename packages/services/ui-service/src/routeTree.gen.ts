@@ -18,6 +18,7 @@ import { Route as MeIndexRouteImport } from './routes/me/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as CompetitionsIndexRouteImport } from './routes/competitions/index'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
+import { Route as MeVerifyRouteImport } from './routes/me/verify'
 import { Route as MeSettingsRouteImport } from './routes/me/settings'
 import { Route as MeEnrolmentsRouteImport } from './routes/me/enrolments'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
@@ -91,6 +92,11 @@ const AboutIndexRoute = AboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MeVerifyRoute = MeVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => MeRouteRoute,
 } as any)
 const MeSettingsRoute = MeSettingsRouteImport.update({
   id: '/settings',
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
+  '/me/verify': typeof MeVerifyRoute
   '/about/': typeof AboutIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
+  '/me/verify': typeof MeVerifyRoute
   '/about': typeof AboutIndexRoute
   '/competitions': typeof CompetitionsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
+  '/me/verify': typeof MeVerifyRoute
   '/about/': typeof AboutIndexRoute
   '/competitions/': typeof CompetitionsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/me/enrolments'
     | '/me/settings'
+    | '/me/verify'
     | '/about/'
     | '/competitions/'
     | '/dashboard/'
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/me/enrolments'
     | '/me/settings'
+    | '/me/verify'
     | '/about'
     | '/competitions'
     | '/dashboard'
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/me/enrolments'
     | '/me/settings'
+    | '/me/verify'
     | '/about/'
     | '/competitions/'
     | '/dashboard/'
@@ -561,6 +573,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/about/'
       preLoaderRoute: typeof AboutIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/me/verify': {
+      id: '/me/verify'
+      path: '/verify'
+      fullPath: '/me/verify'
+      preLoaderRoute: typeof MeVerifyRouteImport
+      parentRoute: typeof MeRouteRoute
     }
     '/me/settings': {
       id: '/me/settings'
@@ -809,6 +828,7 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 interface MeRouteRouteChildren {
   MeEnrolmentsRoute: typeof MeEnrolmentsRoute
   MeSettingsRoute: typeof MeSettingsRoute
+  MeVerifyRoute: typeof MeVerifyRoute
   MeIndexRoute: typeof MeIndexRoute
   MeSubmissionsSubmissionIdRoute: typeof MeSubmissionsSubmissionIdRoute
   MeSubmissionsIndexRoute: typeof MeSubmissionsIndexRoute
@@ -817,6 +837,7 @@ interface MeRouteRouteChildren {
 const MeRouteRouteChildren: MeRouteRouteChildren = {
   MeEnrolmentsRoute: MeEnrolmentsRoute,
   MeSettingsRoute: MeSettingsRoute,
+  MeVerifyRoute: MeVerifyRoute,
   MeIndexRoute: MeIndexRoute,
   MeSubmissionsSubmissionIdRoute: MeSubmissionsSubmissionIdRoute,
   MeSubmissionsIndexRoute: MeSubmissionsIndexRoute,

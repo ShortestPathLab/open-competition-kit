@@ -33,6 +33,13 @@ export function useNavbar() {
     user: session?.user,
     isLoggedIn: !!session?.user,
     isAdmin: adminStatus?.isAdmin ?? false,
+    // An organiser who has not confirmed their address yet. They are not an
+    // admin, so the bar owes them a different button rather than the admin one:
+    // `isAdmin` is asked of the server for the reason above, and a Sudo button
+    // that lands on the claim page is exactly the bounce that comment forbids.
+    // Without something here they have no way to reach the page at all, short of
+    // being told the URL.
+    mayClaim: adminStatus?.mayClaim ?? false,
     emailEnabled: authConfig?.emailEnabled ?? false,
     signOut: async () => {
       await authClient.signOut({

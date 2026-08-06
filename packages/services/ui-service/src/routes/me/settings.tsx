@@ -10,9 +10,10 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { ListSkeleton } from "@/components/skeletons";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
-import { Lock, LogOut } from "lucide-react";
+import { useMayClaim } from "@/lib/use-admin";
+import { Lock, LogOut, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/me/settings")({
@@ -28,10 +29,35 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+/**
+ * Shown to an organiser whose address is listed but not yet confirmed.
+ *
+ * The row below reports "Not verified" for this account and, on a deployment
+ * with nothing to send mail with, gives no way to change it. For an organiser
+ * there is a way, and this is where somebody looking at that row would expect to
+ * find it.
+ */
+function ClaimPrompt() {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3">
+      <div className="flex items-start gap-3">
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+        <p className="text-sm text-muted-foreground">
+          Your address is listed as an organiser. Confirm it is yours to open the dashboard.
+        </p>
+      </div>
+      <Link to="/me/verify">
+        <Button size="sm">Confirm account</Button>
+      </Link>
+    </div>
+  );
+}
+
 function MeSettingsPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [signingOut, setSigningOut] = useState(false);
+  const mayClaim = useMayClaim();
   const user = session?.user;
 
   const signOut = async () => {
@@ -86,6 +112,7 @@ function MeSettingsPage() {
               title="Account"
               description="How you appear to competition organisers."
             />
+            {mayClaim ? <ClaimPrompt /> : null}
             <div className="rounded-2xl border border-border px-4">
               <Row label="Name" value={user.name || "-"} />
               <Row label="Email" value={user.email} />

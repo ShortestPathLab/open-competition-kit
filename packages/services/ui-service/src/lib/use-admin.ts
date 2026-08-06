@@ -22,3 +22,20 @@ export function useIsAdmin() {
 
   return data?.isAdmin ?? false;
 }
+
+/**
+ * Whether this reader is an organiser waiting to confirm their address.
+ *
+ * For offering the claim page, in the same spirit as `useIsAdmin`: it decides
+ * what to draw and protects nothing. `claimAdmin` checks the same condition on
+ * the server before it looks at the token.
+ */
+export function useMayClaim() {
+  const fetchAdminStatus = useServerFn(getAdminStatus);
+  const { data } = useQuery({
+    queryKey: ["adminStatus"],
+    queryFn: () => fetchAdminStatus(),
+  });
+
+  return data?.mayClaim ?? false;
+}

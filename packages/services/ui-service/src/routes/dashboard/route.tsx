@@ -9,6 +9,13 @@ export const Route = createFileRoute("/dashboard")({
     const status = await getAdminStatus();
 
     if (!status.signedIn) throw redirect({ to: "/sign-in" });
+
+    // Listed but not confirmed. Sending them to the competitions page like any
+    // other non-organiser would be technically correct and useless: they are the
+    // organiser, they are one step from proving it, and nothing on that page
+    // says so.
+    if (status.mayClaim) throw redirect({ to: "/me/verify" });
+
     if (!status.isAdmin) throw redirect({ to: "/competitions" });
 
     return { admin: status };
