@@ -20,6 +20,7 @@ import { Route as CompetitionsIndexRouteImport } from './routes/competitions/ind
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as MeSettingsRouteImport } from './routes/me/settings'
 import { Route as MeEnrolmentsRouteImport } from './routes/me/enrolments'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as DashboardCompetitionIdRouteRouteImport } from './routes/dashboard/$competitionId/route'
 import { Route as CompetitionsIdRouteRouteImport } from './routes/competitions/$id/route'
 import { Route as MeSubmissionsIndexRouteImport } from './routes/me/submissions/index'
@@ -100,6 +101,11 @@ const MeEnrolmentsRoute = MeEnrolmentsRouteImport.update({
   id: '/enrolments',
   path: '/enrolments',
   getParentRoute: () => MeRouteRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardCompetitionIdRouteRoute =
   DashboardCompetitionIdRouteRouteImport.update({
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about/': typeof AboutIndexRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about': typeof AboutIndexRoute
@@ -321,6 +329,7 @@ export interface FileRoutesById {
   '/me': typeof MeRouteRouteWithChildren
   '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
   '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/me/enrolments': typeof MeEnrolmentsRoute
   '/me/settings': typeof MeSettingsRoute
   '/about/': typeof AboutIndexRoute
@@ -361,6 +370,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
+    | '/api/health'
     | '/me/enrolments'
     | '/me/settings'
     | '/about/'
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dashboard/$competitionId'
+    | '/api/health'
     | '/me/enrolments'
     | '/me/settings'
     | '/about'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/competitions/$id'
     | '/dashboard/$competitionId'
+    | '/api/health'
     | '/me/enrolments'
     | '/me/settings'
     | '/about/'
@@ -472,6 +484,7 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   MeRouteRoute: typeof MeRouteRouteWithChildren
   CompetitionsIdRouteRoute: typeof CompetitionsIdRouteRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
   AboutIndexRoute: typeof AboutIndexRoute
   CompetitionsIndexRoute: typeof CompetitionsIndexRoute
   RegisterIndexRoute: typeof RegisterIndexRoute
@@ -562,6 +575,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/me/enrolments'
       preLoaderRoute: typeof MeEnrolmentsRouteImport
       parentRoute: typeof MeRouteRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/$competitionId': {
       id: '/dashboard/$competitionId'
@@ -838,6 +858,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   MeRouteRoute: MeRouteRouteWithChildren,
   CompetitionsIdRouteRoute: CompetitionsIdRouteRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
   AboutIndexRoute: AboutIndexRoute,
   CompetitionsIndexRoute: CompetitionsIndexRoute,
   RegisterIndexRoute: RegisterIndexRoute,

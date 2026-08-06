@@ -81,7 +81,7 @@ export function CompetitionSelector({ competitionId, name, className }: Competit
         <DropdownMenuItem
           render={
             <Link to="/competitions/$id" params={{ id: competitionId }}>
-              View as a competitor
+              View as competitor
             </Link>
           }
         />

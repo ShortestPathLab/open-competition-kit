@@ -8,7 +8,15 @@
  */
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk, { context, jobs, reference, submissions, tracks, unsafe, users } from "@open-competition-kit/sdk";
+import sdk, {
+  context,
+  jobs,
+  reference,
+  submissions,
+  tracks,
+  unsafe,
+  users,
+} from "@open-competition-kit/sdk";
 import { z } from "zod";
 import { ensureAdmin } from "./admin";
 import { readCompetitionActivity, type CompetitionActivity } from "./dashboard-data";

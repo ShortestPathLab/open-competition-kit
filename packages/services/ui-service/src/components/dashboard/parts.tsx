@@ -69,9 +69,7 @@ export function ResultCell({
   className?: string;
 }) {
   if (runs === 0) {
-    return (
-      <span className={cn("text-sm text-muted-foreground", className)}>Not run</span>
-    );
+    return <span className={cn("text-sm text-muted-foreground", className)}>Not run</span>;
   }
 
   const headline = readResult(result).headline;
@@ -119,7 +117,11 @@ export function ActivityStats({ totals }: { totals?: CompetitionActivity["totals
         value={totals.running}
         className={totals.running > 0 ? "bg-warning/10" : undefined}
       />
-      <Stat label="Failed" value={totals.failed} tone={totals.failed > 0 ? "destructive" : undefined} />
+      <Stat
+        label="Failed"
+        value={totals.failed}
+        tone={totals.failed > 0 ? "destructive" : undefined}
+      />
     </HeaderStats>
   );
 }

@@ -13,11 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  getServiceStatus,
-  useRestartService,
-  useServiceStatus,
-} from "@/lib/dashboard-restart-fn";
+import { getServiceStatus, useRestartService, useServiceStatus } from "@/lib/dashboard-restart-fn";
 
 /** How often to ask whether the service is answering again. */
 const POLL_MS = 1000;
@@ -132,19 +128,18 @@ export function RestartPrompt({
           <AlertDialogDescription>
             {phase === "late" ? (
               <>
-                The service has not answered for a minute. It was stopped, so something has to
-                start it again. {support?.detail}
+                The service has not answered for a minute. It was stopped, so something has to start
+                it again. {support?.detail}
               </>
             ) : waiting ? (
               "Waiting for the service to answer again. This page reloads by itself when it does."
             ) : (
               <>
-                Your changes are saved to the config file. Open Competition Kit reads that file
-                when it starts, so they apply at the next start.{" "}
+                Your changes are saved to the config file. Open Competition Kit reads that file when
+                it starts, so they apply at the next start.{" "}
                 {support?.restartable
                   ? support.detail
-                  : (support?.detail ??
-                    "Restart the service to pick them up.")}
+                  : (support?.detail ?? "Restart the service to pick them up.")}
               </>
             )}
           </AlertDialogDescription>

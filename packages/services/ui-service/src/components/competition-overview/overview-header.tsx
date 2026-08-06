@@ -5,9 +5,10 @@ import { Stat } from "@/components/stat-strip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CompetitionSummary } from "@/lib/competition-data";
+import { useIsAdmin } from "@/lib/use-admin";
 import { isDraft } from "@open-competition-kit/sdk/visibility";
 import { Link } from "@tanstack/react-router";
-import { PencilRuler } from "lucide-react";
+import { ArrowUpRight, PencilRuler } from "lucide-react";
 import { TrackPickerPopover } from "./track-picker-popover";
 
 /**
@@ -29,6 +30,8 @@ export function OverviewHeader({
   enrolmentCount: number;
   submissionCount: number;
 }) {
+  const isAdmin = useIsAdmin();
+
   return (
     <CompetitionPageHeader
       competitionId={competitionId}
@@ -71,6 +74,20 @@ export function OverviewHeader({
           >
             Read the rules
           </Button>
+          {/* The other half of "View as competitor". An organiser checking how
+              their competition reads arrives here and has no way back into the
+              thing they were editing, which is a page reload and a menu away. */}
+          {isAdmin ? (
+            <Button
+              size="lg"
+              className="h-10 px-5"
+              variant="outline"
+              render={<Link to="/dashboard/$competitionId/overview" params={{ competitionId }} />}
+            >
+              View as organiser
+              <ArrowUpRight className="size-4" />
+            </Button>
+          ) : null}
         </>
       }
       // Panels rather than the inline meta row the section pages use. This is

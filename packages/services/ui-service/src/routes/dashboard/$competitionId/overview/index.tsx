@@ -46,7 +46,6 @@ function AdminOverviewPage() {
           </Button>
         }
         meta={<ActivityStats totals={activity?.totals} />}
-        tabs
       />
 
       <PageBody className="flex flex-col gap-8">
@@ -86,10 +85,7 @@ function AdminOverviewPage() {
                   variant="outline"
                   size="sm"
                   render={
-                    <Link
-                      to="/dashboard/$competitionId/submissions"
-                      params={{ competitionId }}
-                    />
+                    <Link to="/dashboard/$competitionId/submissions" params={{ competitionId }} />
                   }
                 >
                   See all
@@ -140,9 +136,7 @@ function AdminOverviewPage() {
               </Link>
             ))}
             {activity && activity.participants.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nobody has entered a track yet.
-              </p>
+              <p className="text-sm text-muted-foreground">Nobody has entered a track yet.</p>
             ) : null}
             {activity && activity.participants.length > 12 ? (
               <span className="px-1 py-1 text-sm text-muted-foreground">

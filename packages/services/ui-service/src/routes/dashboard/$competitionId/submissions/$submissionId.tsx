@@ -50,7 +50,12 @@ const BACK: AdminParent = { label: "Submissions", section: "submissions" };
  */
 function AdminSubmissionDetailPage() {
   const { competitionId, submissionId } = Route.useParams();
-  const { data: detail, isLoading, isError, error } = useAdminSubmission(competitionId, submissionId);
+  const {
+    data: detail,
+    isLoading,
+    isError,
+    error,
+  } = useAdminSubmission(competitionId, submissionId);
   const rerun = useServerFn(rerunAdminSubmission);
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>();
 
@@ -93,11 +98,7 @@ function AdminSubmissionDetailPage() {
   if (isError || !detail) {
     return (
       <>
-        <AdminPageHeader
-          competitionId={competitionId}
-          title="Submission"
-          back={BACK}
-        />
+        <AdminPageHeader competitionId={competitionId} title="Submission" back={BACK} />
         <PageBody>
           {/* Told apart, because this page polls: a run that is still going
               refetches every two seconds, and one failed refetch reporting the

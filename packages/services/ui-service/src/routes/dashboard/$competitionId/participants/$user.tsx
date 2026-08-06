@@ -31,11 +31,7 @@ function ParticipantDetailPage() {
   if (isError || !participant) {
     return (
       <>
-        <AdminPageHeader
-          competitionId={competitionId}
-          title="Participant"
-          back={BACK}
-        />
+        <AdminPageHeader competitionId={competitionId} title="Participant" back={BACK} />
         <PageBody>
           {/* A read that failed says so. Reporting it as somebody who is not
               here would send an organiser looking for a person rather than for

@@ -90,7 +90,7 @@ export function PageHeaderBand({
         ) : null}
         <div
           className={cn(
-            "mx-auto max-w-7xl px-6 pt-0 flex flex-wrap items-start justify-between gap-4",
+            "mx-auto max-w-7xl px-6 pt-0 flex flex-wrap md:flex-nowrap items-start justify-between gap-4",
             (breadcrumb || nav) && "mt-4",
           )}
         >

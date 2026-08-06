@@ -21,7 +21,6 @@ function ParticipantsPage() {
         title="Participants"
         description="Everybody who has entered a track in this competition."
         meta={<ActivityStats totals={activity?.totals} />}
-        tabs
       />
       <PageBody>
         {isError ? (

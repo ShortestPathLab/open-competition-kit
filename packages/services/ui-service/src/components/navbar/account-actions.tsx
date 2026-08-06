@@ -3,19 +3,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import Avatar from "boring-avatars";
-import { Bell } from "lucide-react";
 import type { NavbarState, SessionUser } from "./use-navbar";
 
 const nameOf = (user: SessionUser) => user.name ?? user.email;
-
-function AdminBell() {
-  return (
-    <button className="p-2 text-muted-foreground transition-colors hover:text-foreground">
-      <Bell className="h-5 w-5" />
-      <span className="sr-only">Notifications</span>
-    </button>
-  );
-}
 
 function ProfileAvatar({ user }: { user: SessionUser }) {
   return (
@@ -30,7 +20,7 @@ function ProfileAvatar({ user }: { user: SessionUser }) {
 function DashboardButton() {
   return (
     <Link to="/dashboard" className="block">
-      <Button className="w-full">Dashboard</Button>
+      <Button className="w-full">Sudo</Button>
     </Link>
   );
 }
@@ -85,7 +75,6 @@ export function DesktopActions({
 
   return (
     <>
-      {isAdmin ? <AdminBell /> : null}
       <ProfileAvatar user={user} />
       {isAdmin ? <DashboardButton /> : null}
       <Button onClick={onSignOut} variant="outline">
@@ -117,7 +106,6 @@ export function MobileActions({
               <ProfileAvatar user={user} />
               <span className="min-w-0 truncate text-sm font-medium">{nameOf(user)}</span>
             </div>
-            {isAdmin ? <AdminBell /> : null}
           </div>
           {isAdmin ? <DashboardButton /> : null}
           <Button onClick={onSignOut} variant="outline">

@@ -21,7 +21,6 @@ function AdminSubmissionsPage() {
         title="Submissions"
         description="Every entry across this competition's tracks, newest first."
         meta={<ActivityStats totals={activity?.totals} />}
-        tabs
       />
       <PageBody>
         {isError ? (
