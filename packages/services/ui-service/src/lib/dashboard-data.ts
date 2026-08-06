@@ -117,9 +117,7 @@ export async function readCompetitionActivity(competitionId: string): Promise<Co
     unsafe(enrolments.list({ competition: competitionId })),
     Promise.all(trackList.map((track) => unsafe(submissions.list({ track: track.id })))),
     unsafe(jobs.list({})),
-    unsafe(
-      context.list({ namespace: JOB_OUTPUT_NAMESPACE, reference: reference.std.output }),
-    ),
+    unsafe(context.list({ namespace: JOB_OUTPUT_NAMESPACE, reference: reference.std.output })),
     unsafe(users.list({})),
   ]);
 

@@ -142,9 +142,12 @@ export class OpenCompetitionKitConfig extends E.Service<OpenCompetitionKitConfig
           ),
           E.andThen((config) =>
             E.gen(function* () {
-              const validated = yield* validateConfig(config as unknown as Record<string, unknown>, {
-                resolve: packages.load,
-              });
+              const validated = yield* validateConfig(
+                config as unknown as Record<string, unknown>,
+                {
+                  resolve: packages.load,
+                },
+              );
               return validated as unknown as typeof config;
             }),
           ),

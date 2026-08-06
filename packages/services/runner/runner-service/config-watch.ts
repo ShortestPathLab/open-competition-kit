@@ -32,13 +32,7 @@ export type ConfigWatch = {
  * reading to compare against, and treating "I have not looked before" as a
  * change would restart the service on startup, for ever.
  */
-export function createConfigWatch({
-  stamp,
-  busy,
-  drain,
-  restart,
-  log = console.log,
-}: ConfigWatch) {
+export function createConfigWatch({ stamp, busy, drain, restart, log = console.log }: ConfigWatch) {
   let known: string | undefined;
   let draining = false;
 
