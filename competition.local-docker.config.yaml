@@ -6,8 +6,8 @@ with:
   - ./packages/packages/standard
   - ./packages/packages/machine/local
   - ./packages/packages/db/prisma
-name: GPPC
-description: GPPC is etc.etc.
+name: Example Competitions
+description: A deployment of Open Competition Kit.
 auth:
   email:
     providerOptions: {}
@@ -31,14 +31,13 @@ db:
   provider: postgresql
   url: postgres://postgres:postgres@db:5432/postgres
 competitions:
-  - id: "fit5047"
-    name: "FIT5047 Pacman Competition"
-    organiser: "Monash University"
+  - id: "pacman"
+    name: "Pacman Competition"
+    organiser: "Example University"
     description: >
-      A programming competition for FIT5047 where participants build Pacman
-      agents and compare their performance under a shared evaluation setup.
+      A programming competition where participants build Pacman agents and compare their performance under a shared evaluation setup.
     overview: |
-      # FIT5047 Pacman Competition
+      # Pacman Competition
 
       In this competition, you'll design and implement an intelligent agent to
       navigate a maze as efficiently as possible. Your agent will be evaluated
