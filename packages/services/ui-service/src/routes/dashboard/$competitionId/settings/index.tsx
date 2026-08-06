@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Info, SearchX, TriangleAlert } from "lucide-react";
+import { FlaskConical, Info, SearchX, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { QueryFailure } from "@/components/dashboard/parts";
@@ -9,6 +9,7 @@ import { PageBody } from "@/components/page-header-band";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/panel";
 import { SectionHeader } from "@/components/section-header";
 import { PageSkeleton } from "@/components/skeletons";
+import { Badge } from "@/components/ui/badge";
 import {
   Empty,
   EmptyDescription,
@@ -40,6 +41,13 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 /**
  * The competition's settings, in two halves.
  *
+ * Marked a preview, and meant as one. What it edits is real and is written to the
+ * real config file, but it reaches a subset of what that file can say, and the
+ * subset is not obvious from looking at the page. Saying so is cheaper than the
+ * support conversation with an organiser who expected to add a track here, and it
+ * keeps the config file the thing that defines a competition rather than a
+ * detail behind a form.
+ *
  * Editable at the top: what the competition is called and how it reads, plus
  * every field the installed packages declare, which is what its behaviour turns
  * on. Read-only underneath: what the competition is made of. Tracks,
@@ -68,7 +76,7 @@ function SettingsPage() {
   if (isError || !config) {
     return (
       <>
-        <AdminPageHeader competitionId={competitionId} title="Settings" tabs />
+        <AdminPageHeader competitionId={competitionId} title="Settings" />
         <PageBody>
           {isError ? (
             <QueryFailure error={error} />
@@ -98,7 +106,7 @@ function SettingsPage() {
         competitionName={config.name}
         title="Settings"
         description="What you can change about this competition without editing the config file by hand."
-        tabs
+        meta={<Badge variant="outline">Preview</Badge>}
       />
 
       <PageBody className="flex flex-col gap-10">
@@ -107,6 +115,20 @@ function SettingsPage() {
             title="Settings"
             description="What this competition is called and how it reads, then every field the installed packages declare here, with their own labels and help text."
           />
+
+          {/* Said where somebody is about to type, not only in the header. The
+              badge above marks the page; this says what the mark means, which is
+              that the config file remains the thing that defines a competition
+              and this is a convenience over it. */}
+          <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+            <FlaskConical className="mt-0.5 size-4 shrink-0" />
+            <span>
+              Editing settings here is a preview. It covers the fields below and nothing else:
+              tracks, leaderboards and the package list are edited in{" "}
+              <code className="font-mono text-xs">{config.file}</code>. Keep that file under version
+              control and check what changed, the same as you would for an edit you made by hand.
+            </span>
+          </div>
 
           {/* Where a change goes, said before anybody makes one. A settings page
               that writes a file the reader has never heard of is a settings page
@@ -222,7 +244,9 @@ function SettingsPage() {
           <Panel>
             <PanelHeader>
               <PanelTitle>Leaderboards</PanelTitle>
-              <span className="text-xs text-muted-foreground">Where each board's rows come from.</span>
+              <span className="text-xs text-muted-foreground">
+                Where each board's rows come from.
+              </span>
             </PanelHeader>
             <div className="divide-y divide-border">
               {config.leaderboards.length ? (
