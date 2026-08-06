@@ -1,9 +1,42 @@
-import { config, hooks, jobs, lifecycle, type Job, unsafe } from "@open-competition-kit/sdk";
+import {
+  config,
+  DEFAULT_STALE_CLAIM_MS,
+  hooks,
+  jobs,
+  JobStatus,
+  lifecycle,
+  type Job,
+  unsafe,
+} from "@open-competition-kit/sdk";
 import { stat } from "node:fs/promises";
 import { createConfigWatch } from "./config-watch";
+import { DEFAULT_IDLE_TOLERANCE_MS, reportOn, serveHealth } from "./health";
 import { createPollingWorker } from "./polling";
+import { concurrencyFrom, mapWithLimit, settleStatus } from "./queue";
 
-const DEFAULT_PENDING_STATUS = "pending";
+const IDLE_TOLERANCE_MS = (() => {
+  const raw = process.env.OCK_RUNNER_IDLE_TOLERANCE_MS;
+  const parsed = raw ? Number(raw) : Number.NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_IDLE_TOLERANCE_MS;
+})();
+
+const CONCURRENCY = concurrencyFrom(process.env.OCK_RUNNER_CONCURRENCY);
+
+/**
+ * How long before a claim is treated as abandoned, and how often to look.
+ *
+ * The sweep is a backstop for a process that died holding a job, so it runs on
+ * its own slow timer rather than in the job poll: there is nothing to gain from
+ * asking every two seconds about a condition that only arises when a service
+ * crashes.
+ */
+const STALE_CLAIM_MS = (() => {
+  const raw = process.env.OCK_RUNNER_STALE_CLAIM_MS;
+  const parsed = raw ? Number(raw) : Number.NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_STALE_CLAIM_MS;
+})();
+
+const SWEEP_POLL_MS = 60_000;
 
 /**
  * How often to look at the config file.
@@ -15,11 +48,46 @@ const DEFAULT_PENDING_STATUS = "pending";
 const CONFIG_POLL_MS = 5000;
 
 async function getRunnableJobs() {
-  return unsafe(jobs.list({ status: DEFAULT_PENDING_STATUS })) as Promise<readonly Job[]>;
+  return unsafe(jobs.list({ status: JobStatus.pending })) as Promise<readonly Job[]>;
 }
 
+/**
+ * One job, from taking it to leaving it in a state nothing has to guess about.
+ *
+ * The claim is the whole point. Listing pending jobs and running them is what
+ * this used to do, and two runner services against one database both saw the
+ * same rows: every submission was evaluated twice, scored twice, and whichever
+ * write landed second won. `jobs.claim` moves the row from pending to running
+ * under a guard, so exactly one caller is told to proceed.
+ *
+ * What is left afterwards matters as much. A runner that answers writes its own
+ * terminal status and clears the claim. A runner that passes, or one that threw
+ * before it could say anything, leaves the row claimed by a process that is not
+ * going to come back to it, so the outcome is written here instead.
+ */
 async function processRunnableJob(job: Job) {
-  await unsafe(jobs.run(job.id));
+  const mine = await unsafe(jobs.claim(job.id, new Date().toISOString()));
+  if (!mine) return;
+
+  try {
+    const outcome = await unsafe(jobs.run(job.id));
+    const current = (await unsafe(jobs.get(job.id))) as Job;
+    const settled = settleStatus(current.status, outcome, JobStatus.running, JobStatus.skipped);
+    if (settled === undefined) return;
+
+    await unsafe(jobs.release(job.id, settled));
+    if (settled === JobStatus.skipped) {
+      console.warn(
+        `[runner-service] job ${job.id} was not claimed by any runner. ` +
+          `Check that a runner package is installed and configured for its competition.`,
+      );
+    }
+  } catch (error) {
+    // The job failed, not the service. Marked rather than left holding a claim,
+    // or it sits as `running` until the stale sweep gets to it an hour later.
+    console.error(`[runner-service] job ${job.id} failed`, error);
+    await unsafe(jobs.release(job.id, JobStatus.error)).catch(() => undefined);
+  }
 }
 
 export async function pollAndProcessSubmissions() {
@@ -27,7 +95,26 @@ export async function pollAndProcessSubmissions() {
 
   if (runnableJobs.length === 0) return;
 
-  await Promise.all(runnableJobs.map(processRunnableJob));
+  await mapWithLimit(runnableJobs, CONCURRENCY, processRunnableJob);
+}
+
+/**
+ * Put back the jobs whose runner died holding them.
+ *
+ * Nothing else will: a row that says `running` is invisible to the pending
+ * query, so a process killed mid-evaluation strands that submission with no
+ * result and no error, and the competitor is never told. The guard on the write
+ * is the claim stamp this read, so a live runner cannot have its job taken.
+ */
+export async function sweepStaleClaims() {
+  const before = new Date(Date.now() - STALE_CLAIM_MS).toISOString();
+  const reclaimed = await unsafe(jobs.sweepStaleClaims(before));
+  if (reclaimed.length > 0) {
+    console.warn(
+      `[runner-service] returned ${reclaimed.length} job(s) to the queue whose claim ` +
+        `was older than ${STALE_CLAIM_MS}ms: ${reclaimed.join(", ")}`,
+    );
+  }
 }
 
 /**
@@ -110,9 +197,24 @@ async function watchConfigFile(worker: ReturnType<typeof createPollingWorker>) {
 export async function startBasicRunner() {
   await prepareRunners();
 
+  // Stamped when a poll finishes rather than when one starts, so the gap the
+  // health check reads is "how long since this loop last got all the way round"
+  // and not "how long since it last tried".
+  let lastPollAt = Date.now();
+
   const worker = createPollingWorker({
     intervalMs: 2000,
-    poll: pollAndProcessSubmissions,
+    poll: async () => {
+      try {
+        await pollAndProcessSubmissions();
+      } finally {
+        // In `finally`, because a poll that threw still went round. Counting only
+        // successful polls would report a runner failing every cycle against an
+        // unreachable database as stalled, which is true of the database and not
+        // of the loop, and the log already says which.
+        lastPollAt = Date.now();
+      }
+    },
     onError(error) {
       console.error("runner-service poll failed", error);
     },
@@ -120,17 +222,37 @@ export async function startBasicRunner() {
 
   worker.start();
 
+  const health = serveHealth(() =>
+    reportOn(Date.now() - lastPollAt, worker.busy(), IDLE_TOLERANCE_MS),
+  );
+
+  const sweeper = createPollingWorker({
+    intervalMs: SWEEP_POLL_MS,
+    poll: sweepStaleClaims,
+    onError(error) {
+      console.error("runner-service could not sweep stale claims", error);
+    },
+  });
+
+  sweeper.start();
+
   const watcher = await watchConfigFile(worker);
 
   const stop = () => {
     worker.stop();
+    sweeper.stop();
     watcher?.stop();
+    health?.stop();
   };
 
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
 
-  console.log("runner-service started");
+  console.log(
+    `runner-service started, up to ${CONCURRENCY} evaluation(s) at once ` +
+      `(OCK_RUNNER_CONCURRENCY)` +
+      (health ? `, health on :${health.port}/health` : ", no health endpoint"),
+  );
 }
 
 await startBasicRunner();

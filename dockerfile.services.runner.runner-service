@@ -35,4 +35,8 @@ ENV CONFIG=/competition.config.yaml
 # the new one. See the same line in the UI service's dockerfile.
 ENV OCK_IN_CONTAINER=1
 
+# `/health` answers here, so a probe can tell a runner whose poll loop has stopped
+# from an idle one. Set OCK_RUNNER_HEALTH_PORT=off for no listening socket.
+EXPOSE 3001
+
 CMD ["bun", "run", "index.ts"]

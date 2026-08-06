@@ -1,3 +1,16 @@
+# The development stack for working on the kit itself.
+#
+#   docker compose up               just Postgres, for `bun dev` beside it
+#   docker compose --profile full up    both services in containers too
+#
+# The default is the database alone because that is what the ordinary loop needs:
+# the UI service runs from Vite so a change is on screen in a second, and building
+# a container to see it would be a strange way to spend an afternoon. The `full`
+# profile is for checking that the images build and run, which is the thing that
+# only breaks in the image.
+#
+# To run a competition rather than to work on one, see the example project. It has
+# a compose file that pulls published images instead of building them.
 services:
   db:
     hostname: db
@@ -8,22 +21,72 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
-  # ui:
-  #   build: { context: ., dockerfile: dockerfile.services.ui }
-  #   ports:
-  #     - "3007:80"
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     # Set this to a random string in production
-  #     BETTER_AUTH_SECRET: secret
-  #     # Set this to your website's URL
-  #     BASE_URL: http://localhost:3007
-  #   volumes:
-  #     - ./competition.local-docker.config.yaml:/competition.config.yaml
-  # runner-service:
-  #   build: { context: ., dockerfile: dockerfile.services.runner.runner-service }
-  #   depends_on:
-  #     - db
-  #   volumes:
-  #     - ./competition.local-docker.config.yaml:/competition.config.yaml
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      # So the services wait for a database that answers rather than for a
+      # container that exists. Postgres accepts connections a moment after the
+      # process starts, and a service that connects in that gap fails its first
+      # query and takes the stack down with it.
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ui:
+    profiles: [full]
+    build: { context: ., dockerfile: dockerfile.services.ui-service }
+    ports:
+      - "3007:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Any random string will do here, and a real deployment must not use this
+      # one: it signs session cookies.
+      BETTER_AUTH_SECRET: secret
+      BASE_URL: http://localhost:3007
+    volumes:
+      - ./competition.local-docker.config.yaml:/competition.config.yaml
+      - files:/data/files
+    healthcheck:
+      # `res.ok`, not just a completed fetch. `fetch` resolves happily on a 503,
+      # so without the check a degraded service reports itself healthy, which is
+      # the one thing a health check must not do.
+      test:
+        [
+          "CMD-SHELL",
+          'bun -e ''process.exit((await fetch("http://localhost:80/api/health")).ok ? 0 : 1)''',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  runner-service:
+    profiles: [full]
+    build: { context: ., dockerfile: dockerfile.services.runner.runner-service }
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Both services write and read the same file store, so the runner needs the
+      # same volume mounted at the same path the config names.
+      OCK_RUNNER_CONCURRENCY: 2
+    volumes:
+      - ./competition.local-docker.config.yaml:/competition.config.yaml
+      - files:/data/files
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'bun -e ''process.exit((await fetch("http://localhost:3001/health")).ok ? 0 : 1)''',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  db-data:
+  files:
