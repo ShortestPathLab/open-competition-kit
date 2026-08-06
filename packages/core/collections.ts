@@ -37,6 +37,11 @@ const createAccessor = <T extends DbKey>(
           payload: schema.update.make(data as any),
         }),
       delete: (id) => d.delete({ collection: collection, payload: id }),
+      claim: (id, where, set) =>
+        d.claim({
+          collection: collection,
+          payload: { id, where: where as any, set: set as any },
+        }),
     } satisfies WithHooks<
       (typeof tables)[typeof collection]["create"]["Type"],
       (typeof tables)[typeof collection]["update"]["Type"],

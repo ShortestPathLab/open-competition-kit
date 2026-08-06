@@ -13,7 +13,7 @@ export default {
   description:
     "Provides a complete no-op package surface for development, testing, and placeholder hook chains.",
   version: "0.0.6",
-  db: { list: noop, get: noop, create: noop, update: noop, delete: noop },
+  db: { list: noop, get: noop, create: noop, update: noop, delete: noop, claim: noop },
   files: {
     write: noop,
     read: noop,

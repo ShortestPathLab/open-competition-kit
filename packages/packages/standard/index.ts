@@ -1,6 +1,7 @@
 import {
   enrolments,
   jobs,
+  JobStatus,
   submissions,
   tracks,
   unsafe,
@@ -52,7 +53,9 @@ export default {
       const submission = await unsafe(
         submissions.create({ user: args.user, body: args.body, track: args.track }),
       );
-      const job = await unsafe(jobs.create({ submission: submission.id, status: "pending" }));
+      const job = await unsafe(
+        jobs.create({ submission: submission.id, status: JobStatus.pending, claimedAt: "" }),
+      );
 
       return { submission: submission.id, jobs: [job.id] };
     },

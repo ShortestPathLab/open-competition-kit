@@ -42,6 +42,7 @@ export {
   type StandardSchemaV1,
 } from "./config";
 export * from "./package/uri";
+export * from "./package/pin";
 export * from "./package/cache";
 export * from "./package/loader";
 export * from "./package/registry";
@@ -74,6 +75,15 @@ export type {
 } from "./hook/db";
 
 export { FileRef, isFile, keyOf, makeKey, toFileRef, type FileBody, type FileMeta } from "./file";
+
+export {
+  DEFAULT_STALE_CLAIM_MS,
+  isTerminal,
+  JobStatus,
+  staleClaims,
+  TERMINAL,
+  type ClaimedJob,
+} from "./job";
 
 export {
   describeRefusals,

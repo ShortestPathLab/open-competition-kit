@@ -24,6 +24,7 @@ export class OpenCompetitionKitDatabase extends E.Service<OpenCompetitionKitData
             create: hooks.try(api.db.create),
             update: hooks.try(api.db.update),
             delete: hooks.try(api.db.delete),
+            claim: hooks.try(api.db.claim),
           };
         });
     }),

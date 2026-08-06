@@ -50,6 +50,16 @@ export const tables = {
   job: createSchemas("open-competition-kit/db/job", {
     submission: S.String,
     status: S.String,
+    /**
+     * When a runner took this job, as an ISO string, or `""` while nobody holds
+     * it.
+     *
+     * A string rather than a date so that the column needs no nullable-column
+     * support in the schema generator, and so that "unclaimed" is a value every
+     * backend can store. ISO strings compare in the same order as the instants
+     * they name, which is all the stale-claim sweep needs.
+     */
+    claimedAt: S.String,
   }),
   context: createSchemas("open-competition-kit/db/context", {
     namespace: S.String as S.Literal<[Namespace]>,
@@ -122,6 +132,7 @@ export type TableHooks<TCreate, TUpdate, TFull> = {
   list: (partial: Partial<TFull>) => Promise<TFull[]>;
   update: (data: TUpdate) => Promise<void>;
   delete: (id: string) => Promise<void>;
+  claim: (id: string, where: Partial<TFull>, set: Partial<TFull>) => Promise<boolean | undefined>;
 };
 
 export type WithHooks<TCreate, TUpdate, TFull, E, C> = {
@@ -156,10 +167,37 @@ export const collections = S.Struct({
 
 type Acc<T> = { collection: keyof typeof schemas; payload: T };
 
+/**
+ * A conditional update: change the row only if it still looks like `where`.
+ *
+ * `id` narrows it to one row and `where` is the guard, so the whole thing is a
+ * compare-and-set. Two callers racing for the same row can both read it as
+ * `pending`, but only one `UPDATE ... WHERE status = 'pending'` affects a row,
+ * and that caller is the winner.
+ */
+export type ClaimRequest = {
+  id: string;
+  /** Fields that must still hold these values for the write to happen. */
+  where: Record<string, unknown>;
+  /** Fields to write when the guard holds. */
+  set: Record<string, unknown>;
+};
+
 export const db = S.Struct({
   list: hook<Acc<any>, unknown>(),
   get: hook<Acc<string>, unknown>(),
   create: hook<Acc<any>, unknown>(),
   update: hook<Acc<any>, void>(),
   delete: hook<Acc<string>, void>(),
+  /**
+   * Compare-and-set, answering whether this caller won.
+   *
+   * Optional in practice: a backend with nothing to say returns `undefined`, and
+   * core falls back to a read-then-write that is correct for one process and
+   * racy across several. That distinction is why the answer is not a plain
+   * boolean. A backend that cannot do this atomically should return `undefined`
+   * rather than guessing, so the fallback is chosen deliberately and said out
+   * loud, instead of a lost race being reported as a win.
+   */
+  claim: hook<Acc<ClaimRequest>, boolean | undefined>(),
 });

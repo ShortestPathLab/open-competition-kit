@@ -1,5 +1,6 @@
 import sdk, {
   jobs,
+  JobStatus,
   machine,
   outputs,
   reference,
@@ -328,24 +329,31 @@ export default {
       // job, so a deployment can run a program for one competition and a package
       // for another.
       if (!runner) {
-        return (await next?.({ job })) ?? { status: "skipped" };
+        return (await next?.({ job })) ?? { status: JobStatus.skipped };
       }
 
-      await unsafe(jobs.update({ id: job, status: "running" }));
+      // Already `running` when the runner service claimed it, and set again
+      // here because a caller that drove this hook directly did not claim
+      // anything. Writing the same value twice costs one statement; assuming a
+      // claim that never happened leaves the job looking pending while it runs.
+      await unsafe(jobs.update({ id: job, status: JobStatus.running }));
 
       try {
         const value = await evaluate(job, runner);
         await unsafe(outputs.set({ reference: reference.std.output, owner: job, value }));
-        await unsafe(jobs.update({ id: job, status: "done" }));
-        return { status: "done" };
+        // The claim goes with the status. A terminal job is nobody's to finish,
+        // so leaving a stamp on it would only give the stale sweep something to
+        // think about.
+        await unsafe(jobs.update({ id: job, status: JobStatus.done, claimedAt: "" }));
+        return { status: JobStatus.done };
       } catch (e) {
         // The job's failure, not the runner's. Letting it escape would stop
         // every job queued behind this one.
         const message = e instanceof Error ? e.message : String(e);
         console.error(`[runner-script] job ${job} failed:`, e);
         await record(job, [message]).catch(() => undefined);
-        await unsafe(jobs.update({ id: job, status: "error" }));
-        return { status: "error" };
+        await unsafe(jobs.update({ id: job, status: JobStatus.error, claimedAt: "" }));
+        return { status: JobStatus.error };
       }
     },
   },

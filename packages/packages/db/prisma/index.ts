@@ -40,5 +40,22 @@ export default {
       const a = await getCollection(collection);
       await a.delete({ where: { id: payload } });
     },
+    /**
+     * Compare-and-set, as one statement the database settles.
+     *
+     * `updateMany` rather than `update` because `update` takes a unique filter
+     * only, so the guard could not be part of it: reading the row, checking it,
+     * then writing leaves a window that two runner services will find. Postgres
+     * takes a row lock for the duration of the `UPDATE`, so of two callers
+     * racing on the same row exactly one sees a count of 1.
+     */
+    claim: async ({ collection, payload }) => {
+      const a = await getCollection(collection);
+      const { count } = await a.updateMany({
+        where: { id: payload.id, ...payload.where },
+        data: payload.set,
+      });
+      return count === 1;
+    },
   },
 } satisfies Package;
