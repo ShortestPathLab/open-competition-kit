@@ -2,8 +2,9 @@ import type { RegistryFieldsType, RJSFSchema, UiSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import React from "react";
 import type { $props, ComponentDef } from "@open-competition-kit/sdk";
-import { meta, point, shape } from "@open-competition-kit/sdk/z";
+import { meta, shape } from "@open-competition-kit/sdk/z";
 import { z } from "zod";
+import { form as formConfig, formField } from "./config";
 import { FileField } from "./file-field";
 import { Form } from "./rjsf/theme";
 import { css } from "./theme/css";
@@ -22,35 +23,36 @@ const json: z.ZodType<any> = z.lazy(() =>
     z.record(z.string(), json),
   ]),
 );
-const value = json;
 
+/**
+ * What this renderer is handed: the keys a config can set, plus the ones only a
+ * caller can supply.
+ *
+ * The extra field keys are imported from `./config` rather than repeated here.
+ * That module declares them to config validation, so defining them twice would
+ * let the two disagree about which keys a config may use.
+ */
 const propsSchema = z.object({
   ...meta.shape,
+  ...formConfig.shape,
   shape: z
     .object({
       ...shape.shape,
       ...meta.shape,
+      ...formField.shape,
       kind: z
         .enum(["text", "email", "number", "textarea", "select", "checkbox", "file"])
         .optional(),
-      placeholder: z.string().optional(),
-      /**
-       * Options for multiple-choice fields.
-       */
-      options: z
-        .object({ ...point.shape, ...meta.shape })
-        .array()
-        .optional(),
-      /**
-       * Line count for textareas.
-       */
-      lines: z.number().optional(),
-      defaultValue: value.optional(),
-      required: z.boolean().optional(),
     })
     .array(),
-  initialData: z.record(z.string(), value).optional(),
-  submitLabel: z.string().optional(),
+  /**
+   * Values to open the form with, keyed by field id.
+   *
+   * Not a config key. A `file` entry here is a `FileRef` pointing at uploaded
+   * bytes, which a `form.loader` can supply and a config file cannot. Use
+   * `defaultValue` on a field to set a starting value from config.
+   */
+  initialData: z.record(z.string(), json).optional(),
 }) satisfies z.ZodType<(typeof $props.form.ui)["def"]>;
 
 type FormDef = z.infer<typeof propsSchema> & (typeof $props.form.ui)["def"];

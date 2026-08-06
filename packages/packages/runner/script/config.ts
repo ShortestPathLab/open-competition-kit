@@ -5,11 +5,10 @@
  * package: the recipe for the image, the program itself, which files a
  * submission may supply, and whatever the program wants to be told.
  *
- * `standard` also declares fields on this node, and the two do not collide: it
- * claims `body` and this claims everything below. A config that sets both is an
- * organiser who has installed two runners, and the one listed later in `with:`
- * wins, silently. Worth knowing rather than worth preventing, since core has no
- * way to tell an intentional override from an accident.
+ * Core declares nothing on a runner node except `with:`, so every key below
+ * belongs to this package. Another runner package installed alongside this one
+ * declares its own keys, and both sets validate. Which package actually runs a
+ * job is decided by `with:` order, not by which keys a config sets.
  */
 import type { ConfigExtensions } from "@open-competition-kit/sdk";
 import { z } from "zod";
