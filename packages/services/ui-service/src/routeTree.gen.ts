@@ -8,685 +8,790 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as MeRouteRouteImport } from "./routes/me/route";
-import { Route as DashboardRouteRouteImport } from "./routes/dashboard/route";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as SignInIndexRouteImport } from "./routes/sign-in/index";
-import { Route as RegisterIndexRouteImport } from "./routes/register/index";
-import { Route as MeIndexRouteImport } from "./routes/me/index";
-import { Route as DashboardIndexRouteImport } from "./routes/dashboard/index";
-import { Route as CompetitionsIndexRouteImport } from "./routes/competitions/index";
-import { Route as AboutIndexRouteImport } from "./routes/about/index";
-import { Route as MeSettingsRouteImport } from "./routes/me/settings";
-import { Route as MeEnrolmentsRouteImport } from "./routes/me/enrolments";
-import { Route as DashboardCompetitionIdRouteRouteImport } from "./routes/dashboard/$competitionId/route";
-import { Route as CompetitionsIdRouteRouteImport } from "./routes/competitions/$id/route";
-import { Route as MeSubmissionsIndexRouteImport } from "./routes/me/submissions/index";
-import { Route as CompetitionsIdIndexRouteImport } from "./routes/competitions/$id/index";
-import { Route as SignInCompleteMethodRouteImport } from "./routes/sign-in/complete/$method";
-import { Route as MeSubmissionsSubmissionIdRouteImport } from "./routes/me/submissions/$submissionId";
-import { Route as CompetitionsIdRulesRouteImport } from "./routes/competitions/$id/rules";
-import { Route as CompetitionsIdEnrolRouteImport } from "./routes/competitions/$id/enrol";
-import { Route as ApiFilesUploadRouteImport } from "./routes/api/files/upload";
-import { Route as ApiFilesRequestUploadRouteImport } from "./routes/api/files/request-upload";
-import { Route as ApiFilesCompleteUploadRouteImport } from "./routes/api/files/complete-upload";
-import { Route as ApiFilesSplatRouteImport } from "./routes/api/files/$";
-import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth/$";
-import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from "./routes/dashboard/$competitionId/overview/index";
-import { Route as DashboardCompetitionIdConfigureIndexRouteImport } from "./routes/dashboard/$competitionId/configure/index";
-import { Route as CompetitionsIdTracksIndexRouteImport } from "./routes/competitions/$id/tracks/index";
-import { Route as CompetitionsIdSubmissionsIndexRouteImport } from "./routes/competitions/$id/submissions/index";
-import { Route as CompetitionsIdLeaderboardsIndexRouteImport } from "./routes/competitions/$id/leaderboards/index";
-import { Route as CompetitionsIdTracksTrackIdRouteImport } from "./routes/competitions/$id/tracks/$trackId";
-import { Route as CompetitionsIdSubmissionsNewRouteImport } from "./routes/competitions/$id/submissions/new";
-import { Route as CompetitionsIdLeaderboardsLeaderboardIdRouteImport } from "./routes/competitions/$id/leaderboards/$leaderboardId";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as MeRouteRouteImport } from './routes/me/route'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
+import { Route as RegisterIndexRouteImport } from './routes/register/index'
+import { Route as MeIndexRouteImport } from './routes/me/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as CompetitionsIndexRouteImport } from './routes/competitions/index'
+import { Route as AboutIndexRouteImport } from './routes/about/index'
+import { Route as MeSettingsRouteImport } from './routes/me/settings'
+import { Route as MeEnrolmentsRouteImport } from './routes/me/enrolments'
+import { Route as DashboardCompetitionIdRouteRouteImport } from './routes/dashboard/$competitionId/route'
+import { Route as CompetitionsIdRouteRouteImport } from './routes/competitions/$id/route'
+import { Route as MeSubmissionsIndexRouteImport } from './routes/me/submissions/index'
+import { Route as CompetitionsIdIndexRouteImport } from './routes/competitions/$id/index'
+import { Route as SignInCompleteMethodRouteImport } from './routes/sign-in/complete/$method'
+import { Route as MeSubmissionsSubmissionIdRouteImport } from './routes/me/submissions/$submissionId'
+import { Route as CompetitionsIdRulesRouteImport } from './routes/competitions/$id/rules'
+import { Route as CompetitionsIdEnrolRouteImport } from './routes/competitions/$id/enrol'
+import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
+import { Route as ApiFilesRequestUploadRouteImport } from './routes/api/files/request-upload'
+import { Route as ApiFilesCompleteUploadRouteImport } from './routes/api/files/complete-upload'
+import { Route as ApiFilesSplatRouteImport } from './routes/api/files/$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as DashboardCompetitionIdSubmissionsIndexRouteImport } from './routes/dashboard/$competitionId/submissions/index'
+import { Route as DashboardCompetitionIdSettingsIndexRouteImport } from './routes/dashboard/$competitionId/settings/index'
+import { Route as DashboardCompetitionIdParticipantsIndexRouteImport } from './routes/dashboard/$competitionId/participants/index'
+import { Route as DashboardCompetitionIdOverviewIndexRouteImport } from './routes/dashboard/$competitionId/overview/index'
+import { Route as CompetitionsIdTracksIndexRouteImport } from './routes/competitions/$id/tracks/index'
+import { Route as CompetitionsIdSubmissionsIndexRouteImport } from './routes/competitions/$id/submissions/index'
+import { Route as CompetitionsIdLeaderboardsIndexRouteImport } from './routes/competitions/$id/leaderboards/index'
+import { Route as DashboardCompetitionIdSubmissionsSubmissionIdRouteImport } from './routes/dashboard/$competitionId/submissions/$submissionId'
+import { Route as DashboardCompetitionIdParticipantsUserRouteImport } from './routes/dashboard/$competitionId/participants/$user'
+import { Route as CompetitionsIdTracksTrackIdRouteImport } from './routes/competitions/$id/tracks/$trackId'
+import { Route as CompetitionsIdSubmissionsNewRouteImport } from './routes/competitions/$id/submissions/new'
+import { Route as CompetitionsIdLeaderboardsLeaderboardIdRouteImport } from './routes/competitions/$id/leaderboards/$leaderboardId'
 
 const MeRouteRoute = MeRouteRouteImport.update({
-  id: "/me",
-  path: "/me",
+  id: '/me',
+  path: '/me',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const SignInIndexRoute = SignInIndexRouteImport.update({
-  id: "/sign-in/",
-  path: "/sign-in/",
+  id: '/sign-in/',
+  path: '/sign-in/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const RegisterIndexRoute = RegisterIndexRouteImport.update({
-  id: "/register/",
-  path: "/register/",
+  id: '/register/',
+  path: '/register/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const MeIndexRoute = MeIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => MeRouteRoute,
-} as any);
+} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => DashboardRouteRoute,
-} as any);
+} as any)
 const CompetitionsIndexRoute = CompetitionsIndexRouteImport.update({
-  id: "/competitions/",
-  path: "/competitions/",
+  id: '/competitions/',
+  path: '/competitions/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AboutIndexRoute = AboutIndexRouteImport.update({
-  id: "/about/",
-  path: "/about/",
+  id: '/about/',
+  path: '/about/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const MeSettingsRoute = MeSettingsRouteImport.update({
-  id: "/settings",
-  path: "/settings",
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => MeRouteRoute,
-} as any);
+} as any)
 const MeEnrolmentsRoute = MeEnrolmentsRouteImport.update({
-  id: "/enrolments",
-  path: "/enrolments",
+  id: '/enrolments',
+  path: '/enrolments',
   getParentRoute: () => MeRouteRoute,
-} as any);
-const DashboardCompetitionIdRouteRoute = DashboardCompetitionIdRouteRouteImport.update({
-  id: "/$competitionId",
-  path: "/$competitionId",
-  getParentRoute: () => DashboardRouteRoute,
-} as any);
+} as any)
+const DashboardCompetitionIdRouteRoute =
+  DashboardCompetitionIdRouteRouteImport.update({
+    id: '/$competitionId',
+    path: '/$competitionId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const CompetitionsIdRouteRoute = CompetitionsIdRouteRouteImport.update({
-  id: "/competitions/$id",
-  path: "/competitions/$id",
+  id: '/competitions/$id',
+  path: '/competitions/$id',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const MeSubmissionsIndexRoute = MeSubmissionsIndexRouteImport.update({
-  id: "/submissions/",
-  path: "/submissions/",
+  id: '/submissions/',
+  path: '/submissions/',
   getParentRoute: () => MeRouteRoute,
-} as any);
+} as any)
 const CompetitionsIdIndexRoute = CompetitionsIdIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
+} as any)
 const SignInCompleteMethodRoute = SignInCompleteMethodRouteImport.update({
-  id: "/sign-in/complete/$method",
-  path: "/sign-in/complete/$method",
+  id: '/sign-in/complete/$method',
+  path: '/sign-in/complete/$method',
   getParentRoute: () => rootRouteImport,
-} as any);
-const MeSubmissionsSubmissionIdRoute = MeSubmissionsSubmissionIdRouteImport.update({
-  id: "/submissions/$submissionId",
-  path: "/submissions/$submissionId",
-  getParentRoute: () => MeRouteRoute,
-} as any);
+} as any)
+const MeSubmissionsSubmissionIdRoute =
+  MeSubmissionsSubmissionIdRouteImport.update({
+    id: '/submissions/$submissionId',
+    path: '/submissions/$submissionId',
+    getParentRoute: () => MeRouteRoute,
+  } as any)
 const CompetitionsIdRulesRoute = CompetitionsIdRulesRouteImport.update({
-  id: "/rules",
-  path: "/rules",
+  id: '/rules',
+  path: '/rules',
   getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
+} as any)
 const CompetitionsIdEnrolRoute = CompetitionsIdEnrolRouteImport.update({
-  id: "/enrol",
-  path: "/enrol",
+  id: '/enrol',
+  path: '/enrol',
   getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
+} as any)
 const ApiFilesUploadRoute = ApiFilesUploadRouteImport.update({
-  id: "/api/files/upload",
-  path: "/api/files/upload",
+  id: '/api/files/upload',
+  path: '/api/files/upload',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiFilesRequestUploadRoute = ApiFilesRequestUploadRouteImport.update({
-  id: "/api/files/request-upload",
-  path: "/api/files/request-upload",
+  id: '/api/files/request-upload',
+  path: '/api/files/request-upload',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiFilesCompleteUploadRoute = ApiFilesCompleteUploadRouteImport.update({
-  id: "/api/files/complete-upload",
-  path: "/api/files/complete-upload",
+  id: '/api/files/complete-upload',
+  path: '/api/files/complete-upload',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiFilesSplatRoute = ApiFilesSplatRouteImport.update({
-  id: "/api/files/$",
-  path: "/api/files/$",
+  id: '/api/files/$',
+  path: '/api/files/$',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: "/api/auth/$",
-  path: "/api/auth/$",
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const DashboardCompetitionIdSubmissionsIndexRoute =
+  DashboardCompetitionIdSubmissionsIndexRouteImport.update({
+    id: '/submissions/',
+    path: '/submissions/',
+    getParentRoute: () => DashboardCompetitionIdRouteRoute,
+  } as any)
+const DashboardCompetitionIdSettingsIndexRoute =
+  DashboardCompetitionIdSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => DashboardCompetitionIdRouteRoute,
+  } as any)
+const DashboardCompetitionIdParticipantsIndexRoute =
+  DashboardCompetitionIdParticipantsIndexRouteImport.update({
+    id: '/participants/',
+    path: '/participants/',
+    getParentRoute: () => DashboardCompetitionIdRouteRoute,
+  } as any)
 const DashboardCompetitionIdOverviewIndexRoute =
   DashboardCompetitionIdOverviewIndexRouteImport.update({
-    id: "/overview/",
-    path: "/overview/",
+    id: '/overview/',
+    path: '/overview/',
     getParentRoute: () => DashboardCompetitionIdRouteRoute,
-  } as any);
-const DashboardCompetitionIdConfigureIndexRoute =
-  DashboardCompetitionIdConfigureIndexRouteImport.update({
-    id: "/configure/",
-    path: "/configure/",
+  } as any)
+const CompetitionsIdTracksIndexRoute =
+  CompetitionsIdTracksIndexRouteImport.update({
+    id: '/tracks/',
+    path: '/tracks/',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
+const CompetitionsIdSubmissionsIndexRoute =
+  CompetitionsIdSubmissionsIndexRouteImport.update({
+    id: '/submissions/',
+    path: '/submissions/',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
+const CompetitionsIdLeaderboardsIndexRoute =
+  CompetitionsIdLeaderboardsIndexRouteImport.update({
+    id: '/leaderboards/',
+    path: '/leaderboards/',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
+const DashboardCompetitionIdSubmissionsSubmissionIdRoute =
+  DashboardCompetitionIdSubmissionsSubmissionIdRouteImport.update({
+    id: '/submissions/$submissionId',
+    path: '/submissions/$submissionId',
     getParentRoute: () => DashboardCompetitionIdRouteRoute,
-  } as any);
-const CompetitionsIdTracksIndexRoute = CompetitionsIdTracksIndexRouteImport.update({
-  id: "/tracks/",
-  path: "/tracks/",
-  getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
-const CompetitionsIdSubmissionsIndexRoute = CompetitionsIdSubmissionsIndexRouteImport.update({
-  id: "/submissions/",
-  path: "/submissions/",
-  getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
-const CompetitionsIdLeaderboardsIndexRoute = CompetitionsIdLeaderboardsIndexRouteImport.update({
-  id: "/leaderboards/",
-  path: "/leaderboards/",
-  getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
-const CompetitionsIdTracksTrackIdRoute = CompetitionsIdTracksTrackIdRouteImport.update({
-  id: "/tracks/$trackId",
-  path: "/tracks/$trackId",
-  getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
-const CompetitionsIdSubmissionsNewRoute = CompetitionsIdSubmissionsNewRouteImport.update({
-  id: "/submissions/new",
-  path: "/submissions/new",
-  getParentRoute: () => CompetitionsIdRouteRoute,
-} as any);
+  } as any)
+const DashboardCompetitionIdParticipantsUserRoute =
+  DashboardCompetitionIdParticipantsUserRouteImport.update({
+    id: '/participants/$user',
+    path: '/participants/$user',
+    getParentRoute: () => DashboardCompetitionIdRouteRoute,
+  } as any)
+const CompetitionsIdTracksTrackIdRoute =
+  CompetitionsIdTracksTrackIdRouteImport.update({
+    id: '/tracks/$trackId',
+    path: '/tracks/$trackId',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
+const CompetitionsIdSubmissionsNewRoute =
+  CompetitionsIdSubmissionsNewRouteImport.update({
+    id: '/submissions/new',
+    path: '/submissions/new',
+    getParentRoute: () => CompetitionsIdRouteRoute,
+  } as any)
 const CompetitionsIdLeaderboardsLeaderboardIdRoute =
   CompetitionsIdLeaderboardsLeaderboardIdRouteImport.update({
-    id: "/leaderboards/$leaderboardId",
-    path: "/leaderboards/$leaderboardId",
+    id: '/leaderboards/$leaderboardId',
+    path: '/leaderboards/$leaderboardId',
     getParentRoute: () => CompetitionsIdRouteRoute,
-  } as any);
+  } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRouteRouteWithChildren;
-  "/me": typeof MeRouteRouteWithChildren;
-  "/competitions/$id": typeof CompetitionsIdRouteRouteWithChildren;
-  "/dashboard/$competitionId": typeof DashboardCompetitionIdRouteRouteWithChildren;
-  "/me/enrolments": typeof MeEnrolmentsRoute;
-  "/me/settings": typeof MeSettingsRoute;
-  "/about/": typeof AboutIndexRoute;
-  "/competitions/": typeof CompetitionsIndexRoute;
-  "/dashboard/": typeof DashboardIndexRoute;
-  "/me/": typeof MeIndexRoute;
-  "/register/": typeof RegisterIndexRoute;
-  "/sign-in/": typeof SignInIndexRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/files/$": typeof ApiFilesSplatRoute;
-  "/api/files/complete-upload": typeof ApiFilesCompleteUploadRoute;
-  "/api/files/request-upload": typeof ApiFilesRequestUploadRoute;
-  "/api/files/upload": typeof ApiFilesUploadRoute;
-  "/competitions/$id/enrol": typeof CompetitionsIdEnrolRoute;
-  "/competitions/$id/rules": typeof CompetitionsIdRulesRoute;
-  "/me/submissions/$submissionId": typeof MeSubmissionsSubmissionIdRoute;
-  "/sign-in/complete/$method": typeof SignInCompleteMethodRoute;
-  "/competitions/$id/": typeof CompetitionsIdIndexRoute;
-  "/me/submissions/": typeof MeSubmissionsIndexRoute;
-  "/competitions/$id/leaderboards/$leaderboardId": typeof CompetitionsIdLeaderboardsLeaderboardIdRoute;
-  "/competitions/$id/submissions/new": typeof CompetitionsIdSubmissionsNewRoute;
-  "/competitions/$id/tracks/$trackId": typeof CompetitionsIdTracksTrackIdRoute;
-  "/competitions/$id/leaderboards/": typeof CompetitionsIdLeaderboardsIndexRoute;
-  "/competitions/$id/submissions/": typeof CompetitionsIdSubmissionsIndexRoute;
-  "/competitions/$id/tracks/": typeof CompetitionsIdTracksIndexRoute;
-  "/dashboard/$competitionId/configure/": typeof DashboardCompetitionIdConfigureIndexRoute;
-  "/dashboard/$competitionId/overview/": typeof DashboardCompetitionIdOverviewIndexRoute;
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/me': typeof MeRouteRouteWithChildren
+  '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
+  '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/me/enrolments': typeof MeEnrolmentsRoute
+  '/me/settings': typeof MeSettingsRoute
+  '/about/': typeof AboutIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/me/': typeof MeIndexRoute
+  '/register/': typeof RegisterIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$': typeof ApiFilesSplatRoute
+  '/api/files/complete-upload': typeof ApiFilesCompleteUploadRoute
+  '/api/files/request-upload': typeof ApiFilesRequestUploadRoute
+  '/api/files/upload': typeof ApiFilesUploadRoute
+  '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
+  '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
+  '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
+  '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
+  '/competitions/$id/': typeof CompetitionsIdIndexRoute
+  '/me/submissions/': typeof MeSubmissionsIndexRoute
+  '/competitions/$id/leaderboards/$leaderboardId': typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
+  '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/dashboard/$competitionId/participants/$user': typeof DashboardCompetitionIdParticipantsUserRoute
+  '/dashboard/$competitionId/submissions/$submissionId': typeof DashboardCompetitionIdSubmissionsSubmissionIdRoute
+  '/competitions/$id/leaderboards/': typeof CompetitionsIdLeaderboardsIndexRoute
+  '/competitions/$id/submissions/': typeof CompetitionsIdSubmissionsIndexRoute
+  '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
+  '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
+  '/dashboard/$competitionId/participants/': typeof DashboardCompetitionIdParticipantsIndexRoute
+  '/dashboard/$competitionId/settings/': typeof DashboardCompetitionIdSettingsIndexRoute
+  '/dashboard/$competitionId/submissions/': typeof DashboardCompetitionIdSubmissionsIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/dashboard/$competitionId": typeof DashboardCompetitionIdRouteRouteWithChildren;
-  "/me/enrolments": typeof MeEnrolmentsRoute;
-  "/me/settings": typeof MeSettingsRoute;
-  "/about": typeof AboutIndexRoute;
-  "/competitions": typeof CompetitionsIndexRoute;
-  "/dashboard": typeof DashboardIndexRoute;
-  "/me": typeof MeIndexRoute;
-  "/register": typeof RegisterIndexRoute;
-  "/sign-in": typeof SignInIndexRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/files/$": typeof ApiFilesSplatRoute;
-  "/api/files/complete-upload": typeof ApiFilesCompleteUploadRoute;
-  "/api/files/request-upload": typeof ApiFilesRequestUploadRoute;
-  "/api/files/upload": typeof ApiFilesUploadRoute;
-  "/competitions/$id/enrol": typeof CompetitionsIdEnrolRoute;
-  "/competitions/$id/rules": typeof CompetitionsIdRulesRoute;
-  "/me/submissions/$submissionId": typeof MeSubmissionsSubmissionIdRoute;
-  "/sign-in/complete/$method": typeof SignInCompleteMethodRoute;
-  "/competitions/$id": typeof CompetitionsIdIndexRoute;
-  "/me/submissions": typeof MeSubmissionsIndexRoute;
-  "/competitions/$id/leaderboards/$leaderboardId": typeof CompetitionsIdLeaderboardsLeaderboardIdRoute;
-  "/competitions/$id/submissions/new": typeof CompetitionsIdSubmissionsNewRoute;
-  "/competitions/$id/tracks/$trackId": typeof CompetitionsIdTracksTrackIdRoute;
-  "/competitions/$id/leaderboards": typeof CompetitionsIdLeaderboardsIndexRoute;
-  "/competitions/$id/submissions": typeof CompetitionsIdSubmissionsIndexRoute;
-  "/competitions/$id/tracks": typeof CompetitionsIdTracksIndexRoute;
-  "/dashboard/$competitionId/configure": typeof DashboardCompetitionIdConfigureIndexRoute;
-  "/dashboard/$competitionId/overview": typeof DashboardCompetitionIdOverviewIndexRoute;
+  '/': typeof IndexRoute
+  '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/me/enrolments': typeof MeEnrolmentsRoute
+  '/me/settings': typeof MeSettingsRoute
+  '/about': typeof AboutIndexRoute
+  '/competitions': typeof CompetitionsIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/me': typeof MeIndexRoute
+  '/register': typeof RegisterIndexRoute
+  '/sign-in': typeof SignInIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$': typeof ApiFilesSplatRoute
+  '/api/files/complete-upload': typeof ApiFilesCompleteUploadRoute
+  '/api/files/request-upload': typeof ApiFilesRequestUploadRoute
+  '/api/files/upload': typeof ApiFilesUploadRoute
+  '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
+  '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
+  '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
+  '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
+  '/competitions/$id': typeof CompetitionsIdIndexRoute
+  '/me/submissions': typeof MeSubmissionsIndexRoute
+  '/competitions/$id/leaderboards/$leaderboardId': typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
+  '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/dashboard/$competitionId/participants/$user': typeof DashboardCompetitionIdParticipantsUserRoute
+  '/dashboard/$competitionId/submissions/$submissionId': typeof DashboardCompetitionIdSubmissionsSubmissionIdRoute
+  '/competitions/$id/leaderboards': typeof CompetitionsIdLeaderboardsIndexRoute
+  '/competitions/$id/submissions': typeof CompetitionsIdSubmissionsIndexRoute
+  '/competitions/$id/tracks': typeof CompetitionsIdTracksIndexRoute
+  '/dashboard/$competitionId/overview': typeof DashboardCompetitionIdOverviewIndexRoute
+  '/dashboard/$competitionId/participants': typeof DashboardCompetitionIdParticipantsIndexRoute
+  '/dashboard/$competitionId/settings': typeof DashboardCompetitionIdSettingsIndexRoute
+  '/dashboard/$competitionId/submissions': typeof DashboardCompetitionIdSubmissionsIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/dashboard": typeof DashboardRouteRouteWithChildren;
-  "/me": typeof MeRouteRouteWithChildren;
-  "/competitions/$id": typeof CompetitionsIdRouteRouteWithChildren;
-  "/dashboard/$competitionId": typeof DashboardCompetitionIdRouteRouteWithChildren;
-  "/me/enrolments": typeof MeEnrolmentsRoute;
-  "/me/settings": typeof MeSettingsRoute;
-  "/about/": typeof AboutIndexRoute;
-  "/competitions/": typeof CompetitionsIndexRoute;
-  "/dashboard/": typeof DashboardIndexRoute;
-  "/me/": typeof MeIndexRoute;
-  "/register/": typeof RegisterIndexRoute;
-  "/sign-in/": typeof SignInIndexRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/files/$": typeof ApiFilesSplatRoute;
-  "/api/files/complete-upload": typeof ApiFilesCompleteUploadRoute;
-  "/api/files/request-upload": typeof ApiFilesRequestUploadRoute;
-  "/api/files/upload": typeof ApiFilesUploadRoute;
-  "/competitions/$id/enrol": typeof CompetitionsIdEnrolRoute;
-  "/competitions/$id/rules": typeof CompetitionsIdRulesRoute;
-  "/me/submissions/$submissionId": typeof MeSubmissionsSubmissionIdRoute;
-  "/sign-in/complete/$method": typeof SignInCompleteMethodRoute;
-  "/competitions/$id/": typeof CompetitionsIdIndexRoute;
-  "/me/submissions/": typeof MeSubmissionsIndexRoute;
-  "/competitions/$id/leaderboards/$leaderboardId": typeof CompetitionsIdLeaderboardsLeaderboardIdRoute;
-  "/competitions/$id/submissions/new": typeof CompetitionsIdSubmissionsNewRoute;
-  "/competitions/$id/tracks/$trackId": typeof CompetitionsIdTracksTrackIdRoute;
-  "/competitions/$id/leaderboards/": typeof CompetitionsIdLeaderboardsIndexRoute;
-  "/competitions/$id/submissions/": typeof CompetitionsIdSubmissionsIndexRoute;
-  "/competitions/$id/tracks/": typeof CompetitionsIdTracksIndexRoute;
-  "/dashboard/$competitionId/configure/": typeof DashboardCompetitionIdConfigureIndexRoute;
-  "/dashboard/$competitionId/overview/": typeof DashboardCompetitionIdOverviewIndexRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/me': typeof MeRouteRouteWithChildren
+  '/competitions/$id': typeof CompetitionsIdRouteRouteWithChildren
+  '/dashboard/$competitionId': typeof DashboardCompetitionIdRouteRouteWithChildren
+  '/me/enrolments': typeof MeEnrolmentsRoute
+  '/me/settings': typeof MeSettingsRoute
+  '/about/': typeof AboutIndexRoute
+  '/competitions/': typeof CompetitionsIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/me/': typeof MeIndexRoute
+  '/register/': typeof RegisterIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/files/$': typeof ApiFilesSplatRoute
+  '/api/files/complete-upload': typeof ApiFilesCompleteUploadRoute
+  '/api/files/request-upload': typeof ApiFilesRequestUploadRoute
+  '/api/files/upload': typeof ApiFilesUploadRoute
+  '/competitions/$id/enrol': typeof CompetitionsIdEnrolRoute
+  '/competitions/$id/rules': typeof CompetitionsIdRulesRoute
+  '/me/submissions/$submissionId': typeof MeSubmissionsSubmissionIdRoute
+  '/sign-in/complete/$method': typeof SignInCompleteMethodRoute
+  '/competitions/$id/': typeof CompetitionsIdIndexRoute
+  '/me/submissions/': typeof MeSubmissionsIndexRoute
+  '/competitions/$id/leaderboards/$leaderboardId': typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
+  '/competitions/$id/submissions/new': typeof CompetitionsIdSubmissionsNewRoute
+  '/competitions/$id/tracks/$trackId': typeof CompetitionsIdTracksTrackIdRoute
+  '/dashboard/$competitionId/participants/$user': typeof DashboardCompetitionIdParticipantsUserRoute
+  '/dashboard/$competitionId/submissions/$submissionId': typeof DashboardCompetitionIdSubmissionsSubmissionIdRoute
+  '/competitions/$id/leaderboards/': typeof CompetitionsIdLeaderboardsIndexRoute
+  '/competitions/$id/submissions/': typeof CompetitionsIdSubmissionsIndexRoute
+  '/competitions/$id/tracks/': typeof CompetitionsIdTracksIndexRoute
+  '/dashboard/$competitionId/overview/': typeof DashboardCompetitionIdOverviewIndexRoute
+  '/dashboard/$competitionId/participants/': typeof DashboardCompetitionIdParticipantsIndexRoute
+  '/dashboard/$competitionId/settings/': typeof DashboardCompetitionIdSettingsIndexRoute
+  '/dashboard/$competitionId/submissions/': typeof DashboardCompetitionIdSubmissionsIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/dashboard"
-    | "/me"
-    | "/competitions/$id"
-    | "/dashboard/$competitionId"
-    | "/me/enrolments"
-    | "/me/settings"
-    | "/about/"
-    | "/competitions/"
-    | "/dashboard/"
-    | "/me/"
-    | "/register/"
-    | "/sign-in/"
-    | "/api/auth/$"
-    | "/api/files/$"
-    | "/api/files/complete-upload"
-    | "/api/files/request-upload"
-    | "/api/files/upload"
-    | "/competitions/$id/enrol"
-    | "/competitions/$id/rules"
-    | "/me/submissions/$submissionId"
-    | "/sign-in/complete/$method"
-    | "/competitions/$id/"
-    | "/me/submissions/"
-    | "/competitions/$id/leaderboards/$leaderboardId"
-    | "/competitions/$id/submissions/new"
-    | "/competitions/$id/tracks/$trackId"
-    | "/competitions/$id/leaderboards/"
-    | "/competitions/$id/submissions/"
-    | "/competitions/$id/tracks/"
-    | "/dashboard/$competitionId/configure/"
-    | "/dashboard/$competitionId/overview/";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/dashboard'
+    | '/me'
+    | '/competitions/$id'
+    | '/dashboard/$competitionId'
+    | '/me/enrolments'
+    | '/me/settings'
+    | '/about/'
+    | '/competitions/'
+    | '/dashboard/'
+    | '/me/'
+    | '/register/'
+    | '/sign-in/'
+    | '/api/auth/$'
+    | '/api/files/$'
+    | '/api/files/complete-upload'
+    | '/api/files/request-upload'
+    | '/api/files/upload'
+    | '/competitions/$id/enrol'
+    | '/competitions/$id/rules'
+    | '/me/submissions/$submissionId'
+    | '/sign-in/complete/$method'
+    | '/competitions/$id/'
+    | '/me/submissions/'
+    | '/competitions/$id/leaderboards/$leaderboardId'
+    | '/competitions/$id/submissions/new'
+    | '/competitions/$id/tracks/$trackId'
+    | '/dashboard/$competitionId/participants/$user'
+    | '/dashboard/$competitionId/submissions/$submissionId'
+    | '/competitions/$id/leaderboards/'
+    | '/competitions/$id/submissions/'
+    | '/competitions/$id/tracks/'
+    | '/dashboard/$competitionId/overview/'
+    | '/dashboard/$competitionId/participants/'
+    | '/dashboard/$competitionId/settings/'
+    | '/dashboard/$competitionId/submissions/'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/dashboard/$competitionId"
-    | "/me/enrolments"
-    | "/me/settings"
-    | "/about"
-    | "/competitions"
-    | "/dashboard"
-    | "/me"
-    | "/register"
-    | "/sign-in"
-    | "/api/auth/$"
-    | "/api/files/$"
-    | "/api/files/complete-upload"
-    | "/api/files/request-upload"
-    | "/api/files/upload"
-    | "/competitions/$id/enrol"
-    | "/competitions/$id/rules"
-    | "/me/submissions/$submissionId"
-    | "/sign-in/complete/$method"
-    | "/competitions/$id"
-    | "/me/submissions"
-    | "/competitions/$id/leaderboards/$leaderboardId"
-    | "/competitions/$id/submissions/new"
-    | "/competitions/$id/tracks/$trackId"
-    | "/competitions/$id/leaderboards"
-    | "/competitions/$id/submissions"
-    | "/competitions/$id/tracks"
-    | "/dashboard/$competitionId/configure"
-    | "/dashboard/$competitionId/overview";
+    | '/'
+    | '/dashboard/$competitionId'
+    | '/me/enrolments'
+    | '/me/settings'
+    | '/about'
+    | '/competitions'
+    | '/dashboard'
+    | '/me'
+    | '/register'
+    | '/sign-in'
+    | '/api/auth/$'
+    | '/api/files/$'
+    | '/api/files/complete-upload'
+    | '/api/files/request-upload'
+    | '/api/files/upload'
+    | '/competitions/$id/enrol'
+    | '/competitions/$id/rules'
+    | '/me/submissions/$submissionId'
+    | '/sign-in/complete/$method'
+    | '/competitions/$id'
+    | '/me/submissions'
+    | '/competitions/$id/leaderboards/$leaderboardId'
+    | '/competitions/$id/submissions/new'
+    | '/competitions/$id/tracks/$trackId'
+    | '/dashboard/$competitionId/participants/$user'
+    | '/dashboard/$competitionId/submissions/$submissionId'
+    | '/competitions/$id/leaderboards'
+    | '/competitions/$id/submissions'
+    | '/competitions/$id/tracks'
+    | '/dashboard/$competitionId/overview'
+    | '/dashboard/$competitionId/participants'
+    | '/dashboard/$competitionId/settings'
+    | '/dashboard/$competitionId/submissions'
   id:
-    | "__root__"
-    | "/"
-    | "/dashboard"
-    | "/me"
-    | "/competitions/$id"
-    | "/dashboard/$competitionId"
-    | "/me/enrolments"
-    | "/me/settings"
-    | "/about/"
-    | "/competitions/"
-    | "/dashboard/"
-    | "/me/"
-    | "/register/"
-    | "/sign-in/"
-    | "/api/auth/$"
-    | "/api/files/$"
-    | "/api/files/complete-upload"
-    | "/api/files/request-upload"
-    | "/api/files/upload"
-    | "/competitions/$id/enrol"
-    | "/competitions/$id/rules"
-    | "/me/submissions/$submissionId"
-    | "/sign-in/complete/$method"
-    | "/competitions/$id/"
-    | "/me/submissions/"
-    | "/competitions/$id/leaderboards/$leaderboardId"
-    | "/competitions/$id/submissions/new"
-    | "/competitions/$id/tracks/$trackId"
-    | "/competitions/$id/leaderboards/"
-    | "/competitions/$id/submissions/"
-    | "/competitions/$id/tracks/"
-    | "/dashboard/$competitionId/configure/"
-    | "/dashboard/$competitionId/overview/";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/me'
+    | '/competitions/$id'
+    | '/dashboard/$competitionId'
+    | '/me/enrolments'
+    | '/me/settings'
+    | '/about/'
+    | '/competitions/'
+    | '/dashboard/'
+    | '/me/'
+    | '/register/'
+    | '/sign-in/'
+    | '/api/auth/$'
+    | '/api/files/$'
+    | '/api/files/complete-upload'
+    | '/api/files/request-upload'
+    | '/api/files/upload'
+    | '/competitions/$id/enrol'
+    | '/competitions/$id/rules'
+    | '/me/submissions/$submissionId'
+    | '/sign-in/complete/$method'
+    | '/competitions/$id/'
+    | '/me/submissions/'
+    | '/competitions/$id/leaderboards/$leaderboardId'
+    | '/competitions/$id/submissions/new'
+    | '/competitions/$id/tracks/$trackId'
+    | '/dashboard/$competitionId/participants/$user'
+    | '/dashboard/$competitionId/submissions/$submissionId'
+    | '/competitions/$id/leaderboards/'
+    | '/competitions/$id/submissions/'
+    | '/competitions/$id/tracks/'
+    | '/dashboard/$competitionId/overview/'
+    | '/dashboard/$competitionId/participants/'
+    | '/dashboard/$competitionId/settings/'
+    | '/dashboard/$competitionId/submissions/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren;
-  MeRouteRoute: typeof MeRouteRouteWithChildren;
-  CompetitionsIdRouteRoute: typeof CompetitionsIdRouteRouteWithChildren;
-  AboutIndexRoute: typeof AboutIndexRoute;
-  CompetitionsIndexRoute: typeof CompetitionsIndexRoute;
-  RegisterIndexRoute: typeof RegisterIndexRoute;
-  SignInIndexRoute: typeof SignInIndexRoute;
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
-  ApiFilesSplatRoute: typeof ApiFilesSplatRoute;
-  ApiFilesCompleteUploadRoute: typeof ApiFilesCompleteUploadRoute;
-  ApiFilesRequestUploadRoute: typeof ApiFilesRequestUploadRoute;
-  ApiFilesUploadRoute: typeof ApiFilesUploadRoute;
-  SignInCompleteMethodRoute: typeof SignInCompleteMethodRoute;
+  IndexRoute: typeof IndexRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  MeRouteRoute: typeof MeRouteRouteWithChildren
+  CompetitionsIdRouteRoute: typeof CompetitionsIdRouteRouteWithChildren
+  AboutIndexRoute: typeof AboutIndexRoute
+  CompetitionsIndexRoute: typeof CompetitionsIndexRoute
+  RegisterIndexRoute: typeof RegisterIndexRoute
+  SignInIndexRoute: typeof SignInIndexRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiFilesSplatRoute: typeof ApiFilesSplatRoute
+  ApiFilesCompleteUploadRoute: typeof ApiFilesCompleteUploadRoute
+  ApiFilesRequestUploadRoute: typeof ApiFilesRequestUploadRoute
+  ApiFilesUploadRoute: typeof ApiFilesUploadRoute
+  SignInCompleteMethodRoute: typeof SignInCompleteMethodRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/me": {
-      id: "/me";
-      path: "/me";
-      fullPath: "/me";
-      preLoaderRoute: typeof MeRouteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/dashboard": {
-      id: "/dashboard";
-      path: "/dashboard";
-      fullPath: "/dashboard";
-      preLoaderRoute: typeof DashboardRouteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-in/": {
-      id: "/sign-in/";
-      path: "/sign-in";
-      fullPath: "/sign-in/";
-      preLoaderRoute: typeof SignInIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/register/": {
-      id: "/register/";
-      path: "/register";
-      fullPath: "/register/";
-      preLoaderRoute: typeof RegisterIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/me/": {
-      id: "/me/";
-      path: "/";
-      fullPath: "/me/";
-      preLoaderRoute: typeof MeIndexRouteImport;
-      parentRoute: typeof MeRouteRoute;
-    };
-    "/dashboard/": {
-      id: "/dashboard/";
-      path: "/";
-      fullPath: "/dashboard/";
-      preLoaderRoute: typeof DashboardIndexRouteImport;
-      parentRoute: typeof DashboardRouteRoute;
-    };
-    "/competitions/": {
-      id: "/competitions/";
-      path: "/competitions";
-      fullPath: "/competitions/";
-      preLoaderRoute: typeof CompetitionsIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/about/": {
-      id: "/about/";
-      path: "/about";
-      fullPath: "/about/";
-      preLoaderRoute: typeof AboutIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/me/settings": {
-      id: "/me/settings";
-      path: "/settings";
-      fullPath: "/me/settings";
-      preLoaderRoute: typeof MeSettingsRouteImport;
-      parentRoute: typeof MeRouteRoute;
-    };
-    "/me/enrolments": {
-      id: "/me/enrolments";
-      path: "/enrolments";
-      fullPath: "/me/enrolments";
-      preLoaderRoute: typeof MeEnrolmentsRouteImport;
-      parentRoute: typeof MeRouteRoute;
-    };
-    "/dashboard/$competitionId": {
-      id: "/dashboard/$competitionId";
-      path: "/$competitionId";
-      fullPath: "/dashboard/$competitionId";
-      preLoaderRoute: typeof DashboardCompetitionIdRouteRouteImport;
-      parentRoute: typeof DashboardRouteRoute;
-    };
-    "/competitions/$id": {
-      id: "/competitions/$id";
-      path: "/competitions/$id";
-      fullPath: "/competitions/$id";
-      preLoaderRoute: typeof CompetitionsIdRouteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/me/submissions/": {
-      id: "/me/submissions/";
-      path: "/submissions";
-      fullPath: "/me/submissions/";
-      preLoaderRoute: typeof MeSubmissionsIndexRouteImport;
-      parentRoute: typeof MeRouteRoute;
-    };
-    "/competitions/$id/": {
-      id: "/competitions/$id/";
-      path: "/";
-      fullPath: "/competitions/$id/";
-      preLoaderRoute: typeof CompetitionsIdIndexRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/sign-in/complete/$method": {
-      id: "/sign-in/complete/$method";
-      path: "/sign-in/complete/$method";
-      fullPath: "/sign-in/complete/$method";
-      preLoaderRoute: typeof SignInCompleteMethodRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/me/submissions/$submissionId": {
-      id: "/me/submissions/$submissionId";
-      path: "/submissions/$submissionId";
-      fullPath: "/me/submissions/$submissionId";
-      preLoaderRoute: typeof MeSubmissionsSubmissionIdRouteImport;
-      parentRoute: typeof MeRouteRoute;
-    };
-    "/competitions/$id/rules": {
-      id: "/competitions/$id/rules";
-      path: "/rules";
-      fullPath: "/competitions/$id/rules";
-      preLoaderRoute: typeof CompetitionsIdRulesRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/competitions/$id/enrol": {
-      id: "/competitions/$id/enrol";
-      path: "/enrol";
-      fullPath: "/competitions/$id/enrol";
-      preLoaderRoute: typeof CompetitionsIdEnrolRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/api/files/upload": {
-      id: "/api/files/upload";
-      path: "/api/files/upload";
-      fullPath: "/api/files/upload";
-      preLoaderRoute: typeof ApiFilesUploadRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/files/request-upload": {
-      id: "/api/files/request-upload";
-      path: "/api/files/request-upload";
-      fullPath: "/api/files/request-upload";
-      preLoaderRoute: typeof ApiFilesRequestUploadRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/files/complete-upload": {
-      id: "/api/files/complete-upload";
-      path: "/api/files/complete-upload";
-      fullPath: "/api/files/complete-upload";
-      preLoaderRoute: typeof ApiFilesCompleteUploadRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/files/$": {
-      id: "/api/files/$";
-      path: "/api/files/$";
-      fullPath: "/api/files/$";
-      preLoaderRoute: typeof ApiFilesSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/auth/$": {
-      id: "/api/auth/$";
-      path: "/api/auth/$";
-      fullPath: "/api/auth/$";
-      preLoaderRoute: typeof ApiAuthSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/dashboard/$competitionId/overview/": {
-      id: "/dashboard/$competitionId/overview/";
-      path: "/overview";
-      fullPath: "/dashboard/$competitionId/overview/";
-      preLoaderRoute: typeof DashboardCompetitionIdOverviewIndexRouteImport;
-      parentRoute: typeof DashboardCompetitionIdRouteRoute;
-    };
-    "/dashboard/$competitionId/configure/": {
-      id: "/dashboard/$competitionId/configure/";
-      path: "/configure";
-      fullPath: "/dashboard/$competitionId/configure/";
-      preLoaderRoute: typeof DashboardCompetitionIdConfigureIndexRouteImport;
-      parentRoute: typeof DashboardCompetitionIdRouteRoute;
-    };
-    "/competitions/$id/tracks/": {
-      id: "/competitions/$id/tracks/";
-      path: "/tracks";
-      fullPath: "/competitions/$id/tracks/";
-      preLoaderRoute: typeof CompetitionsIdTracksIndexRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/competitions/$id/submissions/": {
-      id: "/competitions/$id/submissions/";
-      path: "/submissions";
-      fullPath: "/competitions/$id/submissions/";
-      preLoaderRoute: typeof CompetitionsIdSubmissionsIndexRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/competitions/$id/leaderboards/": {
-      id: "/competitions/$id/leaderboards/";
-      path: "/leaderboards";
-      fullPath: "/competitions/$id/leaderboards/";
-      preLoaderRoute: typeof CompetitionsIdLeaderboardsIndexRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/competitions/$id/tracks/$trackId": {
-      id: "/competitions/$id/tracks/$trackId";
-      path: "/tracks/$trackId";
-      fullPath: "/competitions/$id/tracks/$trackId";
-      preLoaderRoute: typeof CompetitionsIdTracksTrackIdRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/competitions/$id/submissions/new": {
-      id: "/competitions/$id/submissions/new";
-      path: "/submissions/new";
-      fullPath: "/competitions/$id/submissions/new";
-      preLoaderRoute: typeof CompetitionsIdSubmissionsNewRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
-    "/competitions/$id/leaderboards/$leaderboardId": {
-      id: "/competitions/$id/leaderboards/$leaderboardId";
-      path: "/leaderboards/$leaderboardId";
-      fullPath: "/competitions/$id/leaderboards/$leaderboardId";
-      preLoaderRoute: typeof CompetitionsIdLeaderboardsLeaderboardIdRouteImport;
-      parentRoute: typeof CompetitionsIdRouteRoute;
-    };
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in/': {
+      id: '/sign-in/'
+      path: '/sign-in'
+      fullPath: '/sign-in/'
+      preLoaderRoute: typeof SignInIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register/': {
+      id: '/register/'
+      path: '/register'
+      fullPath: '/register/'
+      preLoaderRoute: typeof RegisterIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/': {
+      id: '/me/'
+      path: '/'
+      fullPath: '/me/'
+      preLoaderRoute: typeof MeIndexRouteImport
+      parentRoute: typeof MeRouteRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/competitions/': {
+      id: '/competitions/'
+      path: '/competitions'
+      fullPath: '/competitions/'
+      preLoaderRoute: typeof CompetitionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/': {
+      id: '/about/'
+      path: '/about'
+      fullPath: '/about/'
+      preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/settings': {
+      id: '/me/settings'
+      path: '/settings'
+      fullPath: '/me/settings'
+      preLoaderRoute: typeof MeSettingsRouteImport
+      parentRoute: typeof MeRouteRoute
+    }
+    '/me/enrolments': {
+      id: '/me/enrolments'
+      path: '/enrolments'
+      fullPath: '/me/enrolments'
+      preLoaderRoute: typeof MeEnrolmentsRouteImport
+      parentRoute: typeof MeRouteRoute
+    }
+    '/dashboard/$competitionId': {
+      id: '/dashboard/$competitionId'
+      path: '/$competitionId'
+      fullPath: '/dashboard/$competitionId'
+      preLoaderRoute: typeof DashboardCompetitionIdRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/competitions/$id': {
+      id: '/competitions/$id'
+      path: '/competitions/$id'
+      fullPath: '/competitions/$id'
+      preLoaderRoute: typeof CompetitionsIdRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/submissions/': {
+      id: '/me/submissions/'
+      path: '/submissions'
+      fullPath: '/me/submissions/'
+      preLoaderRoute: typeof MeSubmissionsIndexRouteImport
+      parentRoute: typeof MeRouteRoute
+    }
+    '/competitions/$id/': {
+      id: '/competitions/$id/'
+      path: '/'
+      fullPath: '/competitions/$id/'
+      preLoaderRoute: typeof CompetitionsIdIndexRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/sign-in/complete/$method': {
+      id: '/sign-in/complete/$method'
+      path: '/sign-in/complete/$method'
+      fullPath: '/sign-in/complete/$method'
+      preLoaderRoute: typeof SignInCompleteMethodRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/submissions/$submissionId': {
+      id: '/me/submissions/$submissionId'
+      path: '/submissions/$submissionId'
+      fullPath: '/me/submissions/$submissionId'
+      preLoaderRoute: typeof MeSubmissionsSubmissionIdRouteImport
+      parentRoute: typeof MeRouteRoute
+    }
+    '/competitions/$id/rules': {
+      id: '/competitions/$id/rules'
+      path: '/rules'
+      fullPath: '/competitions/$id/rules'
+      preLoaderRoute: typeof CompetitionsIdRulesRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/competitions/$id/enrol': {
+      id: '/competitions/$id/enrol'
+      path: '/enrol'
+      fullPath: '/competitions/$id/enrol'
+      preLoaderRoute: typeof CompetitionsIdEnrolRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/api/files/upload': {
+      id: '/api/files/upload'
+      path: '/api/files/upload'
+      fullPath: '/api/files/upload'
+      preLoaderRoute: typeof ApiFilesUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/files/request-upload': {
+      id: '/api/files/request-upload'
+      path: '/api/files/request-upload'
+      fullPath: '/api/files/request-upload'
+      preLoaderRoute: typeof ApiFilesRequestUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/files/complete-upload': {
+      id: '/api/files/complete-upload'
+      path: '/api/files/complete-upload'
+      fullPath: '/api/files/complete-upload'
+      preLoaderRoute: typeof ApiFilesCompleteUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/files/$': {
+      id: '/api/files/$'
+      path: '/api/files/$'
+      fullPath: '/api/files/$'
+      preLoaderRoute: typeof ApiFilesSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/$competitionId/submissions/': {
+      id: '/dashboard/$competitionId/submissions/'
+      path: '/submissions'
+      fullPath: '/dashboard/$competitionId/submissions/'
+      preLoaderRoute: typeof DashboardCompetitionIdSubmissionsIndexRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
+    }
+    '/dashboard/$competitionId/settings/': {
+      id: '/dashboard/$competitionId/settings/'
+      path: '/settings'
+      fullPath: '/dashboard/$competitionId/settings/'
+      preLoaderRoute: typeof DashboardCompetitionIdSettingsIndexRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
+    }
+    '/dashboard/$competitionId/participants/': {
+      id: '/dashboard/$competitionId/participants/'
+      path: '/participants'
+      fullPath: '/dashboard/$competitionId/participants/'
+      preLoaderRoute: typeof DashboardCompetitionIdParticipantsIndexRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
+    }
+    '/dashboard/$competitionId/overview/': {
+      id: '/dashboard/$competitionId/overview/'
+      path: '/overview'
+      fullPath: '/dashboard/$competitionId/overview/'
+      preLoaderRoute: typeof DashboardCompetitionIdOverviewIndexRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
+    }
+    '/competitions/$id/tracks/': {
+      id: '/competitions/$id/tracks/'
+      path: '/tracks'
+      fullPath: '/competitions/$id/tracks/'
+      preLoaderRoute: typeof CompetitionsIdTracksIndexRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/competitions/$id/submissions/': {
+      id: '/competitions/$id/submissions/'
+      path: '/submissions'
+      fullPath: '/competitions/$id/submissions/'
+      preLoaderRoute: typeof CompetitionsIdSubmissionsIndexRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/competitions/$id/leaderboards/': {
+      id: '/competitions/$id/leaderboards/'
+      path: '/leaderboards'
+      fullPath: '/competitions/$id/leaderboards/'
+      preLoaderRoute: typeof CompetitionsIdLeaderboardsIndexRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/dashboard/$competitionId/submissions/$submissionId': {
+      id: '/dashboard/$competitionId/submissions/$submissionId'
+      path: '/submissions/$submissionId'
+      fullPath: '/dashboard/$competitionId/submissions/$submissionId'
+      preLoaderRoute: typeof DashboardCompetitionIdSubmissionsSubmissionIdRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
+    }
+    '/dashboard/$competitionId/participants/$user': {
+      id: '/dashboard/$competitionId/participants/$user'
+      path: '/participants/$user'
+      fullPath: '/dashboard/$competitionId/participants/$user'
+      preLoaderRoute: typeof DashboardCompetitionIdParticipantsUserRouteImport
+      parentRoute: typeof DashboardCompetitionIdRouteRoute
+    }
+    '/competitions/$id/tracks/$trackId': {
+      id: '/competitions/$id/tracks/$trackId'
+      path: '/tracks/$trackId'
+      fullPath: '/competitions/$id/tracks/$trackId'
+      preLoaderRoute: typeof CompetitionsIdTracksTrackIdRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/competitions/$id/submissions/new': {
+      id: '/competitions/$id/submissions/new'
+      path: '/submissions/new'
+      fullPath: '/competitions/$id/submissions/new'
+      preLoaderRoute: typeof CompetitionsIdSubmissionsNewRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
+    '/competitions/$id/leaderboards/$leaderboardId': {
+      id: '/competitions/$id/leaderboards/$leaderboardId'
+      path: '/leaderboards/$leaderboardId'
+      fullPath: '/competitions/$id/leaderboards/$leaderboardId'
+      preLoaderRoute: typeof CompetitionsIdLeaderboardsLeaderboardIdRouteImport
+      parentRoute: typeof CompetitionsIdRouteRoute
+    }
   }
 }
 
 interface DashboardCompetitionIdRouteRouteChildren {
-  DashboardCompetitionIdConfigureIndexRoute: typeof DashboardCompetitionIdConfigureIndexRoute;
-  DashboardCompetitionIdOverviewIndexRoute: typeof DashboardCompetitionIdOverviewIndexRoute;
+  DashboardCompetitionIdParticipantsUserRoute: typeof DashboardCompetitionIdParticipantsUserRoute
+  DashboardCompetitionIdSubmissionsSubmissionIdRoute: typeof DashboardCompetitionIdSubmissionsSubmissionIdRoute
+  DashboardCompetitionIdOverviewIndexRoute: typeof DashboardCompetitionIdOverviewIndexRoute
+  DashboardCompetitionIdParticipantsIndexRoute: typeof DashboardCompetitionIdParticipantsIndexRoute
+  DashboardCompetitionIdSettingsIndexRoute: typeof DashboardCompetitionIdSettingsIndexRoute
+  DashboardCompetitionIdSubmissionsIndexRoute: typeof DashboardCompetitionIdSubmissionsIndexRoute
 }
 
-const DashboardCompetitionIdRouteRouteChildren: DashboardCompetitionIdRouteRouteChildren = {
-  DashboardCompetitionIdConfigureIndexRoute: DashboardCompetitionIdConfigureIndexRoute,
-  DashboardCompetitionIdOverviewIndexRoute: DashboardCompetitionIdOverviewIndexRoute,
-};
+const DashboardCompetitionIdRouteRouteChildren: DashboardCompetitionIdRouteRouteChildren =
+  {
+    DashboardCompetitionIdParticipantsUserRoute:
+      DashboardCompetitionIdParticipantsUserRoute,
+    DashboardCompetitionIdSubmissionsSubmissionIdRoute:
+      DashboardCompetitionIdSubmissionsSubmissionIdRoute,
+    DashboardCompetitionIdOverviewIndexRoute:
+      DashboardCompetitionIdOverviewIndexRoute,
+    DashboardCompetitionIdParticipantsIndexRoute:
+      DashboardCompetitionIdParticipantsIndexRoute,
+    DashboardCompetitionIdSettingsIndexRoute:
+      DashboardCompetitionIdSettingsIndexRoute,
+    DashboardCompetitionIdSubmissionsIndexRoute:
+      DashboardCompetitionIdSubmissionsIndexRoute,
+  }
 
 const DashboardCompetitionIdRouteRouteWithChildren =
-  DashboardCompetitionIdRouteRoute._addFileChildren(DashboardCompetitionIdRouteRouteChildren);
+  DashboardCompetitionIdRouteRoute._addFileChildren(
+    DashboardCompetitionIdRouteRouteChildren,
+  )
 
 interface DashboardRouteRouteChildren {
-  DashboardCompetitionIdRouteRoute: typeof DashboardCompetitionIdRouteRouteWithChildren;
-  DashboardIndexRoute: typeof DashboardIndexRoute;
+  DashboardCompetitionIdRouteRoute: typeof DashboardCompetitionIdRouteRouteWithChildren
+  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
-  DashboardCompetitionIdRouteRoute: DashboardCompetitionIdRouteRouteWithChildren,
+  DashboardCompetitionIdRouteRoute:
+    DashboardCompetitionIdRouteRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
-};
+}
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
   DashboardRouteRouteChildren,
-);
+)
 
 interface MeRouteRouteChildren {
-  MeEnrolmentsRoute: typeof MeEnrolmentsRoute;
-  MeSettingsRoute: typeof MeSettingsRoute;
-  MeIndexRoute: typeof MeIndexRoute;
-  MeSubmissionsSubmissionIdRoute: typeof MeSubmissionsSubmissionIdRoute;
-  MeSubmissionsIndexRoute: typeof MeSubmissionsIndexRoute;
+  MeEnrolmentsRoute: typeof MeEnrolmentsRoute
+  MeSettingsRoute: typeof MeSettingsRoute
+  MeIndexRoute: typeof MeIndexRoute
+  MeSubmissionsSubmissionIdRoute: typeof MeSubmissionsSubmissionIdRoute
+  MeSubmissionsIndexRoute: typeof MeSubmissionsIndexRoute
 }
 
 const MeRouteRouteChildren: MeRouteRouteChildren = {
@@ -695,37 +800,38 @@ const MeRouteRouteChildren: MeRouteRouteChildren = {
   MeIndexRoute: MeIndexRoute,
   MeSubmissionsSubmissionIdRoute: MeSubmissionsSubmissionIdRoute,
   MeSubmissionsIndexRoute: MeSubmissionsIndexRoute,
-};
+}
 
-const MeRouteRouteWithChildren = MeRouteRoute._addFileChildren(MeRouteRouteChildren);
+const MeRouteRouteWithChildren =
+  MeRouteRoute._addFileChildren(MeRouteRouteChildren)
 
 interface CompetitionsIdRouteRouteChildren {
-  CompetitionsIdEnrolRoute: typeof CompetitionsIdEnrolRoute;
-  CompetitionsIdRulesRoute: typeof CompetitionsIdRulesRoute;
-  CompetitionsIdIndexRoute: typeof CompetitionsIdIndexRoute;
-  CompetitionsIdLeaderboardsLeaderboardIdRoute: typeof CompetitionsIdLeaderboardsLeaderboardIdRoute;
-  CompetitionsIdSubmissionsNewRoute: typeof CompetitionsIdSubmissionsNewRoute;
-  CompetitionsIdTracksTrackIdRoute: typeof CompetitionsIdTracksTrackIdRoute;
-  CompetitionsIdLeaderboardsIndexRoute: typeof CompetitionsIdLeaderboardsIndexRoute;
-  CompetitionsIdSubmissionsIndexRoute: typeof CompetitionsIdSubmissionsIndexRoute;
-  CompetitionsIdTracksIndexRoute: typeof CompetitionsIdTracksIndexRoute;
+  CompetitionsIdEnrolRoute: typeof CompetitionsIdEnrolRoute
+  CompetitionsIdRulesRoute: typeof CompetitionsIdRulesRoute
+  CompetitionsIdIndexRoute: typeof CompetitionsIdIndexRoute
+  CompetitionsIdLeaderboardsLeaderboardIdRoute: typeof CompetitionsIdLeaderboardsLeaderboardIdRoute
+  CompetitionsIdSubmissionsNewRoute: typeof CompetitionsIdSubmissionsNewRoute
+  CompetitionsIdTracksTrackIdRoute: typeof CompetitionsIdTracksTrackIdRoute
+  CompetitionsIdLeaderboardsIndexRoute: typeof CompetitionsIdLeaderboardsIndexRoute
+  CompetitionsIdSubmissionsIndexRoute: typeof CompetitionsIdSubmissionsIndexRoute
+  CompetitionsIdTracksIndexRoute: typeof CompetitionsIdTracksIndexRoute
 }
 
 const CompetitionsIdRouteRouteChildren: CompetitionsIdRouteRouteChildren = {
   CompetitionsIdEnrolRoute: CompetitionsIdEnrolRoute,
   CompetitionsIdRulesRoute: CompetitionsIdRulesRoute,
   CompetitionsIdIndexRoute: CompetitionsIdIndexRoute,
-  CompetitionsIdLeaderboardsLeaderboardIdRoute: CompetitionsIdLeaderboardsLeaderboardIdRoute,
+  CompetitionsIdLeaderboardsLeaderboardIdRoute:
+    CompetitionsIdLeaderboardsLeaderboardIdRoute,
   CompetitionsIdSubmissionsNewRoute: CompetitionsIdSubmissionsNewRoute,
   CompetitionsIdTracksTrackIdRoute: CompetitionsIdTracksTrackIdRoute,
   CompetitionsIdLeaderboardsIndexRoute: CompetitionsIdLeaderboardsIndexRoute,
   CompetitionsIdSubmissionsIndexRoute: CompetitionsIdSubmissionsIndexRoute,
   CompetitionsIdTracksIndexRoute: CompetitionsIdTracksIndexRoute,
-};
+}
 
-const CompetitionsIdRouteRouteWithChildren = CompetitionsIdRouteRoute._addFileChildren(
-  CompetitionsIdRouteRouteChildren,
-);
+const CompetitionsIdRouteRouteWithChildren =
+  CompetitionsIdRouteRoute._addFileChildren(CompetitionsIdRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -742,16 +848,16 @@ const rootRouteChildren: RootRouteChildren = {
   ApiFilesRequestUploadRoute: ApiFilesRequestUploadRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
   SignInCompleteMethodRoute: SignInCompleteMethodRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { createStart } from "@tanstack/react-start";
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }

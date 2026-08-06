@@ -1,230 +1,157 @@
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn, useServerFn } from "@tanstack/react-start";
-import sdk, { unsafe } from "@open-competition-kit/sdk";
-import { PageHeader } from "@/components/page-header";
-import { StatCard } from "@/components/stat-card";
-import { ToggleTabs } from "@/components/toggle-tabs";
-import { SearchInput } from "@/components/search-input";
-import { DataTable } from "@/components/data-table";
-import type { Column } from "@/components/data-table";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { PageSkeleton } from "@/components/skeletons";
-import { SurfaceSlot } from "@/components/surface-slot";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { surface } from "@open-competition-kit/sdk/surface";
-import { ClipboardList } from "lucide-react";
+import { ArrowUpRight, Users } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import { ActivityChart, ScoreDistributionChart } from "@/components/dashboard/charts";
+import { ActivityStats, QueryFailure } from "@/components/dashboard/parts";
+import { SubmissionList } from "@/components/dashboard/submission-list";
+import { PageBody } from "@/components/page-header-band";
+import { SectionHeader } from "@/components/section-header";
+import { SurfaceSlot } from "@/components/surface-slot";
+import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import { ensureAdmin } from "@/lib/admin";
-import { useMemo, useState } from "react";
-import { z } from "zod";
-
-type SubmissionRow = {
-  id: string;
-  user: string;
-  track: string;
-  trackId: string;
-  status: string;
-  submittedAt: string | null;
-};
-
-const UNFINISHED = new Set(["pending", "running", "queued", "prepared"]);
-const FAILED = new Set(["failed", "error", "cancelled", "timeout"]);
-
-const ALL_TRACKS = "All tracks";
-
-const getDashboardData = createServerFn({ method: "GET" })
-  .inputValidator(z.string())
-  .handler(async ({ data: id }) => {
-    // A server function is a public endpoint — the route guard does not protect it.
-    await ensureAdmin();
-
-    const config = await unsafe(sdk.config.get());
-    const competition = config.competitions.find((c) => c.id === id);
-    if (!competition) {
-      return { stats: [], submissions: [], tracks: [] as string[] };
-    }
-
-    const enrolments = await unsafe(sdk.enrolments.list({ competition: id }));
-    const participants = new Set(enrolments.map((e) => e.user)).size;
-
-    const names = new Map<string, string>();
-    const submissions: SubmissionRow[] = [];
-    let evaluated = 0;
-    let failed = 0;
-    let inFlight = 0;
-
-    for (const track of competition.tracks) {
-      const forTrack = await unsafe(sdk.submissions.list({ track: track.id }));
-
-      for (const submission of forTrack) {
-        const jobs = await unsafe(sdk.jobs.list({ submission: submission.id }));
-        const latest = jobs.at(-1);
-        const status = latest?.status ?? "no job";
-
-        if (FAILED.has(status)) failed++;
-        else if (UNFINISHED.has(status)) inFlight++;
-        else if (latest) evaluated++;
-
-        if (!names.has(submission.user)) {
-          const user = await unsafe(sdk.users.get(submission.user)).catch(() => undefined);
-          names.set(submission.user, user?.name || submission.user);
-        }
-
-        submissions.push({
-          id: submission.id,
-          user: names.get(submission.user) ?? submission.user,
-          track: track.name ?? track.id,
-          trackId: track.id,
-          status,
-          submittedAt: submission.createdAt ? new Date(submission.createdAt).toISOString() : null,
-        });
-      }
-    }
-
-    submissions.sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
-
-    return {
-      tracks: competition.tracks.map((t) => t.name ?? t.id),
-      stats: [
-        { title: "Participants", value: participants, hint: "Enrolled across all tracks" },
-        { title: "Submissions", value: submissions.length, hint: "All time" },
-        { title: "Evaluated", value: evaluated, hint: `${inFlight} still running` },
-        { title: "Failed", value: failed, hint: "Jobs that errored out" },
-      ],
-      submissions,
-    };
-  });
-
-function StatusPill({ status }: { status: string }) {
-  const tone = FAILED.has(status)
-    ? "bg-destructive/10 text-destructive"
-    : UNFINISHED.has(status)
-      ? "bg-warning/10 text-warning"
-      : status === "no job"
-        ? "bg-muted text-muted-foreground"
-        : "bg-success/10 text-success";
-
-  return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tone}`}>
-      {status}
-    </span>
-  );
-}
-
-const columns: Column<SubmissionRow>[] = [
-  {
-    key: "user",
-    header: "Competitor",
-    render: (row) => <span className="font-medium">{row.user}</span>,
-  },
-  { key: "track", header: "Track", render: (row) => row.track },
-  {
-    key: "status",
-    header: "Status",
-    render: (row) => <StatusPill status={row.status} />,
-  },
-  {
-    key: "submittedAt",
-    header: "Submitted",
-    render: (row) => (
-      <span className="text-muted-foreground">
-        {row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "-"}
-      </span>
-    ),
-  },
-];
+import { useCompetitionActivity } from "@/lib/dashboard-fn";
 
 export const Route = createFileRoute("/dashboard/$competitionId/overview/")({
   component: AdminOverviewPage,
 });
 
+/** How many recent submissions the overview shows before sending you to the list. */
+const RECENT = 10;
+
 function AdminOverviewPage() {
-  const { data: session } = authClient.useSession();
   const { competitionId } = Route.useParams();
-  const fetchDashboardData = useServerFn(getDashboardData);
-  const [track, setTrack] = useState(ALL_TRACKS);
-  const [query, setQuery] = useState("");
+  const { data: session } = authClient.useSession();
+  const { data: activity, isLoading, isError, error } = useCompetitionActivity(competitionId);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", competitionId],
-    queryFn: () => fetchDashboardData({ data: competitionId }),
-  });
-
-  const submissions = useMemo(() => {
-    const all = data?.submissions ?? [];
-    const needle = query.trim().toLowerCase();
-
-    return all.filter(
-      (row) =>
-        (track === ALL_TRACKS || row.track === track) &&
-        (!needle ||
-          row.user.toLowerCase().includes(needle) ||
-          row.track.toLowerCase().includes(needle)),
-    );
-  }, [data?.submissions, track, query]);
-
-  if (isLoading) return <PageSkeleton />;
-
-  const stats = data?.stats ?? [];
-  const tracks = [ALL_TRACKS, ...(data?.tracks ?? [])];
+  const rows = activity?.rows ?? [];
+  const recent = rows.slice(0, RECENT);
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
+    <>
+      <AdminPageHeader
+        competitionId={competitionId}
+        competitionName={activity?.name}
         title={`Welcome back, ${session?.user?.name ?? "organiser"}`}
-        description="Here's how your competition is going."
+        description="How your competition is going right now."
+        actions={
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-10 px-5"
+            render={<Link to="/competitions/$id" params={{ id: competitionId }} />}
+          >
+            View as a competitor
+            <ArrowUpRight className="size-4" />
+          </Button>
+        }
+        meta={<ActivityStats totals={activity?.totals} />}
+        tabs
       />
 
-      {tracks.length > 1 ? <ToggleTabs tabs={tracks} onChange={setTrack} /> : null}
+      <PageBody className="flex flex-col gap-8">
+        {/* One notice for the whole page rather than an empty state in each
+            section. When the activity read fails, every section below it is
+            empty for the same reason, and saying so four times says it worse. */}
+        {isError ? <QueryFailure error={error} /> : null}
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {stats.map((stat) => (
-          <StatCard key={stat.title} {...stat} />
-        ))}
-      </div>
-
-      {/* The organiser's side of the same arrangement: where a package put the
-          competition's things, so nobody has to read the config to find them. */}
-      <SurfaceSlot
-        surface={surface.std.dashboardOverview}
-        subject={{ competition: competitionId }}
-        layout="inline"
-      />
-
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
-          {submissions.length} submission{submissions.length === 1 ? "" : "s"}
-        </p>
-        <SearchInput
-          placeholder="Search competitors"
-          className="w-64"
-          value={query}
-          onChange={(e) => setQuery(e.currentTarget.value)}
+        {/* The organiser's side of the same arrangement the competitor pages
+            make: where a package put the competition's things, so nobody has to
+            read the config to find them. */}
+        <SurfaceSlot
+          surface={surface.std.dashboardOverview}
+          subject={{ competition: competitionId }}
+          layout="inline"
         />
-      </div>
 
-      {submissions.length ? (
-        <DataTable columns={columns} data={submissions} />
-      ) : (
-        <Empty className="rounded-lg border border-dashed border-border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ClipboardList />
-            </EmptyMedia>
-            <EmptyTitle>No submissions yet</EmptyTitle>
-            <EmptyDescription>
-              Submissions across this competition's tracks will appear here once competitors start
-              entering.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      )}
-    </div>
+        {/* Two questions the stat strip above cannot answer, because both are
+            about shape rather than totals: when the work is arriving, and
+            whether the scoring separates anybody. */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ActivityChart rows={rows} loading={isLoading} />
+          <ScoreDistributionChart rows={rows} loading={isLoading} />
+        </div>
+
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            title="Latest submissions"
+            description={
+              rows.length > RECENT
+                ? `The ${RECENT} most recent of ${rows.length}.`
+                : "Everything entered so far, newest first."
+            }
+            actions={
+              rows.length > RECENT ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={
+                    <Link
+                      to="/dashboard/$competitionId/submissions"
+                      params={{ competitionId }}
+                    />
+                  }
+                >
+                  See all
+                </Button>
+              ) : undefined
+            }
+          />
+          <SubmissionList
+            competitionId={competitionId}
+            rows={recent}
+            tracks={activity?.tracks ?? []}
+            isLoading={isLoading}
+          />
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            title="Who is competing"
+            description="The people who have entered, ordered by who submitted most recently."
+            actions={
+              <Button
+                variant="outline"
+                size="sm"
+                render={
+                  <Link to="/dashboard/$competitionId/participants" params={{ competitionId }} />
+                }
+              >
+                <Users className="size-4" />
+                All participants
+              </Button>
+            }
+          />
+          {/* Names only, and only a handful. The participants page is one click
+              away and does the sorting, filtering and drilling in properly;
+              repeating it here would be two lists to keep agreeing. */}
+          <div className="flex flex-wrap gap-2">
+            {(activity?.participants ?? []).slice(0, 12).map((participant) => (
+              <Link
+                key={participant.user}
+                to="/dashboard/$competitionId/participants/$user"
+                params={{ competitionId, user: participant.user }}
+                className="rounded-full border border-border px-3 py-1 text-sm transition-colors hover:bg-muted"
+              >
+                {participant.userName}
+                <span className="ml-1.5 font-mono text-xs text-muted-foreground tabular-nums">
+                  {participant.submissions}
+                </span>
+              </Link>
+            ))}
+            {activity && activity.participants.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nobody has entered a track yet.
+              </p>
+            ) : null}
+            {activity && activity.participants.length > 12 ? (
+              <span className="px-1 py-1 text-sm text-muted-foreground">
+                and {activity.participants.length - 12} more
+              </span>
+            ) : null}
+          </div>
+        </section>
+      </PageBody>
+    </>
   );
 }

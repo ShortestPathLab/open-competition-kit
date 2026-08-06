@@ -25,38 +25,55 @@ const filterChipClassName =
 
 interface DataBrowserProps<T> {
   items: T[];
-  isSessionLoading: boolean;
-  isSignedIn: boolean;
+  /**
+   * Whether the reader is signed in, for a list that is theirs.
+   *
+   * Leave all three sign-in props out on a list that is not: the organiser
+   * dashboard is already behind a route guard and a server-side admin check, so
+   * a "sign in to see this" branch there is a state it can never be in.
+   */
+  isSignedIn?: boolean;
+  isSessionLoading?: boolean;
   isLoading: boolean;
   /** Pass `false` for a list short enough that a search box is furniture. */
   searchable?: boolean;
   searchPlaceholder: string;
   /**
    * Chips that narrow the list. An empty array renders no chip row at all,
-   * including the "All tracks" one: a filter with nothing to filter by is a
+   * including the "everything" one: a filter with nothing to filter by is a
    * control that cannot do anything.
    */
   filterOptions: DataBrowserFilterOption[];
-  getFilterValue: (item: T) => string;
+  /** What the chip that clears the filter says. */
+  allLabel?: string;
+  /**
+   * Which chip this item belongs under. A list is free to answer with several:
+   * one participant can be entered in more than one track, and a chip asking
+   * "who is in this track" has to match all of them.
+   */
+  getFilterValue: (item: T) => string | readonly string[];
   matchesSearch: (item: T, query: string) => boolean;
-  signInTitle: string;
-  signInDescription: string;
+  signInTitle?: string;
+  signInDescription?: string;
   loadingLabel: string;
   emptyTitle: string;
   emptyDescription: string;
   noResultsTitle: string;
   noResultsDescription: string;
+  /** Controls that belong beside the search box, e.g. an export button. */
+  actions?: ReactNode;
   renderResults: (items: T[]) => ReactNode;
 }
 
 export function DataBrowser<T>({
   items,
-  isSessionLoading,
+  isSessionLoading = false,
   isSignedIn,
   isLoading,
   searchable = true,
   searchPlaceholder,
   filterOptions,
+  allLabel = "All tracks",
   getFilterValue,
   matchesSearch,
   signInTitle,
@@ -66,6 +83,7 @@ export function DataBrowser<T>({
   emptyDescription,
   noResultsTitle,
   noResultsDescription,
+  actions,
   renderResults,
 }: DataBrowserProps<T>) {
   const [search, setSearch] = useState("");
@@ -75,22 +93,30 @@ export function DataBrowser<T>({
   const filteredItems = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
     return items.filter((item) => {
-      const matchesFilter = filter === "all" || getFilterValue(item) === filter;
+      const belongsTo = getFilterValue(item);
+      const matchesFilter =
+        filter === "all" ||
+        (Array.isArray(belongsTo) ? belongsTo.includes(filter) : belongsTo === filter);
       return matchesFilter && (query.length === 0 || matchesSearch(item, query));
     });
   }, [deferredSearch, filter, getFilterValue, items, matchesSearch]);
 
   return (
     <div className="flex flex-col gap-3">
-      {searchable || filterOptions.length > 0 ? (
+      {searchable || filterOptions.length > 0 || actions ? (
         <div className="flex flex-col gap-3">
-          {searchable ? (
-            <SearchInput
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={searchPlaceholder}
-              className="w-full"
-            />
+          {searchable || actions ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {searchable ? (
+                <SearchInput
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="min-w-64 flex-1"
+                />
+              ) : null}
+              {actions}
+            </div>
           ) : null}
           {filterOptions.length > 0 ? (
             <div className="flex flex-wrap gap-2">
@@ -104,7 +130,7 @@ export function DataBrowser<T>({
                     : "border-border text-muted-foreground",
                 )}
               >
-                All tracks
+                {allLabel}
               </button>
               {filterOptions.map((option) => (
                 <button
@@ -128,7 +154,7 @@ export function DataBrowser<T>({
 
       {isSessionLoading ? (
         <ListSkeleton aria-label="Loading your account details..." />
-      ) : !isSignedIn ? (
+      ) : isSignedIn === false ? (
         <Empty className="rounded-2xl border border-dashed border-border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
